@@ -22,7 +22,7 @@
                             Colegio de Sta. Ana de Victorias
                         </span>
                         <span class="text-[10px] uppercase tracking-[0.15em] text-[#D4A537] font-medium">
-                            Coordinator Portal
+                            Program Head Portal
                         </span>
                     </div>
 

@@ -45,6 +45,30 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0" role="dialog" tabindex="-
         </ul>
       </div>
 
+      {{-- Student Management --}}
+      <div class="pt-3 mt-3 flex flex-col border-t border-sidebar-2-divider first:border-t-0 first:pt-0 first:mt-0">
+        <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">
+          Student Management
+        </span>
+        <ul class="flex flex-col gap-y-1">
+
+          {{-- View Students --}}
+          <li>
+            <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
+                {{ request()->routeIs('programHead.students')
+                    ? 'bg-[#123524] text-white font-medium shadow-sm'
+                    : 'text-sidebar-2-nav-foreground hover:bg-sidebar-2-nav-hover' }}
+                focus:outline-hidden focus:bg-sidebar-2-nav-focus" href="/programHead/view-student">
+              <svg class="shrink-0 size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/>
+              </svg>
+              View Students
+            </a>
+          </li>
+
+        </ul>
+      </div>
+
       {{-- Manage Request --}}
       <div class="pt-3 mt-3 flex flex-col border-t border-sidebar-2-divider first:border-t-0 first:pt-0 first:mt-0">
         <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">
@@ -138,7 +162,7 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0" role="dialog" tabindex="-
         </span>
         <ul class="flex flex-col gap-y-1">
           <li>
-            <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm text-sidebar-2-nav-foreground rounded-lg hover:bg-sidebar-2-nav-hover focus:outline-hidden focus:bg-sidebar-2-nav-focus" href="#!">
+            <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm text-sidebar-2-nav-foreground rounded-lg hover:bg-sidebar-2-nav-hover focus:outline-hidden focus:bg-sidebar-2-nav-focus" href='{{route('coordinator.audit')}}'>
               <svg class="shrink-0 size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Z"/></svg>
               Audit Logs
             </a>
@@ -173,7 +197,7 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0" role="dialog" tabindex="-
         <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/LogoCSAV.png" alt="CSAV" class="w-6 h-6 rounded-full bg-white p-0.5 ring-1 ring-[#D4A537]/40 object-contain shrink-0">
         <div class="leading-tight">
           <p class="text-[11px] font-semibold text-sidebar-2-nav-foreground">CSAV Portal</p>
-          <p class="text-[10px] text-muted-foreground-1">Coordinator</p>
+          <p class="text-[10px] text-muted-foreground-1">Program Head</p>
         </div>
       </div>
     </footer>

@@ -64,6 +64,12 @@ Route::middleware(['auth', 'program head', 'department'])->prefix('programHead')
     Route::livewire('/request-to-admin/view-request', 'pages::coordinator.request-to-admin.view-request')->name('coordinator.request-to-admin.view-request');
     Route::livewire('/request-to-admin/create', 'pages::coordinator.request-to-admin.create-request')->name('coordinator.request-to-admin.create-request');
     Route::livewire('/request-to-admin/{id}/edit', 'pages::coordinator.request-to-admin.edit-request')->name('coordinator.request-to-admin.edit-request');
+
+    //audit
+    Route::livewire('/audit', 'pages::coordinator.audit.audit-log')->name('coordinator.audit');
+
+    //student|faculty
+    Route::livewire('/view-student', 'pages::coordinator.student.view-student')->name('programHead.students');
 });
 
 Route::middleware(['auth', 'role:faculty|student', 'department'])->prefix('portal')->group(function () {
