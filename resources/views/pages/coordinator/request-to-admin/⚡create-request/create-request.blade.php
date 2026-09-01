@@ -10,21 +10,20 @@
 
         <div class="p-6">
 
-            {{-- ✅ Success Flash --}}
+            {{-- Success Flash --}}
             @if(session()->has('success'))
                 <div class="mb-4 p-4 rounded-lg bg-green-100 text-green-800 border border-green-200 text-sm">
                     {{ session('success') }}
                 </div>
             @endif
 
-            {{-- ✅ Error Flash --}}
+            {{-- Error Flash --}}
             @if(session()->has('error'))
                 <div class="mb-4 p-4 rounded-lg bg-red-100 text-red-800 border border-red-200 text-sm">
                     {{ session('error') }}
                 </div>
             @endif
 
-            {{-- ✅ Livewire 4 uses wire:submit not wire:submit.prevent --}}
             <form wire:submit="submit" class="space-y-6">
 
                 {{-- Request Type --}}
@@ -81,9 +80,13 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                             Facility Name <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" wire:model="facility_name"
-                            placeholder="e.g. Room 101, Computer Lab, Gymnasium"
+                        <select wire:model="facility_name"
                             class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
+                            <option value="">Select a facility</option>
+                            @foreach($facilityOptions as $facility)
+                                <option value="{{ $facility }}">{{ $facility }}</option>
+                            @endforeach
+                        </select>
                         @error('facility_name')
                             <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                         @enderror
@@ -112,51 +115,103 @@
                         </div>
                     </div>
                 </div>
-                @endif
 
-                {{-- Material Fields --}}
-                @if($request_type_id == 2)
-                <div class="space-y-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
-                    <p class="text-sm font-semibold text-blue-700 dark:text-blue-300">Materials Needed</p>
+                {{-- Materials — OPTIONAL add-on to a facility reservation --}}
+                <div class="border-t pt-5">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300">
+                            Materials Needed <span class="text-xs font-normal text-gray-400">(optional — e.g. bench for court)</span>
+                        </label>
+                        <button type="button"
+                            wire:click="addMaterial"
+                            class="text-xs px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition font-medium">
+                            + Add Material
+                        </button>
+                    </div>
+
+                    @if(empty($materials))
+                        <p class="text-xs text-gray-400 italic">No materials added.</p>
+                    @endif
 
                     <div class="space-y-3">
-                        @foreach($items as $index => $item)
-                            <div class="flex gap-3 items-center">
-                                <input type="text"
-                                    wire:model="items.{{ $index }}.name"
-                                    placeholder="Material name"
-                                    class="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 text-sm">
-                                <input type="number"
-                                    wire:model="items.{{ $index }}.quantity"
-                                    placeholder="Qty" min="1"
-                                    class="w-20 px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 text-sm">
-                                @if(count($items) > 1)
-                                    <button type="button" wire:click="removeItem({{ $index }})"
-                                        class="text-red-500 hover:text-red-700 font-bold text-lg px-2">
-                                        &times;
-                                    </button>
+                        @foreach($materials as $index => $material)
+                            <div wire:key="fac-material-{{ $index }}" class="flex items-start gap-2 bg-red-50/50 border border-red-100 rounded-lg p-3">
+                                <div class="flex-1">
+                                    <select wire:model="materials.{{ $index }}.resource_id"
+                                        class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
+                                        <option value="">Select material</option>
+                                        @foreach($availableResources as $resource)
+                                            <option value="{{ $resource->id }}">
+                                                {{ $resource->resource_name }} ({{ $resource->quantity_available }} available)
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('materials.' . $index . '.resource_id') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div class="w-24">
+                                    <input type="number" min="1"
+                                        wire:model="materials.{{ $index }}.quantity"
+                                        placeholder="Qty"
+                                        class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
+                                    @error('materials.' . $index . '.quantity') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <button type="button" wire:click="removeMaterial({{ $index }})"
+                                    class="mt-2 text-gray-400 hover:text-red-600 transition" title="Remove">✕</button>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                {{-- Material Request (standalone type) --}}
+                @if($request_type_id == 2)
+                <div class="space-y-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-700">
+                    <p class="text-sm font-semibold text-red-700 dark:text-red-300">Materials Needed <span class="text-red-500">*</span></p>
+
+                    <div class="space-y-3">
+                        @foreach($materials as $index => $material)
+                            <div wire:key="mat-material-{{ $index }}" class="flex items-start gap-2">
+                                <div class="flex-1">
+                                    <select wire:model="materials.{{ $index }}.resource_id"
+                                        class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
+                                        <option value="">Select material</option>
+                                        @foreach($availableResources as $resource)
+                                            <option value="{{ $resource->id }}">
+                                                {{ $resource->resource_name }} ({{ $resource->quantity_available }} available)
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('materials.' . $index . '.resource_id') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div class="w-24">
+                                    <input type="number" min="1"
+                                        wire:model="materials.{{ $index }}.quantity"
+                                        placeholder="Qty"
+                                        class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
+                                    @error('materials.' . $index . '.quantity') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                @if(count($materials) > 1)
+                                    <button type="button" wire:click="removeMaterial({{ $index }})"
+                                        class="mt-2 text-red-500 hover:text-red-700 font-bold text-lg px-2">&times;</button>
                                 @endif
                             </div>
-                            @error("items.{$index}.name")
-                                <p class="text-xs text-red-500">{{ $message }}</p>
-                            @enderror
-                            @error("items.{$index}.quantity")
-                                <p class="text-xs text-red-500">{{ $message }}</p>
-                            @enderror
                         @endforeach
                     </div>
 
-                    <button type="button" wire:click="addItem"
-                        class="mt-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    <button type="button" wire:click="addMaterial"
+                        class="mt-2 px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
                         + Add Item
                     </button>
+
+                    @error('materials')
+                        <p class="text-xs text-red-500">{{ $message }}</p>
+                    @enderror
                 </div>
                 @endif
 
                 {{-- Buttons --}}
                 @if($request_type_id)
                 <div class="flex gap-3 pt-2">
-                    {{-- ✅ wire:loading disables button while submitting --}}
                     <button type="submit"
                         wire:loading.attr="disabled"
                         wire:loading.class="opacity-50 cursor-not-allowed"

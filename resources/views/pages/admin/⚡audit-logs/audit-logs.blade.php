@@ -3,7 +3,7 @@
     {{-- Header --}}
     <div class="mb-6">
         <h2 class="text-2xl font-bold text-foreground">Audit Logs</h2>
-        <p class="text-muted-foreground-1 mt-1">Track all system activities</p>
+        <p class="text-muted-foreground-1 mt-1">Track student, faculty, and program head activity</p>
     </div>
 
     {{-- Stats Cards --}}
@@ -22,12 +22,20 @@
         </div>
     </div>
 
-    {{-- Search --}}
-    <div class="mb-4">
+    {{-- Search + Role Filter --}}
+    <div class="mb-4 flex flex-col sm:flex-row gap-3">
         <input type="text"
             wire:model.live="search"
             placeholder="Search by user, action, or table..."
-            class="w-full md:w-96 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-foreground">
+            class="w-full sm:w-96 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-foreground">
+
+        <select wire:model.live="roleFilter"
+            class="w-full sm:w-48 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-foreground">
+            <option value="all">All Roles</option>
+            <option value="student">Student</option>
+            <option value="faculty">Faculty</option>
+            <option value="program head">Program Head</option>
+        </select>
     </div>
 
     {{-- Logs Table --}}
@@ -37,6 +45,7 @@
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">ID</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">User</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Role</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Action</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Table</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Record Data</th>
@@ -45,6 +54,9 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($this->logs as $log)
+                @php
+                    $roleName = $log->user?->roles->first()?->name;
+                @endphp
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                     <td class="px-4 py-3 text-sm text-foreground">{{ $log->id }}</td>
                     <td class="px-4 py-3 text-sm text-foreground">
@@ -52,10 +64,24 @@
                         <div class="text-xs text-muted-foreground-1">{{ $log->user->email ?? '' }}</div>
                     </td>
                     <td class="px-4 py-3">
+                        @if($roleName)
+                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
+                                {{ $roleName === 'student' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}
+                                {{ $roleName === 'faculty' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : '' }}
+                                {{ $roleName === 'program head' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : '' }}">
+                                {{ ucwords($roleName) }}
+                            </span>
+                        @else
+                            <span class="text-xs text-muted-foreground-1">—</span>
+                        @endif
+                    </td>
+                    <td class="px-4 py-3">
                         <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
                             {{ $log->action == 'created' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : '' }}
                             {{ $log->action == 'updated' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : '' }}
-                            {{ $log->action == 'deleted' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : '' }}">
+                            {{ $log->action == 'deleted' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : '' }}
+                            {{ $log->action == 'login' ? 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200' : '' }}
+                            {{ $log->action == 'logout' ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' : '' }}">
                             {{ ucfirst($log->action) }}
                         </span>
                     </td>
@@ -77,7 +103,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="px-4 py-8 text-center text-muted-foreground-1">
+                    <td colspan="7" class="px-4 py-8 text-center text-muted-foreground-1">
                         No audit logs found
                     </td>
                 </tr>

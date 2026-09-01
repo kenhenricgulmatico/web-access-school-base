@@ -52,6 +52,21 @@ new #[Layout('layouts.coordinator')] class extends Component
         return $rules;
     }
 
+    protected $messages = [
+        'purpose.required'         => 'Please state your purpose',
+        'purpose.min'              => 'Purpose must be at least 10 characters',
+        'request_date.required'    => 'Please select a date',
+        'request_date.after_or_equal' => 'Date must be today or later',
+        'facility_name.required'   => 'Please enter a facility name',
+        'start_time.required'      => 'Please select start time',
+        'end_time.required'        => 'Please select end time',
+        'end_time.after'           => 'End time must be after start time',
+        'items.required'           => 'Please add at least one material',
+        'items.*.name.required'    => 'Please enter the material name',
+        'items.*.quantity.required'=> 'Please enter quantity',
+        'items.*.quantity.min'     => 'Quantity must be at least 1',
+    ];
+
     #[Computed]
     public function requests()
     {
@@ -64,6 +79,11 @@ new #[Layout('layouts.coordinator')] class extends Component
     public function openEdit(int $id)
     {
         $request = ResourceRequest::with('items')->findOrFail($id);
+
+        if ($request->user_id !== Auth::id()) {
+            session()->flash('error', 'You are not authorized to edit this request.');
+            return;
+        }
 
         if ($request->status !== 'pending') {
             session()->flash('error', 'Only pending requests can be edited.');
@@ -93,8 +113,8 @@ new #[Layout('layouts.coordinator')] class extends Component
 
     public function closeEdit()
     {
-        $this->showEditModal = false;
-        $this->editingId     = null;
+        $this->showEditModal   = false;
+        $this->editingId       = null;
         $this->request_type_id = '';
         $this->reset(['purpose', 'request_date', 'facility_name', 'start_time', 'end_time']);
         $this->items = [['name' => '', 'quantity' => 1]];
@@ -104,7 +124,13 @@ new #[Layout('layouts.coordinator')] class extends Component
     {
         $this->validate();
 
-        $request = ResourceRequest::findOrFail($this->editingId);
+        $request = ResourceRequest::where('user_id', Auth::id())->findOrFail($this->editingId);
+
+        if ($request->status !== 'pending') {
+            session()->flash('error', 'This request can no longer be edited.');
+            $this->closeEdit();
+            return;
+        }
 
         $request->update(['purpose' => $this->purpose]);
 
@@ -152,7 +178,7 @@ new #[Layout('layouts.coordinator')] class extends Component
 
     public function delete(int $id)
     {
-        $request = ResourceRequest::findOrFail($id);
+        $request = ResourceRequest::where('user_id', Auth::id())->findOrFail($id);
 
         if ($request->status !== 'pending') {
             session()->flash('error', 'Only pending requests can be deleted.');

@@ -26,7 +26,7 @@
                     </button>
                 </div>
 
-                {{-- Tabs --}}
+                {{-- ===== SCHEDULE TAB DISABLED =====
                 <div class="flex border-b border-gray-100 dark:border-neutral-700">
                     <button wire:click="$set('activeTab', 'schedule')"
                         class="flex-1 py-2.5 text-xs font-semibold transition border-b-2
@@ -41,6 +41,25 @@
                                 ? 'border-gray-800 text-gray-800 dark:border-neutral-200 dark:text-neutral-200'
                                 : 'border-transparent text-gray-400 dark:text-neutral-500 hover:text-gray-600' }}">
                         RESERVATIONS
+                    </button>
+                </div>
+                ===== END SCHEDULE TAB DISABLED ===== --}}
+
+                {{-- Request Type Tabs (facility & material only) --}}
+                <div class="flex border-b border-gray-100 dark:border-neutral-700">
+                    <button wire:click="$set('activeTab', 'reservation')"
+                        class="flex-1 py-2.5 text-xs font-semibold transition border-b-2
+                            {{ $activeTab === 'reservation'
+                                ? 'border-gray-800 text-gray-800 dark:border-neutral-200 dark:text-neutral-200'
+                                : 'border-transparent text-gray-400 dark:text-neutral-500 hover:text-gray-600' }}">
+                        FACILITY
+                    </button>
+                    <button wire:click="$set('activeTab', 'material')"
+                        class="flex-1 py-2.5 text-xs font-semibold transition border-b-2
+                            {{ $activeTab === 'material'
+                                ? 'border-gray-800 text-gray-800 dark:border-neutral-200 dark:text-neutral-200'
+                                : 'border-transparent text-gray-400 dark:text-neutral-500 hover:text-gray-600' }}">
+                        MATERIAL
                     </button>
                 </div>
 
@@ -77,11 +96,16 @@
                                 {{-- Event dots --}}
                                 @if($events)
                                     <div class="flex gap-0.5 mt-0.5">
+                                        {{-- ===== SCHEDULE DOT DISABLED =====
                                         @if($events['schedule'])
                                             <span class="size-1 rounded-full bg-blue-500 inline-block"></span>
                                         @endif
-                                        @if($events['reservation'])
+                                        ===== END SCHEDULE DOT DISABLED ===== --}}
+                                        @if($events['reservation'] ?? false)
                                             <span class="size-1 rounded-full bg-green-500 inline-block"></span>
+                                        @endif
+                                        @if($events['material'] ?? false)
+                                            <span class="size-1 rounded-full bg-purple-500 inline-block"></span>
                                         @endif
                                     </div>
                                 @endif
@@ -92,13 +116,19 @@
 
                 {{-- Legend --}}
                 <div class="px-4 pb-4 flex items-center gap-4 text-[10px] text-gray-400 dark:text-neutral-500">
+                    {{-- ===== SCHEDULE LEGEND DISABLED =====
                     <div class="flex items-center gap-1">
                         <span class="size-1.5 rounded-full bg-blue-500 inline-block"></span>
                         Schedule
                     </div>
+                    ===== END SCHEDULE LEGEND DISABLED ===== --}}
                     <div class="flex items-center gap-1">
                         <span class="size-1.5 rounded-full bg-green-500 inline-block"></span>
-                        Reservation
+                        Facility
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="size-1.5 rounded-full bg-purple-500 inline-block"></span>
+                        Material
                     </div>
                 </div>
 
@@ -134,105 +164,143 @@
                 <div class="overflow-y-auto max-h-[600px] divide-y divide-gray-50 dark:divide-neutral-700">
 
                     @php
-                        $events = $this->selectedDateEvents;
-                        $schedules    = $events['schedules'] ?? collect();
+                        $events       = $this->selectedDateEvents;
                         $reservations = $events['reservations'] ?? collect();
+                        $materials    = $events['materials'] ?? collect();
+
+                        // ===== SCHEDULE DISABLED =====
+                        // $schedules = $events['schedules'] ?? collect();
+                        // ===== END SCHEDULE DISABLED =====
                     @endphp
 
-                    {{-- Schedules --}}
-                    @if($activeTab === 'schedule' || $activeTab === 'all')
+                    {{-- ===== SCHEDULE EVENTS DISABLED =====
+                    @if($activeTab === 'schedule')
                         @forelse($schedules as $schedule)
                             <div class="flex items-stretch gap-4 px-6 py-4 hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
-
-                                {{-- Timeline dot --}}
                                 <div class="flex flex-col items-center">
                                     <div class="size-2.5 rounded-full bg-gray-200 dark:bg-neutral-600 mt-1.5 shrink-0"></div>
                                     <div class="w-px flex-1 bg-gray-100 dark:bg-neutral-700 mt-1"></div>
                                 </div>
-
-                                {{-- Content --}}
                                 <div class="flex-1 min-w-0 pb-2">
                                     <div class="flex items-start justify-between gap-2">
                                         <div class="flex-1 min-w-0">
                                             <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                                <span class="inline-flex items-center py-0.5 px-2 text-[10px] font-semibold bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900 dark:text-blue-300">
-                                                    CLASS
-                                                </span>
-                                                <span class="inline-flex items-center py-0.5 px-2 text-[10px] font-medium bg-gray-100 text-gray-600 rounded-full dark:bg-neutral-700 dark:text-neutral-300">
-                                                    {{ $schedule->section }}
-                                                </span>
+                                                <span class="inline-flex items-center py-0.5 px-2 text-[10px] font-semibold bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900 dark:text-blue-300">CLASS</span>
+                                                <span class="inline-flex items-center py-0.5 px-2 text-[10px] font-medium bg-gray-100 text-gray-600 rounded-full dark:bg-neutral-700 dark:text-neutral-300">{{ $schedule->section }}</span>
                                             </div>
                                             <p class="text-sm font-semibold text-gray-800 dark:text-neutral-200 truncate">
                                                 {{ $schedule->subject_code }}
                                                 @if($schedule->subject_name)
-                                                    <span class="font-normal text-gray-400 dark:text-neutral-500"> — {{ $schedule->subject_name }}</span>
+                                                    <span class="font-normal text-gray-400"> — {{ $schedule->subject_name }}</span>
                                                 @endif
                                             </p>
-                                            <p class="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
-                                                👤 {{ $schedule->teacher }} &nbsp;·&nbsp; 🏢 {{ $schedule->department }}
+                                            <p class="text-xs text-gray-500 dark:text-neutral-400 mt-0.5 flex items-center gap-3">
+                                                <span class="inline-flex items-center gap-1">
+                                                    <svg class="size-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                    </svg>
+                                                    {{ $schedule->teacher }}
+                                                </span>
+                                                <span class="inline-flex items-center gap-1">
+                                                    <svg class="size-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l8-4v18M13 21V11h6v10M9 9h.01M9 13h.01M9 17h.01"/>
+                                                    </svg>
+                                                    {{ $schedule->department }}
+                                                </span>
                                             </p>
                                         </div>
                                         <div class="shrink-0 text-right">
                                             <p class="text-xs font-medium text-gray-600 dark:text-neutral-400">
                                                 {{ \Carbon\Carbon::parse($schedule->start_time)->format('g:i') }} - {{ \Carbon\Carbon::parse($schedule->end_time)->format('g:i A') }}
                                             </p>
-                                            <span class="inline-block mt-1 py-0.5 px-2 text-[10px] bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300 rounded font-medium">
-                                                📍 {{ $schedule->room }}
+                                            <span class="inline-flex items-center gap-1 mt-1 py-0.5 px-2 text-[10px] bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300 rounded font-medium">
+                                                <svg class="size-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/>
+                                                    <circle cx="12" cy="11" r="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                                {{ $schedule->room }}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
                         @empty
-                            @if($activeTab === 'schedule')
-                                <div class="px-6 py-10 text-center">
-                                    <p class="text-sm text-gray-400 dark:text-neutral-500">No classes scheduled on this day.</p>
-                                </div>
-                            @endif
+                            <div class="px-6 py-10 text-center">
+                                <p class="text-sm text-gray-400 dark:text-neutral-500">No classes scheduled on this day.</p>
+                            </div>
                         @endforelse
                     @endif
+                    ===== END SCHEDULE EVENTS DISABLED ===== --}}
 
-                    {{-- Reservations --}}
-                    @if($activeTab === 'reservation' || $activeTab === 'all')
+                    {{-- Facility Reservations --}}
+                    @if($activeTab === 'reservation')
                         @forelse($reservations as $reservation)
-                            @php $item = $reservation->items->first(); @endphp
+                            @php
+                                // The facility item is the one with a start/end time (the room/court slot)
+                                $facilityItem = $reservation->items->first(fn($i) => $i->start_time && $i->end_time)
+                                    ?? $reservation->items->first();
+
+                                // Anything else on this request is treated as materials tied to the booking
+                                $materialItems = $reservation->items->reject(
+                                    fn($i) => $facilityItem && $i->id === $facilityItem->id
+                                );
+                            @endphp
+
                             <div class="flex items-stretch gap-4 px-6 py-4 hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
 
-                                {{-- Timeline dot --}}
                                 <div class="flex flex-col items-center">
                                     <div class="size-2.5 rounded-full bg-green-400 dark:bg-green-600 mt-1.5 shrink-0 ring-4 ring-green-50 dark:ring-green-900"></div>
                                     <div class="w-px flex-1 bg-gray-100 dark:bg-neutral-700 mt-1"></div>
                                 </div>
 
-                                {{-- Content --}}
                                 <div class="flex-1 min-w-0 pb-2">
                                     <div class="flex items-start justify-between gap-2">
                                         <div class="flex-1 min-w-0">
                                             <div class="flex items-center gap-2 mb-1 flex-wrap">
                                                 <span class="inline-flex items-center py-0.5 px-2 text-[10px] font-semibold bg-green-100 text-green-800 rounded-full dark:bg-green-900 dark:text-green-300">
-                                                    RESERVATION
+                                                    FACILITY
                                                 </span>
                                                 <span class="inline-flex items-center py-0.5 px-2 text-[10px] font-medium bg-gray-100 text-gray-600 rounded-full dark:bg-neutral-700 dark:text-neutral-300">
                                                     {{ $reservation->user->department->department_name ?? 'N/A' }}
                                                 </span>
                                             </div>
+
                                             <p class="text-sm font-semibold text-gray-800 dark:text-neutral-200 truncate">
-                                                {{ $item->item_name ?? 'N/A' }}
+                                                {{ $facilityItem->item_name ?? 'N/A' }}
                                             </p>
-                                            <p class="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
-                                                👤 {{ $reservation->user->name }}
+
+                                            <p class="text-xs text-gray-500 dark:text-neutral-400 mt-0.5 flex items-center gap-1">
+                                                <svg class="size-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                </svg>
+                                                {{ $reservation->user->name }}
                                             </p>
+
+                                            {{-- Materials attached to this facility reservation (e.g. 20 chairs) --}}
+                                            @if($materialItems->isNotEmpty())
+                                                <div class="mt-2 flex flex-wrap gap-1">
+                                                    @foreach($materialItems as $mat)
+                                                        <span class="inline-flex items-center gap-1 py-0.5 px-2 text-[10px] font-medium bg-purple-50 text-purple-700 rounded-full dark:bg-purple-900/40 dark:text-purple-300">
+                                                            <svg class="size-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                                            </svg>
+                                                            {{ $mat->item_name }} (x{{ $mat->quantity }})
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+
                                             @if($reservation->purpose)
                                                 <p class="text-xs text-gray-400 dark:text-neutral-500 mt-0.5 italic">
                                                     "{{ Str::limit($reservation->purpose, 60) }}"
                                                 </p>
                                             @endif
                                         </div>
-                                        @if($item && $item->start_time && $item->end_time)
+
+                                        @if($facilityItem && $facilityItem->start_time && $facilityItem->end_time)
                                             <div class="shrink-0 text-right">
                                                 <p class="text-xs font-medium text-gray-600 dark:text-neutral-400">
-                                                    {{ \Carbon\Carbon::parse($item->start_time)->format('g:i') }} - {{ \Carbon\Carbon::parse($item->end_time)->format('g:i A') }}
+                                                    {{ \Carbon\Carbon::parse($facilityItem->start_time)->format('g:i') }} - {{ \Carbon\Carbon::parse($facilityItem->end_time)->format('g:i A') }}
                                                 </p>
                                             </div>
                                         @endif
@@ -241,16 +309,68 @@
 
                             </div>
                         @empty
-                            @if($activeTab === 'reservation')
-                                <div class="px-6 py-10 text-center">
-                                    <p class="text-sm text-gray-400 dark:text-neutral-500">No reservations on this day.</p>
+                            <div class="px-6 py-10 text-center">
+                                <p class="text-sm text-gray-400 dark:text-neutral-500">No facility reservations on this day.</p>
+                            </div>
+                        @endforelse
+                    @endif
+
+                    {{-- Material Requests --}}
+                    @if($activeTab === 'material')
+                        @forelse($materials as $material)
+                            <div class="flex items-stretch gap-4 px-6 py-4 hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
+
+                                <div class="flex flex-col items-center">
+                                    <div class="size-2.5 rounded-full bg-purple-400 dark:bg-purple-600 mt-1.5 shrink-0 ring-4 ring-purple-50 dark:ring-purple-900"></div>
+                                    <div class="w-px flex-1 bg-gray-100 dark:bg-neutral-700 mt-1"></div>
                                 </div>
-                            @endif
+
+                                <div class="flex-1 min-w-0 pb-2">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                <span class="inline-flex items-center py-0.5 px-2 text-[10px] font-semibold bg-purple-100 text-purple-800 rounded-full dark:bg-purple-900 dark:text-purple-300">
+                                                    MATERIAL
+                                                </span>
+                                                <span class="inline-flex items-center py-0.5 px-2 text-[10px] font-medium bg-gray-100 text-gray-600 rounded-full dark:bg-neutral-700 dark:text-neutral-300">
+                                                    {{ $material->user->department->department_name ?? 'N/A' }}
+                                                </span>
+                                            </div>
+                                            <ul class="text-sm text-gray-700 dark:text-neutral-300 space-y-0.5">
+                                                @foreach($material->items as $item)
+                                                    <li class="truncate">• {{ $item->item_name }} <span class="text-gray-400">(x{{ $item->quantity }})</span></li>
+                                                @endforeach
+                                            </ul>
+                                            <p class="text-xs text-gray-500 dark:text-neutral-400 mt-0.5 flex items-center gap-1">
+                                                <svg class="size-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                </svg>
+                                                {{ $material->user->name }}
+                                            </p>
+                                            @if($material->purpose)
+                                                <p class="text-xs text-gray-400 dark:text-neutral-500 mt-0.5 italic">
+                                                    "{{ Str::limit($material->purpose, 60) }}"
+                                                </p>
+                                            @endif
+                                        </div>
+                                        <div class="shrink-0 text-right">
+                                            <p class="text-xs text-gray-400 dark:text-neutral-500">
+                                                {{ \Carbon\Carbon::parse($material->created_at)->format('g:i A') }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        @empty
+                            <div class="px-6 py-10 text-center">
+                                <p class="text-sm text-gray-400 dark:text-neutral-500">No material requests on this day.</p>
+                            </div>
                         @endforelse
                     @endif
 
                     {{-- Both empty --}}
-                    @if($schedules->isEmpty() && $reservations->isEmpty())
+                    @if($reservations->isEmpty() && $materials->isEmpty())
                         <div class="flex flex-col items-center justify-center py-20 px-6 text-center">
                             <div class="size-14 rounded-full bg-gray-100 dark:bg-neutral-700 flex items-center justify-center mb-3">
                                 <svg class="size-7 text-gray-300 dark:text-neutral-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -266,7 +386,6 @@
                     @endif
 
                 </div>
-
             </div>
         </div>
 

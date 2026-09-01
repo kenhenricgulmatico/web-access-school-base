@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Admin;
 
-use App\Models\Schedule;
+// use App\Models\Schedule;
 use App\Models\Request as ResourceRequest;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -13,7 +13,7 @@ new #[Layout('layouts.admin')] class extends Component
     public int    $year;
     public int    $month;
     public string $selectedDate = '';
-    public string $activeTab    = 'schedule';
+    public string $activeTab    = 'reservation'; // ✅ default to reservation since schedule is disabled
 
     public function mount()
     {
@@ -72,33 +72,41 @@ new #[Layout('layouts.admin')] class extends Component
     {
         $carbon = \Carbon\Carbon::create($this->year, $this->month, 1);
 
-        // Get all day codes that have schedules
-        $schedules = Schedule::all();
-        $days      = [];
+        // ===== SCHEDULE DISABLED =====
+        // $schedules = Schedule::all();
+        // Uncomment above and the schedule blocks below to re-enable class schedule dots.
+        // ===== END SCHEDULE DISABLED =====
+
+        $days = [];
 
         for ($d = 1; $d <= $carbon->daysInMonth; $d++) {
-            $date    = \Carbon\Carbon::create($this->year, $this->month, $d);
-            $dayCode = $this->getDayCode($date->dayOfWeek);
+            $date = \Carbon\Carbon::create($this->year, $this->month, $d);
 
-            $hasSchedule = $schedules->contains(
-                fn($s) =>
-                in_array($dayCode, $this->expandDayCode($s->day_type))
-            );
+            // ===== SCHEDULE DISABLED =====
+            // $dayCode = $this->getDayCode($date->dayOfWeek);
+            // $hasSchedule = $schedules->contains(
+            //     fn($s) => in_array($dayCode, $this->expandDayCode($s->day_type))
+            // );
+            // ===== END SCHEDULE DISABLED =====
 
             $hasReservation = ResourceRequest::with('items')
                 ->where('request_type_id', 1)
                 ->where('status', 'approved')
-                ->whereHas(
-                    'items',
-                    fn($q) =>
+                ->whereHas('items', fn($q) =>
                     $q->whereDate('request_date', $date->format('Y-m-d'))
                 )
                 ->exists();
 
-            if ($hasSchedule || $hasReservation) {
+            $hasMaterial = ResourceRequest::where('request_type_id', 2)
+                ->where('status', 'approved')
+                ->whereDate('created_at', $date->format('Y-m-d'))
+                ->exists();
+
+            if ($hasReservation || $hasMaterial) {
                 $days[$date->format('Y-m-d')] = [
-                    'schedule'    => $hasSchedule,
+                    // 'schedule'    => $hasSchedule, // ===== SCHEDULE DISABLED =====
                     'reservation' => $hasReservation,
+                    'material'    => $hasMaterial,
                 ];
             }
         }
@@ -109,58 +117,66 @@ new #[Layout('layouts.admin')] class extends Component
     #[Computed]
     public function selectedDateEvents()
     {
-        if (!$this->selectedDate) return collect();
+        if (!$this->selectedDate) return [];
 
-        $date    = \Carbon\Carbon::parse($this->selectedDate);
-        $dayCode = $this->getDayCode($date->dayOfWeek);
-
-        $schedules = Schedule::all()
-            ->filter(fn($s) => in_array($dayCode, $this->expandDayCode($s->day_type)))
-            ->sortBy(fn($s) => \Carbon\Carbon::parse($s->start_time)->format('Hi'))
-            ->values();
+        // ===== SCHEDULE DISABLED =====
+        // $date    = \Carbon\Carbon::parse($this->selectedDate);
+        // $dayCode = $this->getDayCode($date->dayOfWeek);
+        // $schedules = Schedule::all()
+        //     ->filter(fn($s) => in_array($dayCode, $this->expandDayCode($s->day_type)))
+        //     ->sortBy(fn($s) => \Carbon\Carbon::parse($s->start_time)->format('Hi'))
+        //     ->values();
+        // ===== END SCHEDULE DISABLED =====
 
         $reservations = ResourceRequest::with(['user.department', 'items'])
             ->where('request_type_id', 1)
             ->where('status', 'approved')
-            ->whereHas(
-                'items',
-                fn($q) =>
+            ->whereHas('items', fn($q) =>
                 $q->whereDate('request_date', $this->selectedDate)
             )
             ->get();
 
+        $materials = ResourceRequest::with(['user.department', 'items'])
+            ->where('request_type_id', 2)
+            ->where('status', 'approved')
+            ->whereDate('created_at', $this->selectedDate)
+            ->get();
+
         return [
-            'schedules'    => $schedules,
+            // 'schedules'    => $schedules, // ===== SCHEDULE DISABLED =====
             'reservations' => $reservations,
+            'materials'    => $materials,
         ];
     }
 
-    private function getDayCode(int $dayOfWeek): string
-    {
-        return match ($dayOfWeek) {
-            0 => 'SUN',
-            1 => 'MON',
-            2 => 'TUE',
-            3 => 'WED',
-            4 => 'THU',
-            5 => 'FRI',
-            6 => 'SAT',
-            default => '',
-        };
-    }
+    // ===== SCHEDULE DISABLED =====
+    // private function getDayCode(int $dayOfWeek): string
+    // {
+    //     return match ($dayOfWeek) {
+    //         0 => 'SUN',
+    //         1 => 'MON',
+    //         2 => 'TUE',
+    //         3 => 'WED',
+    //         4 => 'THU',
+    //         5 => 'FRI',
+    //         6 => 'SAT',
+    //         default => '',
+    //     };
+    // }
 
-    private function expandDayCode(string $code): array
-    {
-        return match ($code) {
-            'MW'  => ['MON', 'WED'],
-            'TTH' => ['TUE', 'THU'],
-            'F'   => ['FRI'],
-            'SAT' => ['SAT'],
-            'M'   => ['MON'],
-            'T'   => ['TUE'],
-            'W'   => ['WED'],
-            'TH'  => ['THU'],
-            default => [],
-        };
-    }
+    // private function expandDayCode(string $code): array
+    // {
+    //     return match ($code) {
+    //         'MW'  => ['MON', 'WED'],
+    //         'TTH' => ['TUE', 'THU'],
+    //         'F'   => ['FRI'],
+    //         'SAT' => ['SAT'],
+    //         'M'   => ['MON'],
+    //         'T'   => ['TUE'],
+    //         'W'   => ['WED'],
+    //         'TH'  => ['THU'],
+    //         default => [],
+    //     };
+    // }
+    // ===== END SCHEDULE DISABLED =====
 };

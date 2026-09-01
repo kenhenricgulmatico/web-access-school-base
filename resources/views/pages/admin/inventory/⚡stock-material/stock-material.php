@@ -30,10 +30,12 @@ new #[Layout('layouts.admin')] class extends Component
     public string $remarks        = '';
 
     // Add Material Form
-    public string $resource_name    = '';
-    public string $description      = '';
-    public string $type_name        = '';
-    public int    $initial_quantity = 0;
+    public string $resource_name        = '';
+    public string $description          = '';
+    public string $type_name            = '';
+    public int    $initial_quantity     = 0;
+    public string $material_supplier    = '';
+    public string $material_unit_price  = '';
 
     public function mount(): void
     {
@@ -108,6 +110,7 @@ new #[Layout('layouts.admin')] class extends Component
             'resource_id', 'quantity_added', 'supplier', 'unit_price',
             'arrival_date', 'arrival_time', 'remarks',
             'resource_name', 'description', 'type_name', 'initial_quantity',
+            'material_supplier', 'material_unit_price',
         ]);
         $this->arrival_date = now()->format('Y-m-d');
     }
@@ -119,12 +122,9 @@ new #[Layout('layouts.admin')] class extends Component
             'quantity_added' => 'required|integer|min:1',
             'supplier'       => 'nullable|string|max:255',
             'unit_price'     => 'nullable|numeric|min:0',
-            'arrival_date'   => 'required|date',
-            'arrival_time'   => 'nullable',
-            'remarks'        => 'nullable|string|max:500',
         ]);
 
-        $resource = Resource::findOrFail($this->resource_id);
+        $resource = Resource::with('resourceType')->findOrFail($this->resource_id);
         $before   = $resource->quantity_available;
         $after    = $before + $this->quantity_added;
 
@@ -134,11 +134,11 @@ new #[Layout('layouts.admin')] class extends Component
             'quantity_added'  => $this->quantity_added,
             'quantity_before' => $before,
             'quantity_after'  => $after,
-            'supplier'        => $this->supplier ?: null,
-            'unit_price'      => $this->unit_price ?: null,
-            'arrival_date'    => $this->arrival_date,
-            'arrival_time'    => $this->arrival_time ?: null,
-            'remarks'         => $this->remarks ?: null,
+            'supplier'        => $this->supplier !== '' ? $this->supplier : ($resource->resourceType->type_name ?? 'Unspecified'),
+            'unit_price'      => $this->unit_price !== '' ? $this->unit_price : null,
+            'arrival_date'    => now()->format('Y-m-d'),
+            'arrival_time'    => now()->format('H:i'),
+            'remarks'         => $this->remarks !== '' ? $this->remarks : null,
         ]);
 
         $resource->update(['quantity_available' => $after]);
@@ -150,10 +150,12 @@ new #[Layout('layouts.admin')] class extends Component
     public function addMaterial(): void
     {
         $this->validate([
-            'resource_name'    => 'required|string|max:255',
-            'description'      => 'required|string',
-            'type_name'        => 'required|string|max:255',
-            'initial_quantity' => 'required|integer|min:0',
+            'resource_name'        => 'required|string|max:255',
+            'description'          => 'required|string',
+            'type_name'            => 'required|string|max:255',
+            'initial_quantity'     => 'required|integer|min:0',
+            'material_supplier'    => 'nullable|string|max:255',
+            'material_unit_price'  => 'nullable|numeric|min:0',
         ]);
 
         // ✅ Find or create resource type by name
@@ -176,6 +178,8 @@ new #[Layout('layouts.admin')] class extends Component
                 'quantity_added'  => $this->initial_quantity,
                 'quantity_before' => 0,
                 'quantity_after'  => $this->initial_quantity,
+                'supplier'        => $this->material_supplier !== '' ? $this->material_supplier : $resourceType->type_name,
+                'unit_price'      => $this->material_unit_price !== '' ? $this->material_unit_price : null,
                 'arrival_date'    => now()->format('Y-m-d'),
                 'remarks'         => 'Initial stock',
             ]);

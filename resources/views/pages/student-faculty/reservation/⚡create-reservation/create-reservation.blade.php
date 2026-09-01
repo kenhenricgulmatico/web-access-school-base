@@ -1,4 +1,4 @@
-<div>
+<div class="select-none">
 <div class="max-w-4xl mx-auto px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
     <div class="bg-white dark:bg-neutral-800 border rounded-xl shadow overflow-hidden">
 
@@ -85,6 +85,59 @@
                             <option value="18:00">6:00 PM</option>
                         </select>
                         @error('end_time') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+
+                {{-- MATERIALS PICKER --}}
+                <div class="border-t pt-5">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300">
+                            Materials Needed <span class="text-xs font-normal text-gray-400">(optional — e.g. bench for court)</span>
+                        </label>
+                        <button type="button"
+                            wire:click="addMaterial"
+                            class="text-xs px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition font-medium">
+                            + Add Material
+                        </button>
+                    </div>
+
+                    @if(empty($materials))
+                        <p class="text-xs text-gray-400 italic">No materials added. Click "+ Add Material" if you need equipment/supplies (e.g. bench, projector).</p>
+                    @endif
+
+                    <div class="space-y-3">
+                        @foreach($materials as $index => $material)
+                            <div wire:key="material-{{ $index }}" class="flex items-start gap-2 bg-red-50/50 border border-red-100 rounded-lg p-3">
+                                <div class="flex-1">
+                                    <select wire:model="materials.{{ $index }}.resource_id"
+                                        class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
+                                        <option value="">Select material</option>
+                                        @foreach($availableResources as $resource)
+                                            <option value="{{ $resource->id }}">
+                                                {{ $resource->resource_name }} ({{ $resource->quantity_available }} available)
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('materials.' . $index . '.resource_id') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                                </div>
+
+                                <div class="w-24">
+                                    <input type="number"
+                                        min="1"
+                                        wire:model="materials.{{ $index }}.quantity"
+                                        placeholder="Qty"
+                                        class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
+                                    @error('materials.' . $index . '.quantity') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                                </div>
+
+                                <button type="button"
+                                    wire:click="removeMaterial({{ $index }})"
+                                    class="mt-2 text-gray-400 hover:text-red-600 transition"
+                                    title="Remove">
+                                    ✕
+                                </button>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
 

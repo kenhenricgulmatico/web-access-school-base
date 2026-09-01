@@ -19,7 +19,7 @@
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Requestor</th>
                 <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Department</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Facility</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Facility / Materials</th>
                 <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Date</th>
                 <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Time</th>
                 <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Purpose</th>
@@ -29,7 +29,11 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
               @forelse($this->reservations as $reservation)
-                <tr class="hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
+                @php
+                    $facilityItem  = $reservation->items->firstWhere('resource_id', null);
+                    $materialItems = $reservation->items->whereNotNull('resource_id');
+                @endphp
+                <tr class="hover:bg-gray-50 dark:hover:bg-neutral-700 transition align-top">
 
                   {{-- Requestor --}}
                   <td class="px-6 py-3">
@@ -42,29 +46,39 @@
                     {{ $reservation->user->department->department_name ?? 'N/A' }}
                   </td>
 
-                  {{-- Facility --}}
+                  {{-- Facility / Materials --}}
                   <td class="px-6 py-3 text-sm text-gray-700 dark:text-neutral-300">
-                    @foreach($reservation->items as $item)
-                      <p>{{ $item->item_name ?? 'N/A' }}</p>
-                    @endforeach
+                    @if($facilityItem)
+                        <p class="font-semibold text-gray-800 dark:text-neutral-200">{{ $facilityItem->item_name }}</p>
+                    @endif
+
+                    @if($materialItems->isNotEmpty())
+                        <div class="mt-1.5 space-y-0.5">
+                            @foreach($materialItems as $material)
+                                <p class="text-xs font-medium text-red-600 flex items-center gap-1.5">
+                                    <span class="w-1 h-1 rounded-full bg-red-500 inline-block"></span>
+                                    {{ $material->item_name }}
+                                    <span class="text-red-400">x{{ $material->quantity }}</span>
+                                </p>
+                            @endforeach
+                        </div>
+                    @endif
                   </td>
 
                   {{-- Date --}}
                   <td class="px-6 py-3 text-sm text-gray-600 dark:text-neutral-400">
-                    @foreach($reservation->items as $item)
-                      <p>{{ \Carbon\Carbon::parse($item->request_date)->format('M d, Y') }}</p>
-                    @endforeach
+                    @if($facilityItem)
+                        {{ \Carbon\Carbon::parse($facilityItem->request_date)->format('M d, Y') }}
+                    @endif
                   </td>
 
                   {{-- Time --}}
                   <td class="px-6 py-3 text-sm text-gray-600 dark:text-neutral-400">
-                    @foreach($reservation->items as $item)
-                      @if($item->start_time && $item->end_time)
-                        <p>{{ \Carbon\Carbon::parse($item->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($item->end_time)->format('h:i A') }}</p>
-                      @else
-                        <p class="text-gray-400">N/A</p>
-                      @endif
-                    @endforeach
+                    @if($facilityItem && $facilityItem->start_time && $facilityItem->end_time)
+                        {{ \Carbon\Carbon::parse($facilityItem->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($facilityItem->end_time)->format('h:i A') }}
+                    @else
+                        <span class="text-gray-400">N/A</span>
+                    @endif
                   </td>
 
                   {{-- Purpose --}}

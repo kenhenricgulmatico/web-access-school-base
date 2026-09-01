@@ -44,7 +44,10 @@
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
                             @forelse($this->requests as $index => $request)
-                                <tr class="hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
+                                @php
+                                    $isMaterial = $request->request_type_id == 2;
+                                @endphp
+                                <tr class="hover:bg-gray-50 dark:hover:bg-neutral-700 transition align-top">
 
                                     <td class="px-6 py-4 text-sm text-gray-500">{{ $index + 1 }}</td>
 
@@ -52,16 +55,25 @@
                                     <td class="px-6 py-4">
                                         <span class="px-2 py-1 text-xs font-medium rounded-full
                                             @if($request->request_type_id == 1) bg-green-100 text-green-700
-                                            @else bg-purple-100 text-purple-700 @endif">
+                                            @else bg-red-100 text-red-700 @endif">
                                             {{ $request->requestType->type_name ?? 'N/A' }}
                                         </span>
                                     </td>
 
                                     {{-- Items --}}
                                     <td class="px-6 py-4">
-                                        <ul class="text-xs text-gray-600 dark:text-neutral-400 space-y-1">
+                                        <ul class="text-xs space-y-1 {{ $isMaterial ? 'text-red-600' : 'text-gray-600 dark:text-neutral-400' }}">
                                             @foreach($request->items as $item)
-                                                <li>• {{ $item->item_name ?? 'N/A' }}
+                                                <li class="flex items-center gap-1.5 flex-wrap">
+                                                    @if($isMaterial)
+                                                        <span class="w-1 h-1 rounded-full bg-red-500 inline-block"></span>
+                                                    @else
+                                                        <span>•</span>
+                                                    @endif
+                                                    <span class="font-medium">{{ $item->item_name ?? 'N/A' }}</span>
+                                                    @if($isMaterial)
+                                                        <span class="text-red-400">x{{ $item->quantity }}</span>
+                                                    @endif
                                                     @if($item->request_date)
                                                         <span class="text-gray-400">({{ \Carbon\Carbon::parse($item->request_date)->format('M d, Y') }})</span>
                                                     @endif
@@ -221,8 +233,8 @@
 
             {{-- Material Fields --}}
             @if($request_type_id == 2)
-            <div class="space-y-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
-                <p class="text-sm font-semibold text-blue-700 dark:text-blue-300">Materials Needed</p>
+            <div class="space-y-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-700">
+                <p class="text-sm font-semibold text-red-700 dark:text-red-300">Materials Needed</p>
 
                 <div class="space-y-3">
                     @foreach($items as $index => $item)
@@ -252,7 +264,7 @@
                 </div>
 
                 <button type="button" wire:click="addItem"
-                    class="mt-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    class="mt-2 px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
                     + Add Item
                 </button>
             </div>

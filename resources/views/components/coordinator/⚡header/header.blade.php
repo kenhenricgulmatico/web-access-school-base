@@ -2,32 +2,32 @@
 <!-- ========== HEADER ========== -->
 <header class="fixed top-0 inset-x-0 flex flex-wrap md:justify-start md:flex-nowrap z-48 lg:z-61 w-full bg-navbar-2 text-sm py-2.5"
     wire:poll.5s="loadNotifications">
-    <nav class="px-4 sm:px-5.5 flex basis-full items-center w-full mx-auto">
-        <div class="w-full flex items-center gap-x-1.5">
+    <nav class="px-3 sm:px-5.5 flex basis-full items-center w-full mx-auto">
+        <div class="w-full flex items-center gap-x-1 sm:gap-x-1.5">
 
             {{-- Left: Logo + Sidebar Toggle --}}
-            <ul class="flex items-center gap-2.5">
-                <li class="inline-flex items-center gap-2.5 relative pe-2.5 last:pe-0 last:after:hidden after:absolute after:top-1/2 after:end-0 after:inline-block after:w-px after:h-3.5 after:bg-navbar-2-divider after:rounded-full after:-translate-y-1/2 after:rotate-12">
+            <ul class="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+                <li class="inline-flex items-center gap-1.5 sm:gap-2.5 relative pe-1.5 sm:pe-2.5 last:pe-0 last:after:hidden after:absolute after:top-1/2 after:end-0 after:inline-block after:w-px after:h-3.5 after:bg-navbar-2-divider after:rounded-full after:-translate-y-1/2 after:rotate-12 min-w-0">
 
                     {{-- CSAV Logo, seal-badge treatment --}}
                     <a href="/coordinator/dashboard"
                         class="shrink-0 inline-flex justify-center items-center rounded-full bg-white ring-2 ring-[#D4A537]/60 p-1 shadow-sm hover:ring-[#D4A537] transition focus:outline-hidden focus:opacity-80"
                         aria-label="CSAV">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/LogoCSAV.png"
-                            alt="CSAV Logo" class="h-6 w-6 object-contain" />
+                            alt="CSAV Logo" class="h-5 w-5 sm:h-6 sm:w-6 object-contain" />
                     </a>
 
-                    <div class="hidden sm:flex flex-col leading-tight ms-0.5">
-                        <span class="text-sm font-semibold text-foreground" style="font-family: 'Fraunces', serif;">
+                    <div class="hidden md:flex flex-col leading-tight ms-0.5 min-w-0">
+                        <span class="text-sm font-semibold text-foreground truncate" style="font-family: 'Fraunces', serif;">
                             Colegio de Sta. Ana de Victorias
                         </span>
-                        <span class="text-[10px] uppercase tracking-[0.15em] text-[#D4A537] font-medium">
+                        <span class="text-[10px] uppercase tracking-[0.15em] text-[#D4A537] font-medium truncate">
                             Program Head Portal
                         </span>
                     </div>
 
                     <button type="button"
-                        class="p-1.5 size-7.5 inline-flex items-center gap-x-1 text-xs rounded-md border border-transparent text-foreground hover:bg-surface-hover disabled:opacity-50 disabled:pointer-events-none focus:outline-hidden focus:bg-surface-focus ms-1"
+                        class="p-1.5 size-7.5 inline-flex items-center gap-x-1 text-xs rounded-md border border-transparent text-foreground hover:bg-surface-hover disabled:opacity-50 disabled:pointer-events-none focus:outline-hidden focus:bg-surface-focus ms-0.5 sm:ms-1 shrink-0"
                         aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-pro-sidebar"
                         data-hs-overlay="#hs-pro-sidebar">
                         <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -44,11 +44,11 @@
 
                 {{-- Department Badge (coordinator's assigned department) --}}
                 @if (Auth::user()->department)
-                    <li class="hidden md:inline-flex items-center gap-1.5 px-3 py-1 bg-[#123524]/5 border border-[#123524]/10 rounded-full">
+                    <li class="hidden lg:inline-flex items-center gap-1.5 px-3 py-1 bg-[#123524]/5 border border-[#123524]/10 rounded-full shrink-0">
                         <svg class="size-3.5 text-[#123524]/60" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
                         </svg>
-                        <span class="text-xs font-medium text-[#123524]">
+                        <span class="text-xs font-medium text-[#123524] whitespace-nowrap">
                             {{ Auth::user()->department->department_name }}
                         </span>
                     </li>
@@ -56,7 +56,7 @@
             </ul>
 
             {{-- Right: Notifications + User Dropdown --}}
-            <ul class="flex flex-row items-center gap-x-2 ms-auto">
+            <ul class="flex flex-row items-center gap-x-1 sm:gap-x-2 ms-auto shrink-0">
 
                 {{-- Notification Bell --}}
                 <li x-data="{
@@ -69,9 +69,9 @@
 
                     {{-- Bell Button --}}
                     <button @click="open = !open"
-                        class="relative flex justify-center items-center size-9 text-sm text-navbar-2-nav-foreground rounded-full hover:bg-navbar-2-nav-hover focus:outline-hidden focus:bg-navbar-2-nav-focus transition"
+                        class="relative flex justify-center items-center size-8 sm:size-9 text-sm text-navbar-2-nav-foreground rounded-full hover:bg-navbar-2-nav-hover focus:outline-hidden focus:bg-navbar-2-nav-focus transition"
                         aria-label="Notifications">
-                        <svg class="shrink-0 size-5" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        <svg class="shrink-0 size-4.5 sm:size-5" xmlns="http://www.w3.org/2000/svg" fill="none"
                             stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
@@ -82,7 +82,7 @@
                         </span>
                     </button>
 
-                    {{-- Dropdown Panel --}}
+                    {{-- Dropdown Panel — fixed & centered on mobile, anchored on sm+ --}}
                     <div x-show="open"
                         @click.outside="open = false"
                         x-transition:enter="transition ease-out duration-200"
@@ -91,29 +91,29 @@
                         x-transition:leave="transition ease-in duration-150"
                         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                         x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
-                        class="absolute right-0 top-full mt-2 w-96 bg-white dark:bg-[#16281F] border border-[#E4E1D8] dark:border-[#2A4B3A] rounded-2xl shadow-2xl z-50 overflow-hidden"
+                        class="fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 top-16 sm:top-full sm:mt-2 w-auto sm:w-96 max-w-full bg-white dark:bg-[#16281F] border border-[#E4E1D8] dark:border-[#2A4B3A] rounded-2xl shadow-2xl z-50 overflow-hidden"
                         style="display: none;">
 
                         {{-- Header --}}
                         <div class="flex items-center justify-between px-4 py-3 bg-[#FAF7EF] dark:bg-[#0E1A14] border-b border-[#E4E1D8] dark:border-[#2A4B3A]">
-                            <div class="flex items-center gap-2">
-                                <svg class="size-4 text-[#1C6B45] dark:text-[#7FBF8E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <svg class="size-4 text-[#1C6B45] dark:text-[#7FBF8E] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                                 </svg>
-                                <h3 class="text-sm font-semibold text-[#123524] dark:text-white" style="font-family: 'Fraunces', serif;">Pending Requests</h3>
+                                <h3 class="text-sm font-semibold text-[#123524] dark:text-white truncate" style="font-family: 'Fraunces', serif;">Pending Requests</h3>
                                 <span x-show="unreadCount > 0"
-                                    class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-[#B8352A] rounded-full"
+                                    class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-[#B8352A] rounded-full shrink-0"
                                     x-text="unreadCount"></span>
                             </div>
                             <button x-show="unreadCount > 0"
                                 @click="markAllAsRead()"
-                                class="text-xs text-[#1C6B45] hover:text-[#123524] dark:text-[#7FBF8E] font-medium hover:underline transition">
+                                class="text-xs text-[#1C6B45] hover:text-[#123524] dark:text-[#7FBF8E] font-medium hover:underline transition shrink-0 whitespace-nowrap ms-2">
                                 Mark all read
                             </button>
                         </div>
 
                         {{-- Notifications List --}}
-                        <div class="max-h-80 overflow-y-auto divide-y divide-[#E4E1D8] dark:divide-[#2A4B3A]">
+                        <div class="max-h-[60vh] sm:max-h-80 overflow-y-auto divide-y divide-[#E4E1D8] dark:divide-[#2A4B3A]">
 
                             <template x-for="notification in notifications" :key="notification.id">
                                 <div class="px-4 py-3 flex items-start gap-3 transition-colors"
@@ -153,9 +153,9 @@
                                                 Pending
                                             </span>
                                         </div>
-                                        <p class="text-sm font-medium text-gray-800 dark:text-gray-200"
+                                        <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate"
                                             x-text="notification.requester"></p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400"
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 truncate"
                                             x-text="'Dept: ' + notification.department"></p>
                                         <p class="text-xs text-gray-500 dark:text-gray-400 truncate"
                                             x-text="notification.purpose"></p>
@@ -167,7 +167,7 @@
                             </template>
 
                             {{-- Empty State --}}
-                            <div x-show="notifications.length === 0" class="py-12 text-center">
+                            <div x-show="notifications.length === 0" class="py-10 sm:py-12 text-center px-4">
                                 <div class="w-14 h-14 rounded-full bg-[#FAF7EF] dark:bg-[#0E1A14] flex items-center justify-center mx-auto mb-3">
                                     <svg class="size-7 text-[#B8862A]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
@@ -181,7 +181,7 @@
 
                         {{-- Footer --}}
                         <div x-show="notifications.length > 0"
-                            class="px-4 py-3 bg-[#FAF7EF] dark:bg-[#0E1A14] border-t border-[#E4E1D8] dark:border-[#2A4B3A] flex gap-3 justify-center">
+                            class="px-4 py-3 bg-[#FAF7EF] dark:bg-[#0E1A14] border-t border-[#E4E1D8] dark:border-[#2A4B3A] flex flex-wrap gap-3 justify-center">
                             <a href="/coordinator/facility"
                                 class="text-xs font-medium text-[#1C6B45] hover:text-[#123524] dark:text-[#7FBF8E] hover:underline transition">
                                 View Facility →
@@ -201,15 +201,15 @@
                     <div class="hs-dropdown inline-flex [--strategy:absolute] [--auto-close:inside] [--placement:bottom-right] relative text-start">
 
                         <button id="hs-coordinator-user-dropdown" type="button"
-                            class="p-0.5 inline-flex shrink-0 items-center gap-x-2 text-start rounded-full hover:bg-navbar-nav-hover focus:outline-hidden focus:bg-navbar-nav-focus"
+                            class="p-0.5 inline-flex shrink-0 items-center gap-x-1.5 sm:gap-x-2 text-start rounded-full hover:bg-navbar-nav-hover focus:outline-hidden focus:bg-navbar-nav-focus"
                             aria-haspopup="menu" aria-expanded="false" aria-label="User Dropdown">
-                            <div class="w-8 h-8 rounded-full bg-[#123524] text-white flex items-center justify-center text-sm font-bold ring-2 ring-[#D4A537]/50">
+                            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#123524] text-white flex items-center justify-center text-xs sm:text-sm font-bold ring-2 ring-[#D4A537]/50 shrink-0">
                                 {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                             </div>
-                            <div class="hidden sm:block text-left">
-                                <span class="text-xs font-medium text-foreground block leading-tight">{{ Auth::user()->name }}</span>
+                            <div class="hidden md:block text-left min-w-0">
+                                <span class="text-xs font-medium text-foreground block leading-tight truncate max-w-[120px]">{{ Auth::user()->name }}</span>
                             </div>
-                            <svg class="shrink-0 size-3 text-muted-foreground-1 hidden sm:block"
+                            <svg class="shrink-0 size-3 text-muted-foreground-1 hidden md:block"
                                 xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor"
                                 stroke-width="2" viewBox="0 0 24 24">
                                 <path d="m6 9 6 6 6-6" />
@@ -217,18 +217,18 @@
                         </button>
 
                         {{-- Dropdown Menu --}}
-                        <div class="hs-dropdown-menu hs-dropdown-open:opacity-100 w-64 transition-[opacity,margin] duration opacity-0 hidden z-20 bg-dropdown border border-dropdown-line rounded-xl shadow-xl overflow-hidden"
+                        <div class="hs-dropdown-menu hs-dropdown-open:opacity-100 w-64 max-w-[calc(100vw-1.5rem)] transition-[opacity,margin] duration opacity-0 hidden z-20 bg-dropdown border border-dropdown-line rounded-xl shadow-xl overflow-hidden"
                             role="menu" aria-orientation="vertical" aria-labelledby="hs-coordinator-user-dropdown">
 
                             {{-- User Info --}}
                             <div class="py-3.5 px-3.5 border-b border-dropdown-divider bg-gradient-to-br from-[#123524]/[0.04] to-[#D4A537]/[0.04]">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-[#123524] text-white flex items-center justify-center text-sm font-bold ring-2 ring-[#D4A537]/50">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-10 h-10 rounded-full bg-[#123524] text-white flex items-center justify-center text-sm font-bold ring-2 ring-[#D4A537]/50 shrink-0">
                                         {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                                     </div>
-                                    <div>
-                                        <p class="text-sm font-semibold text-foreground">{{ Auth::user()->name }}</p>
-                                        <p class="text-xs text-muted-foreground-1">{{ Auth::user()->email }}</p>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-semibold text-foreground truncate">{{ Auth::user()->name }}</p>
+                                        <p class="text-xs text-muted-foreground-1 truncate">{{ Auth::user()->email }}</p>
                                         <div class="flex items-center gap-1.5 mt-1">
                                             <span class="text-[10px] uppercase tracking-wide text-[#B8862A] font-semibold">
                                                 {{ Auth::user()->roles->first()->name ?? 'No Role' }}
