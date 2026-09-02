@@ -110,7 +110,7 @@
                         </button>
 
                         {{-- Dropdown Menu --}}
-                        <div class="hs-dropdown-menu hs-dropdown-open:opacity-100 w-60 sm:w-64 transition-[opacity,margin] duration opacity-0 hidden z-20 bg-dropdown border border-dropdown-line rounded-xl shadow-xl overflow-hidden"
+                        <div class="hs-dropdown-menu hs-dropdown-open:opacity-100 w-60 sm:w-64 transition-[opacity,margin] duration opacity-0 hidden z-20 bg-gray-50 border border-dropdown-line rounded-xl shadow-xl overflow-hidden"
                             role="menu" aria-orientation="vertical" aria-labelledby="hs-admin-user-dropdown">
 
                             {{-- User Info --}}
