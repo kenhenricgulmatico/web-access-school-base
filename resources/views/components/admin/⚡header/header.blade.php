@@ -205,7 +205,7 @@
                             </svg>
                         </button>
 
-                        <div class="hs-dropdown-menu hs-dropdown-open:opacity-100 w-60 transition-[opacity,margin] duration opacity-0 hidden z-20 bg-dropdown border border-dropdown-line rounded-xl shadow-xl"
+                        <div class="hs-dropdown-menu hs-dropdown-open:opacity-100 w-60 transition-[opacity,margin] duration opacity-0 hidden z-20 bg-gray-100 border border-dropdown-line rounded-xl shadow-xl"
                             role="menu" aria-orientation="vertical" aria-labelledby="hs-admin-user-dropdown">
 
                             <div class="py-3 px-3.5 border-b border-dropdown-divider">
