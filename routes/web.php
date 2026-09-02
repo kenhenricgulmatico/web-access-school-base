@@ -68,6 +68,9 @@ Route::middleware(['auth', 'program head', 'department'])->prefix('programHead')
     //audit
     Route::livewire('/audit', 'pages::coordinator.audit.audit-log')->name('coordinator.audit');
 
+    //pofile
+    Route::livewire('/profile', 'pages::coordinator.profile')->name('coordinator.profile');
+
     //student|faculty
     Route::livewire('/view-student', 'pages::coordinator.student.view-student')->name('programHead.students');
 });

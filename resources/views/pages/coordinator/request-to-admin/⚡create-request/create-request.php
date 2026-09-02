@@ -211,6 +211,6 @@ new #[Layout('layouts.coordinator')] class extends Component
 
     public function cancel()
     {
-        return redirect()->route('coordinator.request-to-admin.edit-request');
+        return redirect()->route('coordinator.request-to-admin.view-request');
     }
 };

@@ -6,15 +6,15 @@ hs-overlay-open:translate-x-0 lg:hs-overlay-layout-open:translate-x-0
 w-60
 hidden
 fixed inset-y-0 z-60 start-0
-bg-sidebar-2
+bg-white border-r border-gray-200
 lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
     role="dialog" tabindex="-1" aria-label="Sidebar">
     <div class="lg:pt-13 relative flex flex-col h-full max-h-full">
-        <nav class="p-3 size-full flex flex-col overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-none [&::-webkit-scrollbar-track]:bg-scrollbar-track [&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb">
+        <nav class="p-3 size-full flex flex-col overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-none [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-thumb]:bg-gray-300">
 
             <div class="lg:hidden mb-2 flex items-center justify-between">
                 <button type="button"
-                    class="p-1.5 size-7.5 inline-flex items-center gap-x-1 text-xs rounded-md text-muted-foreground-1 disabled:opacity-50 disabled:pointer-events-none focus:outline-hidden"
+                    class="p-1.5 size-7.5 inline-flex items-center gap-x-1 text-xs rounded-md text-gray-500 disabled:opacity-50 disabled:pointer-events-none focus:outline-hidden hover:bg-gray-100"
                     aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-pro-sidebar"
                     data-hs-overlay="#hs-pro-sidebar">
                     <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -28,11 +28,11 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
             </div>
 
             {{-- Home --}}
-            <div class="pt-3 mt-3 flex flex-col border-t border-sidebar-2-divider first:border-t-0 first:pt-0 first:mt-0">
-                <span class="block ps-2.5 mb-2 font-medium text-xs uppercase text-muted-foreground-1">Home</span>
+            <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 first:border-t-0 first:pt-0 first:mt-0">
+                <span class="block ps-2.5 mb-2 font-medium text-xs uppercase text-gray-500">Home</span>
                 <ul class="flex flex-col gap-y-1">
                     <li>
-                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-sidebar-2-nav-foreground rounded-lg hover:bg-sidebar-2-nav-hover focus:outline-hidden focus:bg-sidebar-2-nav-focus"
+                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-gray-700 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-200"
                             href="/admin/dashboard">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <rect x="3" y="3" width="7" height="7"/>
@@ -47,11 +47,11 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
             </div>
 
             {{-- Manage Request --}}
-            <div class="pt-3 mt-3 flex flex-col border-t border-sidebar-2-divider first:border-t-0 first:pt-0 first:mt-0">
-                <span class="block ps-2.5 mb-2 font-medium text-xs uppercase text-muted-foreground-1">Manage Request</span>
+            <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 first:border-t-0 first:pt-0 first:mt-0">
+                <span class="block ps-2.5 mb-2 font-medium text-xs uppercase text-gray-500">Manage Request</span>
                 <ul class="flex flex-col gap-y-1">
                     <li>
-                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-sidebar-2-nav-foreground rounded-lg hover:bg-sidebar-2-nav-hover focus:outline-hidden focus:bg-sidebar-2-nav-focus"
+                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-gray-700 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-200"
                             href="/admin/manage-coordinator">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -66,11 +66,11 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
             </div>
 
             {{-- Inventory / Stocks --}}
-            <div class="pt-3 mt-3 flex flex-col border-t border-sidebar-2-divider first:border-t-0 first:pt-0 first:mt-0">
-                <span class="block ps-2.5 mb-2 font-medium text-xs uppercase text-muted-foreground-1">Inventory</span>
+            <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 first:border-t-0 first:pt-0 first:mt-0">
+                <span class="block ps-2.5 mb-2 font-medium text-xs uppercase text-gray-500">Inventory</span>
                 <ul class="flex flex-col gap-y-1">
                     <li>
-                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-sidebar-2-nav-foreground rounded-lg hover:bg-sidebar-2-nav-hover focus:outline-hidden focus:bg-sidebar-2-nav-focus"
+                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-gray-700 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-200"
                             href="/admin/inventory-stock-material">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
@@ -81,7 +81,7 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
                         </a>
                     </li>
                     <li>
-                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-sidebar-2-nav-foreground rounded-lg hover:bg-sidebar-2-nav-hover focus:outline-hidden focus:bg-sidebar-2-nav-focus"
+                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-gray-700 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-200"
                             href="/admin/inventory-stock-history">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path d="M3 3h18v18H3z"/>
@@ -94,24 +94,11 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
             </div>
 
             {{-- Facility Calendar --}}
-            <div class="pt-3 mt-3 flex flex-col border-t border-sidebar-2-divider first:border-t-0 first:pt-0 first:mt-0">
-                <span class="block ps-2.5 mb-2 font-medium text-xs uppercase text-muted-foreground-1">Schedule</span>
+            <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 first:border-t-0 first:pt-0 first:mt-0">
+                <span class="block ps-2.5 mb-2 font-medium text-xs uppercase text-gray-500">Schedule</span>
                 <ul class="flex flex-col gap-y-1">
                     <li>
-                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-sidebar-2-nav-foreground rounded-lg hover:bg-sidebar-2-nav-hover focus:outline-hidden focus:bg-sidebar-2-nav-focus"
-                            href="/admin/schedule">
-                            <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                <line x1="16" y1="2" x2="16" y2="6"/>
-                                <line x1="8" y1="2" x2="8" y2="6"/>
-                                <line x1="3" y1="10" x2="21" y2="10"/>
-                            </svg>
-                            Schedule Calendar
-                        </a>
-                    </li>
-
-                    <li>
-                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-sidebar-2-nav-foreground rounded-lg hover:bg-sidebar-2-nav-hover focus:outline-hidden focus:bg-sidebar-2-nav-focus"
+                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-gray-700 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-200"
                             href="/admin/calendar">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -126,11 +113,11 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
             </div>
 
             {{-- Management --}}
-            <div class="pt-3 mt-3 flex flex-col border-t border-sidebar-2-divider first:border-t-0 first:pt-0 first:mt-0">
-                <span class="block ps-2.5 mb-2 font-medium text-xs uppercase text-muted-foreground-1">Management</span>
+            <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 first:border-t-0 first:pt-0 first:mt-0">
+                <span class="block ps-2.5 mb-2 font-medium text-xs uppercase text-gray-500">Management</span>
                 <ul class="flex flex-col gap-y-1">
                     <li>
-                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-sidebar-2-nav-foreground rounded-lg hover:bg-sidebar-2-nav-hover focus:outline-hidden focus:bg-sidebar-2-nav-focus"
+                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-gray-700 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-200"
                             href="/admin/users">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -145,11 +132,11 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
             </div>
 
             {{-- System --}}
-            <div class="pt-3 mt-3 flex flex-col border-t border-sidebar-2-divider first:border-t-0 first:pt-0 first:mt-0">
-                <span class="block ps-2.5 mb-2 font-medium text-xs uppercase text-muted-foreground-1">System</span>
+            <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 first:border-t-0 first:pt-0 first:mt-0">
+                <span class="block ps-2.5 mb-2 font-medium text-xs uppercase text-gray-500">System</span>
                 <ul class="flex flex-col gap-y-1">
                     <li>
-                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-sidebar-2-nav-foreground rounded-lg hover:bg-sidebar-2-nav-hover focus:outline-hidden focus:bg-sidebar-2-nav-focus"
+                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-gray-700 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-200"
                             href="/admin/audit-logs">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -162,16 +149,16 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
             </div>
 
             {{-- Mobile Others --}}
-            <div class="pt-3 mt-3 lg:hidden flex flex-col border-t border-sidebar-2-divider first:border-t-0 first:pt-0 first:mt-0">
-                <span class="block ps-2.5 mb-2 font-medium text-xs uppercase text-muted-foreground-1">Others</span>
+            <div class="pt-3 mt-3 lg:hidden flex flex-col border-t border-gray-200 first:border-t-0 first:pt-0 first:mt-0">
+                <span class="block ps-2.5 mb-2 font-medium text-xs uppercase text-gray-500">Others</span>
                 <ul class="flex flex-col gap-y-1">
                     <li>
-                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-sidebar-2-nav-foreground rounded-lg hover:bg-sidebar-2-nav-hover focus:outline-hidden focus:bg-sidebar-2-nav-focus" href="#">
+                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-gray-700 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-200" href="#">
                             Docs
                         </a>
                     </li>
                     <li>
-                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-sidebar-2-nav-foreground rounded-lg hover:bg-sidebar-2-nav-hover focus:outline-hidden focus:bg-sidebar-2-nav-focus" href="#">
+                        <a class="w-full flex items-center gap-x-2 py-2 px-2.5 text-sm text-gray-700 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-200" href="#">
                             API
                         </a>
                     </li>

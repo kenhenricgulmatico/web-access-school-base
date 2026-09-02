@@ -1,13 +1,10 @@
 <?php
 
-namespace App\Livewire\StudentFaculty;
-
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new #[Layout('layouts.student-faculty')] class extends Component
+new #[Layout('layouts.coordinator')] class extends Component
 {
     public $name;
     public $email;
@@ -49,22 +46,26 @@ new #[Layout('layouts.student-faculty')] class extends Component
     ];
 
     public function updateProfile()
-{
-    $this->validate();
+    {
+        $this->validate();
 
-    $user = Auth::user();
-    $data = ['name' => $this->name, 'email' => $this->email];
+        $user = Auth::user();
+        $data = [
+            'name' => $this->name,
+            'email' => $this->email,
+        ];
 
-    if ($this->new_password) {
-        $data['password'] = $this->new_password;
+        if ($this->new_password) {
+            // plain value — the User model's 'hashed' cast hashes it once on save
+            $data['password'] = $this->new_password;
+        }
+
+        $user->update($data);
+
+        if ($this->new_password) {
+            $this->reset(['current_password', 'new_password', 'new_password_confirmation']);
+        }
+
+        session()->flash('message', 'Profile updated successfully.');
     }
-
-    $user->update($data);
-
-    if ($this->new_password) {
-        $this->reset(['current_password', 'new_password', 'new_password_confirmation']);
-    }
-
-    session()->flash('message', 'Profile updated successfully.');
-}
 };

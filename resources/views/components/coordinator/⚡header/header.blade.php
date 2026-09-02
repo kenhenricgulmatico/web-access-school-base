@@ -1,6 +1,6 @@
 <div class="select-none">
 <!-- ========== HEADER ========== -->
-<header class="fixed top-0 inset-x-0 flex flex-wrap md:justify-start md:flex-nowrap z-48 lg:z-61 w-full bg-navbar-2 text-sm py-2.5"
+<header class="fixed top-0 inset-x-0 flex flex-wrap md:justify-start md:flex-nowrap z-[48] lg:z-[61] w-full bg-navbar-2 text-sm py-2.5"
     wire:poll.5s="loadNotifications">
     <nav class="px-3 sm:px-5.5 flex basis-full items-center w-full mx-auto">
         <div class="w-full flex items-center gap-x-1 sm:gap-x-1.5">

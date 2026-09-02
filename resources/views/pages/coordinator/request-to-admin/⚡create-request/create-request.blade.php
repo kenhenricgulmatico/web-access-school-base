@@ -6,7 +6,7 @@
         <div class="px-6 py-4 border-b">
             <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">Create Request to Admin</h2>
             <p class="text-sm text-gray-600 dark:text-neutral-400">Submit a facility reservation or material request</p>
-        </div>
+        </div>  
 
         <div class="p-6">
 
