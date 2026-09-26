@@ -13,7 +13,7 @@ Route::livewire('/privacy', 'pages::privacy')->name('privacy');
 Route::livewire('/printable', 'auth::print.print-receipt')->name('printable.receipt');
 
 
-Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'approved', 'admin'])->prefix('admin')->group(function () {
     Route::livewire('/dashboard', 'pages::admin.dashboard')->name('admin.dashboard');
     Route::livewire('/facility', 'pages::admin.reservation-facility')->name('admin.facility');
     Route::livewire('/material', 'pages::admin.reservation-material')->name('admin.material');
@@ -54,7 +54,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 });
 
 
-Route::middleware(['auth', 'program head', 'department'])->prefix('programHead')->group(function () {
+Route::middleware(['auth', 'approved', 'program head', 'department'])->prefix('programHead')->group(function () {
     Route::livewire('/dashboard', 'pages::coordinator.dashboard')->name('coordinator.dashboard');
 
     Route::livewire('/facility', 'pages::coordinator.reservation-facility')->name('coordinator.facility');
@@ -83,7 +83,7 @@ Route::middleware(['auth', 'program head', 'department'])->prefix('programHead')
     Route::livewire('/view-student', 'pages::coordinator.student.view-student')->name('programHead.students');
 });
 
-Route::middleware(['auth', 'role:faculty|student', 'department'])->prefix('portal')->group(function () {
+Route::middleware(['auth', 'approved', 'role:faculty|student', 'department'])->prefix('portal')->group(function () {
     Route::livewire('/dashboard', 'pages::student-faculty.dashbaord')->name('portal.dashboard');
     //Create reservation
     Route::livewire('/reservation', 'pages::student-faculty.reservation.view-reservation')->name('portal.reservation');

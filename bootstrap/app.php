@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\ApprovedUserMiddleware;
 use App\Http\Middleware\DepartmentMiddleware;
 use App\Http\Middleware\FacultyMiddleware;
 use App\Http\Middleware\ProgramHeadMiddleware;
@@ -28,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'student' => StudentMiddleware::class,
             'program head' => ProgramHeadMiddleware::class,
             'department' => DepartmentMiddleware::class,
+            'approved'     => ApprovedUserMiddleware::class,
             'role' => RoleMiddleware::class,
         ]);
     })
