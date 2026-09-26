@@ -158,7 +158,6 @@
                             <span class="px-2.5 py-1 text-xs font-medium rounded-full shrink-0
                                 {{ $status === 'approved' ? 'bg-[#1C6B45]/10 text-[#1C6B45] dark:bg-[#1C6B45]/25 dark:text-[#7FBF8E]' : '' }}
                                 {{ $status === 'pending' ? 'bg-[#D4A537]/15 text-[#B8862A]' : '' }}
-                                {{ $status === 'submitted' ? 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300' : '' }}
                                 {{ $status === 'rejected' ? 'bg-[#B8352A]/10 text-[#B8352A]' : '' }}">
                                 {{ ucfirst($status) }}
                             </span>

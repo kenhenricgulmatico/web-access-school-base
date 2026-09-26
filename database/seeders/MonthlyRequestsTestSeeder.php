@@ -64,7 +64,7 @@ class MonthlyRequestsTestSeeder extends Seeder
                         'department_id' => $deptId,
                         'request_type_id' => fake()->randomElement([1, 2]),
                         'purpose' => fake()->sentence(4),
-                        'status' => fake()->randomElement(['pending', 'coordinator_review', 'admin_review', 'approved', 'rejected']),
+                        'status' => fake()->randomElement(['pending', 'approved', 'rejected']),
                         'current_responsibility_center_id' => null,
                         'created_at' => $date,
                         'updated_at' => $date,

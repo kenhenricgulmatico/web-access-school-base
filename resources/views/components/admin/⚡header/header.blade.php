@@ -105,7 +105,7 @@
                                 {{-- Whole row is the click target (no buttons inside) --}}
                                 <div @click="openNotification(notification.id)"
                                     class="px-4 py-3 flex items-start gap-3 transition-colors cursor-pointer"
-                                    :class="notification.status === 'unread'
+                                    :class="notification.status === 'pending'
                                         ? 'bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30'
                                         : 'hover:bg-gray-50 dark:hover:bg-neutral-800/50'">
 

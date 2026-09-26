@@ -14,7 +14,7 @@ new #[Layout('layouts.admin')] class extends Component
     {
         return ResourceRequest::with(['user.department', 'items'])
             ->where('request_type_id', 2)
-            ->where('status', 'admin_review')
+            ->where('status', 'pending')
             ->latest()
             ->get();
     }
@@ -22,7 +22,7 @@ new #[Layout('layouts.admin')] class extends Component
     public function accept(int $id)
     {
         ResourceRequest::findOrFail($id)->update([
-            'status' => 'coordinator_review',
+            'status' => 'approved',
         ]);
     }
 

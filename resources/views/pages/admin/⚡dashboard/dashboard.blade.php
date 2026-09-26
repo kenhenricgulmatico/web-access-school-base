@@ -168,13 +168,8 @@
                             <span class="px-2 py-1 text-xs font-medium rounded-full
                                 @if($request->status === 'approved') bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400
                                 @elseif($request->status === 'rejected') bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400
-                                @elseif($request->status === 'admin_review') bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400
-                                @elseif($request->status === 'coordinator_review') bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400
-                                @endif">
                                 @if($request->status === 'approved') Approved
                                 @elseif($request->status === 'rejected') Rejected
-                                @elseif($request->status === 'admin_review') Admin Review
-                                @elseif($request->status === 'coordinator_review') Coordinator Review
                                 @endif
                             </span>
                         </td>
@@ -219,8 +214,6 @@
         $statusStyles = [
             'approved'           => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
             'rejected'           => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-            'admin_review'       => 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-            'coordinator_review' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
             'pending'            => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
         ];
     @endphp

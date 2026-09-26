@@ -38,10 +38,10 @@ new #[Layout('layouts.admin')] class extends Component
     private function adminVisibleRequests()
     {
         return ResourceRequest::whereIn('status', [
-            'coordinator_review',
-            'admin_review',
+            'pending',
             'approved',
             'rejected',
+            'cancelled',
         ]);
     }
 
@@ -56,7 +56,7 @@ new #[Layout('layouts.admin')] class extends Component
     {
         // "Pending" for admin = waiting at coordinator or admin level
         return $this->adminVisibleRequests()
-            ->whereIn('status', ['coordinator_review', 'admin_review'])
+            ->whereIn('status', ['pending'])
             ->count();
     }
 

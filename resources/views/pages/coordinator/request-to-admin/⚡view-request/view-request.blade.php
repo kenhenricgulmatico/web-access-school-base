@@ -67,10 +67,6 @@
                                     <td class="px-6 py-4">
                                         @if($request->status === 'pending')
                                             <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700">Pending</span>
-                                        @elseif($request->status === 'admin_review')
-                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700">Admin Reviewing</span>
-                                        @elseif($request->status === 'coordinator_review')
-                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">Admin Accepted</span>
                                         @elseif($request->status === 'approved')
                                             <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Approved</span>
                                         @elseif($request->status === 'rejected')

@@ -54,10 +54,10 @@
                   <td class="px-6 py-3">
                     <span class="px-2 py-1 text-xs font-medium rounded-full
                       @if($request->status === 'pending') bg-yellow-100 text-yellow-800
-                      @elseif($request->status === 'coordinator_review') bg-blue-100 text-blue-800
-                      @elseif($request->status === 'admin_review') bg-purple-100 text-purple-800
                       @elseif($request->status === 'approved') bg-green-100 text-green-800
-                      @else bg-red-100 text-red-800 @endif">
+                      @elseif($request->status === 'rejected') bg-red-100 text-red-800
+                      @elseif($request->status === 'cancelled') bg-gray-100 text-gray-700
+                      @else bg-gray-100 text-gray-700 @endif">
                       {{ ucfirst(str_replace('_', ' ', $request->status)) }}
                     </span>
                   </td>
@@ -73,9 +73,9 @@
 
                   {{-- Actions --}}
                   <td class="px-6 py-3 text-right space-x-2">
-                    @if($request->status === 'admin_review')
+                    @if($request->status === 'pending')
                       <button wire:click="accept({{ $request->id }})"
-                              wire:confirm="Send back to coordinator for final approval?"
+                              wire:confirm="Accept this request?"
                               class="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700">
                         Accept
                       </button>
