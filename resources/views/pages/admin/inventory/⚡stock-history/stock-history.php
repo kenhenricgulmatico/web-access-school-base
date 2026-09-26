@@ -92,7 +92,7 @@ new #[Layout('layouts.admin')] class extends Component
                     ->from('model_has_roles as mhr')
                     ->join('roles as rl', 'rl.id', '=', 'mhr.role_id')
                     ->where('mhr.model_type', User::class)
-                    ->whereIn('rl.name', ['coordinator', 'program head']);
+                    ->whereIn('rl.name', ['program head']);
             })
             ->when($this->search, function ($q) {
                 $q->where(function ($q2) {

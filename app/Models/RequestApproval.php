@@ -14,8 +14,9 @@ class RequestApproval extends Model
     protected $fillable = [
         'request_id',
         'approver_id',
-        'approval_date',
         'status',
+        'remarks',
+        'approved_at',
     ];
 
     public function request():BelongsTo

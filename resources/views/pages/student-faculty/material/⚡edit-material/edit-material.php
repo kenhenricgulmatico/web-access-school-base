@@ -243,7 +243,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
         }
 
         // Notify coordinators about the update
-        $coordinators = User::role('coordinator')->get();
+        $coordinators = User::role('program head')->get();
         foreach ($coordinators as $coordinator) {
             Notification::create([
                 'user_id' => $coordinator->id,
