@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -25,7 +27,17 @@ new class extends Component
     {
         $this->validate();
 
+        $throttleKey = Str::lower($this->email) . '|' . request()->ip();
+
+        // Block login if too many failed attempts — lockout duration grows each time
+        if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            $this->addError('email', "Too many failed attempts. Please try again in {$seconds} seconds.");
+            return;
+        }
+
         if (Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
+            RateLimiter::clear($throttleKey);
             session()->regenerate();
 
             $user = Auth::user();
@@ -53,6 +65,16 @@ new class extends Component
 
             return redirect()->route('portal.dashboard');
         }
+
+        // Failed attempt: lock out for a growing decay time
+        $attempts = RateLimiter::attempts($throttleKey);
+        $decaySeconds = match (true) {
+            $attempts >= 6 => 300, // 5 min after repeated abuse
+            $attempts >= 3 => 120, // 2 min
+            default => 60,          // 1 min
+        };
+
+        RateLimiter::hit($throttleKey, $decaySeconds);
 
         $this->addError('email', 'Invalid credentials.');
     }

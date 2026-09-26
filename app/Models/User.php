@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Request;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -38,7 +39,7 @@ public function auditLogs(): HasMany {
 
 public function responsibility(): BelongsTo
 {
-    return $this->belongsTo(ResponsibilityCenter::class);
+    return $this->belongsTo(ResponsibilityCenter::class, 'responsibility_center_id');
 }
 
 public function department(): BelongsTo
@@ -53,6 +54,10 @@ public function notifications(): HasMany {
 
 public function resourceUsages(): HasMany {
     return $this->hasMany(ResourceUsage::class);
+}
+
+public function requests(): HasMany{
+    return $this->hasMany(Request::class);
 }
 
 }

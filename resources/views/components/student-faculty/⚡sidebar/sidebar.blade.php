@@ -56,25 +56,6 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
 
       </div>
 
-      {{-- Search --}}
-      <button type="button"
-        class="p-1.5 ps-2.5 w-full inline-flex items-center gap-x-2 text-sm rounded-lg bg-layer dark:bg-white/5 border border-layer-line dark:border-white/15 text-muted-foreground-2 dark:text-neutral-300 shadow-xs focus:outline-hidden disabled:opacity-50 disabled:pointer-events-none hover:border-[#D4A537]/40 dark:hover:border-[#D4A537]/60 transition"
-        aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-pro-cmsssm"
-        data-hs-overlay="#hs-pro-cmsssm">
-        <svg class="shrink-0 size-3.5 text-muted-foreground-1 dark:text-neutral-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/>
-        </svg>
-        <span class="text-sm">Search</span>
-        <span class="ms-auto flex items-center gap-x-1 py-px px-1.5 border border-line-2 dark:border-white/20 rounded-md dark:text-neutral-400">
-          <svg class="shrink-0 size-2.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-            <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3"/>
-          </svg>
-          <span class="text-[11px] uppercase">k</span>
-        </span>
-      </button>
-
       {{-- Home --}}
       <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
                 <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">Home</span>

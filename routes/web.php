@@ -59,6 +59,7 @@ Route::middleware(['auth', 'program head', 'department'])->prefix('programHead')
 
     Route::livewire('/facility', 'pages::coordinator.reservation-facility')->name('coordinator.facility');
     Route::livewire('/material', 'pages::coordinator.request-material')->name('coordinator.material');
+    Route::livewire('/view/request-reserve/{id}', 'pages::coordinator.view-request-reserve')->name('coordinator.view-request-reserve');
 
     //Notifications
     Route::livewire('/notifications', 'pages::coordinator.notification')->name('coordinator.notification');
@@ -89,12 +90,12 @@ Route::middleware(['auth', 'role:faculty|student', 'department'])->prefix('porta
     Route::livewire('/reservation/create', 'pages::student-faculty.reservation.create-reservation')->name('portal.create-reservation');
     Route::livewire('/reservation/{id}/edit', 'pages::student-faculty.reservation.edit-reservation')->name('portal.edit-reservation');
 
-    Route::livewire('/history-reservation', 'pages::student-faculty.history-reservation')->name('portal.history-reservation');
-
     //Create material request
     Route::livewire('/material', 'pages::student-faculty.material.view-material')->name('portal.material');
     Route::livewire('/material/create', 'pages::student-faculty.material.create-material')->name('portal.create-material');
     Route::livewire('/material/{id}/edit', 'pages::student-faculty.material.edit-material')->name('portal.edit-material');
+
+    Route::livewire('/view/material-reservation/{id}', 'pages::student-faculty.view-material-reservation')->name('portal.view-material-reservation');
 
     //Profile
     Route::livewire('/profile', 'pages::student-faculty.profile')->name('portal.profile');

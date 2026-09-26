@@ -33,7 +33,9 @@
                 @php $status = $request->status; @endphp
                 <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm space-y-3">
                     <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700/50 pb-2">
-                        <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">#{{ $request->id }}</span>
+                        <span class="text-sm font-medium text-gray-800 dark:text-gray-200">
+                            {{ $request->created_at->format('M d, Y h:i A') }}
+                        </span>
                         <span class="px-2.5 py-0.5 text-xs font-medium rounded-full
                             {{ $status === 'approved' ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' : '' }}
                             {{ $status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' : '' }}
@@ -41,13 +43,6 @@
                             {{ $status === 'cancelled' ? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' : '' }}">
                             {{ ucfirst($status) }}
                         </span>
-                    </div>
-
-                    <div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Request Date</div>
-                        <div class="text-sm font-medium text-gray-800 dark:text-gray-200">
-                            {{ $request->created_at->format('M d, Y h:i A') }}
-                        </div>
                     </div>
 
                     <div>
@@ -59,14 +54,11 @@
                         </div>
                     </div>
 
-                    <div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Purpose</div>
-                        <div class="text-sm text-gray-700 dark:text-gray-300">
-                            {{ $request->purpose }}
-                        </div>
-                    </div>
-
                     <div class="pt-2 border-t border-gray-100 dark:border-gray-700/50 flex items-center justify-end gap-3">
+                        <a href="{{ route('portal.view-material-reservation', $request->id) }}" wire:navigate
+                           class="text-gray-600 hover:text-gray-800 dark:text-gray-400 text-sm font-medium">
+                            View
+                        </a>
                         @if($request->status === 'pending')
                             <a href="{{ route('portal.edit-material', $request->id) }}"
                                class="text-blue-600 hover:text-blue-800 dark:text-blue-400 text-sm font-medium">
@@ -83,8 +75,6 @@
                                     class="text-red-600 hover:text-red-800 dark:text-red-400 text-sm font-medium">
                                 Delete
                             </button>
-                        @else
-                            <span class="text-gray-400 text-xs">No actions</span>
                         @endif
                     </div>
                 </div>
@@ -102,10 +92,8 @@
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-900/50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request Date</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items (Qty)</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Purpose</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
@@ -113,7 +101,6 @@
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                         @forelse($this->materialRequests as $request)
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ $request->id }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                                     {{ $request->created_at->format('M d, Y h:i A') }}
                                 </td>
@@ -121,9 +108,6 @@
                                     @foreach($request->items as $item)
                                         <div>{{ $item->item_name }} <span class="text-gray-400 text-xs">(x{{ $item->quantity }})</span></div>
                                     @endforeach
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 max-w-xs truncate">
-                                    {{ $request->purpose }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @php $status = $request->status; @endphp
@@ -136,6 +120,10 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                                    <a href="{{ route('portal.view-material-reservation', $request->id) }}" wire:navigate
+                                       class="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 text-sm font-medium">
+                                        View
+                                    </a>
                                     @if($request->status === 'pending')
                                         <a href="{{ route('portal.edit-material', $request->id) }}"
                                            class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">
@@ -152,14 +140,12 @@
                                                 class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium">
                                             Delete
                                         </button>
-                                    @else
-                                        <span class="text-gray-400 dark:text-gray-500 text-sm">No actions</span>
                                     @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                <td colspan="4" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                                     You haven't made any material requests yet.
                                     <a href="{{ route('portal.create-material') }}" class="text-blue-600 dark:text-blue-400 hover:underline ml-1">Create one now</a>
                                 </td>

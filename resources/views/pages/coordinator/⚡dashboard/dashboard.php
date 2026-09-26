@@ -70,6 +70,14 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->count();
     }
 
+     #[Computed]
+    public function totalFaculty()
+    {
+        return User::role('faculty')
+            ->where('department_id', Auth::user()->department_id)
+            ->count();
+    }
+
     #[Computed]
     public function monthlyData()
     {
@@ -86,15 +94,26 @@ new #[Layout('layouts.coordinator')] class extends Component
     }
 
     #[Computed]
-    public function recentRequests()
-    {
-        return ResourceRequest::with(['user.department', 'requestType'])
-            ->whereIn('status', ['pending', 'coordinator_review'])
-            ->whereHas('user', fn($q) => $this->deptFilter($q))
-            ->latest()
-            ->take(5)
-            ->get();
-    }
+public function userRequestHistory()
+{
+    return User::query()
+        ->where('department_id', Auth::user()->department_id)
+        ->where(function ($q) {
+            $q->role('student')->orWhere(fn($q2) => $q2->role('faculty'));
+        })
+        ->withCount([
+            'requests as facility_count' => fn($q) => $q->where('request_type_id', 1),
+            'requests as material_count' => fn($q) => $q->where('request_type_id', 2),
+        ])
+        ->get()
+        ->map(function ($user) {
+            $user->total_count = $user->facility_count + $user->material_count;
+            return $user;
+        })
+        ->filter(fn($user) => $user->total_count > 0)
+        ->sortByDesc('total_count')
+        ->values();
+}
 
     #[Computed]
 public function studentFacilityRequests()

@@ -148,51 +148,6 @@
                     <p class="text-sm text-gray-400 dark:text-neutral-500">No items found for this request.</p>
                 @endif
 
-                {{-- Approval History — only approved/rejected entries shown, pending ones hidden --}}
-                @if ($decidedApprovals->isNotEmpty())
-                    <div>
-                        <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-500 mb-3">
-                            Approval History
-                        </h3>
-                        <ul class="space-y-3">
-                            @foreach ($decidedApprovals as $approval)
-                                <li class="flex items-start gap-x-3 p-3 rounded-lg border border-gray-200 dark:border-neutral-700">
-                                    <span class="size-8 shrink-0 inline-flex items-center justify-center rounded-full bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300 text-xs font-semibold">
-                                        {{ strtoupper(substr($approval->approver->name ?? '?', 0, 1)) }}
-                                    </span>
-                                    <div class="flex-1">
-                                        <div class="flex items-center justify-between flex-wrap gap-2">
-                                            <p class="text-sm font-medium text-gray-800 dark:text-neutral-200">
-                                                {{ $approval->approver->name ?? 'Unknown' }}
-                                            </p>
-                                            <span class="py-0.5 px-2 text-[10px] font-medium rounded-full {{ $this->statusBadgeClasses($approval->status) }}">
-                                                {{ ucfirst($approval->status) }}
-                                            </span>
-                                        </div>
-                                        @if ($approval->remarks)
-                                            <p class="text-xs text-gray-500 dark:text-neutral-400 mt-1">
-                                                "{{ $approval->remarks }}"
-                                            </p>
-                                        @endif
-                                        @if ($approval->approved_at)
-                                            <p class="text-[10px] text-gray-400 dark:text-neutral-500 mt-1">
-                                                {{ \Carbon\Carbon::parse($approval->approved_at)->format('M d, Y \a\t h:i A') }}
-                                            </p>
-                                        @endif
-                                    </div>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @else
-                    <div>
-                        <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-500 mb-1">
-                            Approval History
-                        </h3>
-                        <p class="text-sm text-gray-400 dark:text-neutral-500">No approval activity yet.</p>
-                    </div>
-                @endif
-
             </div>
 
         </div>

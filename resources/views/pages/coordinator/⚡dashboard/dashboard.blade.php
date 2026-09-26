@@ -48,21 +48,6 @@
             <div class="absolute bottom-0 left-0 right-0 h-1 bg-[#D4A537] rounded-b-2xl"></div>
         </div>
 
-        {{-- Approved --}}
-        <div class="relative overflow-hidden flex flex-col bg-white border border-[#E4E1D8] shadow-sm rounded-2xl p-4 sm:p-6 dark:bg-[#16281F] dark:border-[#2A4B3A]">
-            <div class="flex items-center justify-between mb-2 sm:mb-4">
-                <p class="text-xs sm:text-sm font-medium text-gray-500 dark:text-neutral-400">Approved</p>
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#1C6B45]/10 dark:bg-[#1C6B45]/25 flex items-center justify-center shrink-0">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-[#1C6B45] dark:text-[#7FBF8E]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                    </svg>
-                </div>
-            </div>
-            <h3 class="text-2xl sm:text-4xl font-bold text-[#123524] dark:text-neutral-200">{{ $this->approvedRequests }}</h3>
-            <p class="text-xs text-gray-400 mt-1">Successfully approved</p>
-            <div class="absolute bottom-0 left-0 right-0 h-1 bg-[#1C6B45] rounded-b-2xl"></div>
-        </div>
-
         {{-- Total Students --}}
         <div class="relative overflow-hidden flex flex-col bg-white border border-[#E4E1D8] shadow-sm rounded-2xl p-4 sm:p-6 dark:bg-[#16281F] dark:border-[#2A4B3A]">
             <div class="flex items-center justify-between mb-2 sm:mb-4">
@@ -79,6 +64,21 @@
             <div class="absolute bottom-0 left-0 right-0 h-1 bg-[#B8352A] rounded-b-2xl"></div>
         </div>
 
+        {{-- Total Faculty --}}
+        <div class="relative overflow-hidden flex flex-col bg-white border border-[#E4E1D8] shadow-sm rounded-2xl p-4 sm:p-6 dark:bg-[#16281F] dark:border-[#2A4B3A]">
+            <div class="flex items-center justify-between mb-2 sm:mb-4">
+                <p class="text-xs sm:text-sm font-medium text-gray-500 dark:text-neutral-400">Total Faculty</p>
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 dark:text-purple-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                    </svg>
+                </div>
+            </div>
+            <h3 class="text-2xl sm:text-4xl font-bold text-[#123524] dark:text-neutral-200">{{ $this->totalFaculty }}</h3>
+            <p class="text-xs text-gray-400 mt-1">Registered faculty</p>
+            <div class="absolute bottom-0 left-0 right-0 h-1 bg-purple-500 rounded-b-2xl"></div>
+        </div>
+
     </div>
 
     <div class="grid lg:grid-cols-1 gap-4 sm:gap-6">
@@ -91,8 +91,7 @@
             </div>
             <div class="flex flex-wrap gap-3 sm:gap-4 mb-4">
             <div class="inline-flex rounded-full border border-[#E4E1D8] dark:border-[#2A4B3A] p-0.5 text-xs font-medium" id="lineFilters">
-                <button type="button" data-filter="all" class="px-3 py-1 rounded-full bg-[#123524] text-white">All</button>
-                <button type="button" data-filter="student" class="px-3 py-1 rounded-full text-gray-500 dark:text-neutral-400">Students</button>
+                <button type="button" data-filter="student" class="px-3 py-1 rounded-full bg-[#123524] text-white">Students</button>
                 <button type="button" data-filter="faculty" class="px-3 py-1 rounded-full text-gray-500 dark:text-neutral-400">Faculty</button>
                 </div>
             </div>
@@ -102,90 +101,74 @@
         </div>
     </div>
 
-    {{-- Recent Pending Requests Table --}}
-    <div class="bg-white border border-[#E4E1D8] rounded-2xl shadow-sm overflow-hidden dark:bg-[#16281F] dark:border-[#2A4B3A]">
-        <div class="px-4 sm:px-6 py-4 border-b border-[#E4E1D8] dark:border-[#2A4B3A] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div class="min-w-0">
-                <h2 class="text-base sm:text-lg font-semibold text-[#123524] dark:text-neutral-200 truncate" style="font-family: 'Fraunces', serif;">Pending Requests</h2>
-                <p class="text-xs sm:text-sm text-gray-400">Latest requests awaiting your action</p>
-            </div>
-            <div class="flex gap-3 shrink-0">
-                <a href="/coordinator/facility" class="text-xs text-[#1C6B45] hover:text-[#123524] dark:text-[#7FBF8E] hover:underline font-medium whitespace-nowrap">Facility →</a>
-                <a href="/coordinator/material" class="text-xs text-[#B8862A] hover:text-[#96701F] hover:underline font-medium whitespace-nowrap">Materials →</a>
-            </div>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-[720px] w-full divide-y divide-[#E4E1D8] dark:divide-[#2A4B3A]">
-                <thead class="bg-[#FAF7EF] dark:bg-[#0E1A14]">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#B8862A]">Requestor</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#B8862A]">Department</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#B8862A]">Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#B8862A]">Purpose</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#B8862A]">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#B8862A]">Date</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-[#E4E1D8] dark:divide-[#2A4B3A]">
-                    @forelse($this->recentRequests as $request)
-                        <tr class="hover:bg-[#FAF7EF] dark:hover:bg-[#0E1A14]/50 transition">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full bg-[#123524] text-white flex items-center justify-center text-sm font-bold ring-2 ring-[#D4A537]/40 shrink-0">
-                                        {{ strtoupper(substr($request->user->name, 0, 1)) }}
-                                    </div>
-                                    <div class="min-w-0">
-                                        <p class="text-sm font-medium text-gray-800 dark:text-neutral-200 truncate">{{ $request->user->name }}</p>
-                                        <p class="text-xs text-gray-400 truncate">{{ $request->user->email }}</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-neutral-400 whitespace-nowrap">
-                                {{ $request->user->department->department_name ?? 'N/A' }}
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="px-2.5 py-1 text-xs font-medium rounded-full whitespace-nowrap
-                                    @if($request->request_type_id == 1) bg-[#123524]/8 text-[#1C6B45] dark:bg-[#123524]/25 dark:text-[#7FBF8E]
-                                    @else bg-[#D4A537]/12 text-[#B8862A] @endif">
-                                    {{ $request->requestType->type_name ?? 'N/A' }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-neutral-400">
-                                {{ Str::limit($request->purpose, 40) }}
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="px-2.5 py-1 text-xs font-medium rounded-full whitespace-nowrap
-                                    @if($request->status === 'pending') bg-[#D4A537]/15 text-[#B8862A]
-                                    @elseif($request->status === 'coordinator_review') bg-[#123524]/8 text-[#1C6B45] dark:bg-[#123524]/25 dark:text-[#7FBF8E]
-                                    @else bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 @endif">
-                                    {{ ucfirst(str_replace('_', ' ', $request->status)) }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">
-                                {{ $request->created_at->format('M d, Y') }}
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="px-6 py-10 text-center text-gray-400">
-                                No pending requests.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    {{-- Student & Faculty Request History --}}
+<div class="bg-white border border-[#E4E1D8] rounded-2xl shadow-sm overflow-hidden dark:bg-[#16281F] dark:border-[#2A4B3A]">
+    <div class="px-4 sm:px-6 py-4 border-b border-[#E4E1D8] dark:border-[#2A4B3A]">
+        <h2 class="text-base sm:text-lg font-semibold text-[#123524] dark:text-neutral-200" style="font-family: 'Fraunces', serif;">
+            Request History
+        </h2>
+        <p class="text-xs sm:text-sm text-gray-400">How many reservations and material requests each person has made</p>
     </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-[640px] w-full divide-y divide-[#E4E1D8] dark:divide-[#2A4B3A]">
+            <thead class="bg-[#FAF7EF] dark:bg-[#0E1A14]">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#B8862A]">Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#B8862A]">Role</th>
+                    <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#B8862A]">Facility Reservations</th>
+                    <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#B8862A]">Material Requests</th>
+                    <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#B8862A]">Total</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-[#E4E1D8] dark:divide-[#2A4B3A]">
+                @forelse($this->userRequestHistory as $user)
+                    <tr class="hover:bg-[#FAF7EF] dark:hover:bg-[#0E1A14]/50 transition">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-[#123524] text-white flex items-center justify-center text-sm font-bold ring-2 ring-[#D4A537]/40 shrink-0">
+                                    {{ strtoupper(substr($user->name, 0, 1)) }}
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-medium text-gray-800 dark:text-neutral-200 truncate">{{ $user->name }}</p>
+                                    <p class="text-xs text-gray-400 truncate">{{ $user->email }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2.5 py-1 text-xs font-medium rounded-full whitespace-nowrap
+                                {{ $user->hasRole('student') ? 'bg-[#B8352A]/8 text-[#B8352A]' : 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-300' }}">
+                                {{ ucfirst($user->getRoleNames()->first() ?? 'N/A') }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center text-sm text-gray-700 dark:text-neutral-300">
+                            {{ $user->facility_count }}
+                        </td>
+                        <td class="px-6 py-4 text-center text-sm text-gray-700 dark:text-neutral-300">
+                            {{ $user->material_count }}
+                        </td>
+                        <td class="px-6 py-4 text-center text-sm font-semibold text-[#123524] dark:text-neutral-200">
+                            {{ $user->total_count }}
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="px-6 py-10 text-center text-gray-400">
+                            No request history yet.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
 
 </div>
 
 {{-- Chart.js --}}
-{{-- Chart.js --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Pre-computed data for the filter toggle (All / Students / Faculty)
+    // Pre-computed data for the filter toggle (Students / Faculty)
     const requestData = {
-        all: [{{ $this->facilityRequests }}, {{ $this->materialRequests }}],
         student: [{{ $this->studentFacilityRequests }}, {{ $this->studentMaterialRequests }}],
         faculty: [{{ $this->facultyFacilityRequests }}, {{ $this->facultyMaterialRequests }}],
     };
@@ -197,7 +180,7 @@
             labels: ['Facility Reservation', 'Material Request'],
             datasets: [{
                 label: 'Total',
-                data: requestData.all,
+                data: requestData.student,
                 backgroundColor: [
                     'rgba(18, 53, 36, 0.85)',
                     'rgba(212, 165, 55, 0.85)',
@@ -221,7 +204,7 @@
         }
     });
 
-    // Filter button handling (All / Students / Faculty)
+    // Filter button handling (Students / Faculty)
     const filterButtons = document.querySelectorAll('#lineFilters button');
     filterButtons.forEach(btn => {
         btn.addEventListener('click', () => {
