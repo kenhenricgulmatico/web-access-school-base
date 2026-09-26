@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\AuditLog;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
@@ -28,11 +29,10 @@ class AuditLogObserver
         if ($model instanceof AuditLog) return;
 
         AuditLog::create([
-            'user_id'    => Auth::id() ?? $model->getKey(), // ✅ if registering, use the new user's own id
+            'user_id'    => Auth::id() ?? ($model instanceof User ? $model->getKey() : null), // ✅ if registering, use the new user's own id
             'action'     => $action,
             'table_name' => $model->getTable(),
-            'record'     => json_encode($model->toArray()),
-            'timestamp'  => now(),
+            'record'     => $model->toArray(),
         ]);
     }
 }
