@@ -1,7 +1,5 @@
 <?php
 
-namespace App\Livewire\Coordinator;
-
 use App\Models\Request as ResourceRequest;
 use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;

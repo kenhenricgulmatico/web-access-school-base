@@ -17,7 +17,7 @@ new #[Layout('layouts.admin')] class extends Component
     public $statusFilter = '';
     public $search       = '';
 
-    // ✅ NEW: Reject dialog state
+    // ✅ Reject dialog state
     public ?int   $rejectingRequestId = null;
     public string $rejectReason       = '';
 
@@ -98,12 +98,35 @@ new #[Layout('layouts.admin')] class extends Component
     // ============================================================
     public function approve($id)
     {
+        // ✅ Server-side permission guard
+        abort_unless(
+            auth()->user()->canAny([
+                'program-head-requests.approve',
+                'requests.approve',
+            ]),
+            403
+        );
+
         $request = $this->incomingRequestsQuery()
             ->with('items')
             ->findOrFail($id);
 
         if ($request->status !== 'pending') {
             session()->flash('error', 'This request has already been processed.');
+            return;
+        }
+
+        // ✅ Facility conflict check — block overlapping approved reservations
+        $facilityItem = $request->items->firstWhere('resource_id', null);
+
+        if ($facilityItem && $this->facilityHasConflict(
+            $facilityItem->item_name,
+            $facilityItem->request_date,
+            $facilityItem->start_time,
+            $facilityItem->end_time,
+            $request->id
+        )) {
+            session()->flash('error', 'This facility is already booked for an overlapping time.');
             return;
         }
 
@@ -170,7 +193,6 @@ new #[Layout('layouts.admin')] class extends Component
 
                 $fresh->update(['status' => 'approved']);
 
-                // ✅ Record approval
                 \App\Models\RequestApproval::create([
                     'request_id'  => $fresh->id,
                     'approver_id' => Auth::id(),
@@ -196,10 +218,18 @@ new #[Layout('layouts.admin')] class extends Component
     }
 
     // ============================================================
-    // ✅ REJECT WITH REASON
+    // REJECT WITH REASON
     // ============================================================
     public function openReject(int $id): void
     {
+        abort_unless(
+            auth()->user()->canAny([
+                'program-head-requests.reject',
+                'requests.reject',
+            ]),
+            403
+        );
+
         $this->rejectingRequestId = $id;
         $this->rejectReason = '';
     }
@@ -212,6 +242,14 @@ new #[Layout('layouts.admin')] class extends Component
 
     public function confirmReject(): void
     {
+        abort_unless(
+            auth()->user()->canAny([
+                'program-head-requests.reject',
+                'requests.reject',
+            ]),
+            403
+        );
+
         if (! $this->rejectingRequestId) return;
 
         $request = $this->incomingRequestsQuery()->findOrFail($this->rejectingRequestId);
@@ -222,10 +260,8 @@ new #[Layout('layouts.admin')] class extends Component
             return;
         }
 
-        // 1. Mark rejected
         $request->update(['status' => 'rejected']);
 
-        // 2. Save rejection row with reason
         \App\Models\RequestApproval::create([
             'request_id'  => $request->id,
             'approver_id' => Auth::id(),
@@ -234,7 +270,6 @@ new #[Layout('layouts.admin')] class extends Component
             'approved_at' => now(),
         ]);
 
-        // 3. Notify requester
         $message = Auth::user()->name . ' (Admin) rejected your request.';
         if ($this->rejectReason) {
             $message .= ' Reason: ' . $this->rejectReason;
@@ -256,5 +291,27 @@ new #[Layout('layouts.admin')] class extends Component
     public function clearFilters()
     {
         $this->reset('search');
+    }
+
+    // ============================================================
+    // ✅ FACILITY CONFLICT DETECTION
+    // ============================================================
+    protected function facilityHasConflict(
+        string $facilityName,
+        string $date,
+        string $startTime,
+        string $endTime,
+        int $excludeRequestId
+    ): bool {
+        return DB::table('request_items as ri')
+            ->join('requests as req', 'req.id', '=', 'ri.request_id')
+            ->where('req.status', 'approved')
+            ->where('req.id', '!=', $excludeRequestId)
+            ->whereNull('ri.resource_id')
+            ->where('ri.item_name', $facilityName)
+            ->whereDate('ri.request_date', $date)
+            ->where('ri.start_time', '<', $endTime)
+            ->where('ri.end_time', '>', $startTime)
+            ->exists();
     }
 };

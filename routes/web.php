@@ -15,8 +15,6 @@ Route::livewire('/printable', 'auth::print.print-receipt')->name('printable.rece
 
 Route::middleware(['auth', 'approved', 'admin'])->prefix('admin')->group(function () {
     Route::livewire('/dashboard', 'pages::admin.dashboard')->name('admin.dashboard');
-    Route::livewire('/facility', 'pages::admin.reservation-facility')->name('admin.facility');
-    Route::livewire('/material', 'pages::admin.reservation-material')->name('admin.material');
     Route::livewire('/students', 'pages::admin.student')->name('admin.students');
     Route::livewire('/audit-logs', 'pages::admin.audit-logs')->name('admin.audit-logs');
 

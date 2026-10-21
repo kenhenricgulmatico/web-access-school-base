@@ -14,13 +14,13 @@ abstract class TestCase extends BaseTestCase
 {
     protected function seedBaseData(): void
     {
-        foreach (['admin', 'faculty', 'student', 'program head'] as $roleName) {
-            Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
-        }
+        // ✅ Seed roles + permissions with the real seeder
+        $this->seed(\Database\Seeders\PermissionSeeder::class);
 
+        // ✅ Seed request types (PermissionSeeder doesn't handle these)
         \DB::table('request_types')->insertOrIgnore([
             ['id' => 1, 'type_name' => 'Facility Reservation', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 2, 'type_name' => 'Material Request', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 2, 'type_name' => 'Material Request',      'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 

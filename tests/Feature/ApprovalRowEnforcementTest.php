@@ -134,41 +134,4 @@ class ApprovalRowEnforcementTest extends TestCase
             'status'      => 'approved',
         ]);
     }
-
-    public function test_admin_facility_approval_writes_approval_row(): void
-    {
-        $dept     = $this->createDepartment();
-        $admin    = $this->createUser('admin', $dept);
-        $student  = $this->createUser('student', $dept);
-
-        $date = now()->addDays(3)->toDateString();
-
-        $pending = ResourceRequest::create([
-            'user_id'         => $student->id,
-            'department_id'   => $dept->id,
-            'request_type_id' => 1,
-            'purpose'         => 'Approval row test — admin facility',
-            'status'          => 'pending',
-        ]);
-
-        RequestItem::create([
-            'request_id'   => $pending->id,
-            'resource_id'  => null,
-            'item_name'    => 'Computer Laboratory 1',
-            'quantity'     => 1,
-            'request_date' => $date,
-            'start_time'   => '09:00',
-            'end_time'     => '10:00',
-        ]);
-
-        Livewire::actingAs($admin)
-            ->test('pages::admin.reservation-facility')
-            ->call('accept', $pending->id);
-
-        $this->assertDatabaseHas('request_approvals', [
-            'request_id'  => $pending->id,
-            'approver_id' => $admin->id,
-            'status'      => 'approved',
-        ]);
-    }
 }
