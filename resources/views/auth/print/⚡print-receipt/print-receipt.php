@@ -30,11 +30,20 @@ new class extends Component
             return;
         }
 
-        $user    = Auth::user();
-        $isOwner = $request->user_id === $user->id;
-        $isStaff = $user->hasRole(['admin', 'student', 'faculty', 'program head']);
+        // ✅ Who may print this receipt:
+        //   - the person who made the request
+        //   - an admin
+        //   - the program head of the request's department
+        // Students/faculty can NOT open other people's receipts.
+        $user = Auth::user();
+        abort_unless($user, 403);
 
-        if (!$isOwner && !$isStaff) {
+        $isOwner        = (int) $request->user_id === (int) $user->id;
+        $isAdmin        = $user->hasRole('admin');
+        $isDeptHead     = $user->hasRole('program head')
+                          && (int) $user->department_id === (int) $request->department_id;
+
+        if (! $isOwner && ! $isAdmin && ! $isDeptHead) {
             abort(403);
         }
 

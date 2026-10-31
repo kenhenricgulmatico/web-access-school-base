@@ -10,6 +10,18 @@
     Back to Reservations
   </a>
 
+  {{-- Flash messages --}}
+  @if(session('message'))
+    <div class="mb-4 px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-sm text-green-800 dark:bg-green-950/30 dark:border-green-900 dark:text-green-300">
+      {{ session('message') }}
+    </div>
+  @endif
+  @if(session('error'))
+    <div class="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800 dark:bg-red-950/30 dark:border-red-900 dark:text-red-300">
+      {{ session('error') }}
+    </div>
+  @endif
+
   <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl shadow-sm overflow-hidden">
 
     {{-- Header --}}
@@ -116,7 +128,16 @@
 
     {{-- Actions --}}
     @if($requestModel->status === 'pending')
-    <div class="px-6 py-4 bg-gray-50 dark:bg-neutral-900/40 border-t border-gray-100 dark:border-neutral-700 flex justify-end gap-2">
+    <div class="px-6 py-4 bg-gray-50 dark:bg-neutral-900/40 border-t border-gray-100 dark:border-neutral-700 space-y-3">
+      <div>
+        <label for="rejectReason" class="block text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">
+          Reason for rejecting (optional — sent to the requester)
+        </label>
+        <textarea id="rejectReason" wire:model="rejectReason" rows="2" maxlength="500"
+                  class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-800 dark:text-neutral-200"></textarea>
+        @error('rejectReason') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+      </div>
+      <div class="flex justify-end gap-2">
       <button wire:click="reject"
               wire:confirm="Reject this request?"
               class="px-4 py-2 text-sm font-medium bg-white dark:bg-neutral-800 text-red-600 border border-red-200 dark:border-red-900 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition">
@@ -127,6 +148,7 @@
               class="px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
         Accept
       </button>
+      </div>
     </div>
     @endif
 

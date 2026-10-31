@@ -9,8 +9,10 @@ Route::livewire('/waiting', 'auth::waiting')->name('waiting');
 //Privacy
 Route::livewire('/privacy', 'pages::privacy')->name('privacy');
 
-//printable
-Route::livewire('/printable', 'auth::print.print-receipt')->name('printable.receipt');
+//printable — logged-in, approved users only (owner / same-department program head / admin is checked in the page)
+Route::livewire('/printable', 'auth::print.print-receipt')
+    ->middleware(['auth', 'approved'])
+    ->name('printable.receipt');
 
 
 Route::middleware(['auth', 'approved', 'admin'])->prefix('admin')->group(function () {

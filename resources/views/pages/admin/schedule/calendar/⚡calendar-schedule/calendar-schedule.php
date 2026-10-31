@@ -67,40 +67,40 @@ new #[Layout('layouts.admin')] class extends Component
         return $days;
     }
 
-   #[Computed]
-public function daysWithEvents(): array
-{
-    $carbon = \Carbon\Carbon::create($this->year, $this->month, 1);
+    /**
+     * Which days of the shown month have approved facility / material requests.
+     * ONE query for the whole month (it used to be 2 queries per day ≈ 62 per page load).
+     */
+    #[Computed]
+    public function daysWithEvents(): array
+    {
+        $start = \Carbon\Carbon::create($this->year, $this->month, 1)->startOfMonth();
+        $end   = $start->copy()->endOfMonth();
 
-    $days = [];
+        $rows = \Illuminate\Support\Facades\DB::table('request_items as ri')
+            ->join('requests as r', 'r.id', '=', 'ri.request_id')
+            ->where('r.status', 'approved')
+            ->whereIn('r.request_type_id', [1, 2])
+            ->whereBetween('ri.request_date', [$start->toDateString(), $end->toDateString()])
+            ->select('ri.request_date', 'r.request_type_id')
+            ->distinct()
+            ->get();
 
-    for ($d = 1; $d <= $carbon->daysInMonth; $d++) {
-        $date = \Carbon\Carbon::create($this->year, $this->month, $d);
+        $days = [];
 
-        $hasReservation = ResourceRequest::where('request_type_id', 1)
-            ->where('status', 'approved')
-            ->whereHas('items', fn($q) =>
-                $q->whereDate('request_date', $date->format('Y-m-d'))
-            )
-            ->exists();
+        foreach ($rows as $row) {
+            $key = \Carbon\Carbon::parse($row->request_date)->format('Y-m-d');
+            $days[$key] ??= ['reservation' => false, 'material' => false];
 
-        $hasMaterial = ResourceRequest::where('request_type_id', 2)
-            ->where('status', 'approved')
-            ->whereHas('items', fn($q) =>
-                $q->whereDate('request_date', $date->format('Y-m-d'))
-            )
-            ->exists();
-
-        if ($hasReservation || $hasMaterial) {
-            $days[$date->format('Y-m-d')] = [
-                'reservation' => $hasReservation,
-                'material'    => $hasMaterial,
-            ];
+            if ((int) $row->request_type_id === 1) {
+                $days[$key]['reservation'] = true;
+            } else {
+                $days[$key]['material'] = true;
+            }
         }
-    }
 
-    return $days;
-}
+        return $days;
+    }
 
 #[Computed]
 public function selectedDateEvents()
