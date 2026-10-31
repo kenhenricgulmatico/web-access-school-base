@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\BookingDate;
 use App\Models\Request as ResourceRequest;
 use App\Models\RequestItem;
 use App\Models\RequestType;
@@ -77,7 +78,7 @@ new #[Layout('layouts.coordinator')] class extends Component
         $rules = [
             'request_type_id' => 'required|exists:request_types,id',
             'purpose'         => 'required|string|min:10|max:500',
-            'request_date'    => 'required|date|after_or_equal:today',
+            'request_date'    => BookingDate::rules(),
             'materials.*.resource_id' => 'nullable|exists:resources,id',
             'materials.*.quantity'    => 'nullable|integer|min:1',
         ];
@@ -101,8 +102,6 @@ new #[Layout('layouts.coordinator')] class extends Component
         'request_type_id.required' => 'Please select a request type',
         'purpose.required'         => 'Please state your purpose',
         'purpose.min'              => 'Purpose must be at least 10 characters',
-        'request_date.required'    => 'Please select a date',
-        'request_date.after_or_equal' => 'Date must be today or later',
         'facility_name.required'   => 'Please select a facility',
         'start_time.required'      => 'Please select start time',
         'end_time.required'        => 'Please select end time',
@@ -113,6 +112,12 @@ new #[Layout('layouts.coordinator')] class extends Component
         'materials.*.quantity.required'    => 'Please enter quantity',
         'materials.*.quantity.min'         => 'Quantity must be at least 1',
     ];
+
+    protected function messages(): array
+    {
+        // ✅ Booking date: today up to ~6 months ahead (see App\Support\BookingDate)
+        return array_merge($this->messages, BookingDate::messages('request_date'));
+    }
 
     protected function formatQuantity(int $qtyInPcs, ?string $unit, ?int $piecesPerPack): string
     {

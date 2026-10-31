@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Portal;
 
+use App\Support\BookingDate;
 use App\Models\Request as ResourceRequest;
 use App\Models\RequestItem;
 use App\Models\Resource;
@@ -28,7 +29,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     {
         return [
             'facility_name'           => 'required|string|max:255',
-            'used_date'               => 'required|date|after_or_equal:today',
+            'used_date'               => BookingDate::rules(),
             'start_time'              => 'required',
             'end_time'                => 'required|after:start_time',
             'purpose'                 => 'required|string|min:10|max:500',
@@ -39,8 +40,6 @@ new #[Layout('layouts.student-faculty')] class extends Component
 
     protected $messages = [
         'facility_name.required'   => 'Please select a facility',
-        'used_date.required'       => 'Please select a date',
-        'used_date.after_or_equal' => 'Date must be today or later',
         'start_time.required'      => 'Please select start time',
         'end_time.required'        => 'Please select end time',
         'end_time.after'           => 'End time must be after start time',
@@ -49,6 +48,12 @@ new #[Layout('layouts.student-faculty')] class extends Component
         'materials.*.resource_id.exists' => 'Selected material is invalid.',
         'materials.*.quantity.min' => 'Quantity must be at least 1.',
     ];
+
+    protected function messages(): array
+    {
+        // ✅ Booking date: today up to ~6 months ahead (see App\Support\BookingDate)
+        return array_merge($this->messages, BookingDate::messages('used_date'));
+    }
 
     public function mount($id)
     {

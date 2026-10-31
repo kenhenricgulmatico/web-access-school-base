@@ -2,6 +2,7 @@
 
 namespace App\Livewire\ProgramHead\RequestToAdmin;
 
+use App\Support\BookingDate;
 use App\Models\Request as ResourceRequest;
 use App\Models\RequestItem;
 use App\Models\RequestType;
@@ -130,7 +131,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     {
         $rules = [
             'purpose'         => 'required|string|min:10|max:500',
-            'request_date'    => 'required|date',
+            'request_date'    => BookingDate::rules(),
             'materials.*.resource_id' => 'nullable|exists:resources,id',
             'materials.*.quantity'    => 'nullable|integer|min:1',
         ];
@@ -153,7 +154,6 @@ new #[Layout('layouts.coordinator')] class extends Component
     protected $messages = [
         'purpose.required'         => 'Please state your purpose',
         'purpose.min'              => 'Purpose must be at least 10 characters',
-        'request_date.required'    => 'Please select a date',
         'facility_name.required'   => 'Please select a facility',
         'start_time.required'      => 'Please select start time',
         'end_time.required'        => 'Please select end time',
@@ -164,6 +164,12 @@ new #[Layout('layouts.coordinator')] class extends Component
         'materials.*.quantity.required'    => 'Please enter quantity',
         'materials.*.quantity.min'         => 'Quantity must be at least 1',
     ];
+
+    protected function messages(): array
+    {
+        // ✅ Booking date: today up to ~6 months ahead (see App\Support\BookingDate)
+        return array_merge($this->messages, BookingDate::messages('request_date'));
+    }
 
     #[Computed]
     public function requestTypes()

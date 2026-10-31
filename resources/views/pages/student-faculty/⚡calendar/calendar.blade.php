@@ -54,12 +54,12 @@
 
         <div class="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 py-4 border-b border-[#E6EAE6]">
           <div class="flex items-center gap-2.5">
-            <button type="button" wire:click="previousMonth" aria-label="Previous month"
-              class="size-11 inline-flex items-center justify-center rounded-xl border border-[#D9DED9] bg-white hover:bg-[#EEF1EE] transition">
+            <button type="button" wire:click="previousMonth" aria-label="Previous month" @disabled(! $this->canGoPrevious)
+              class="size-11 inline-flex items-center justify-center rounded-xl border border-[#D9DED9] bg-white hover:bg-[#EEF1EE] transition disabled:opacity-40 disabled:pointer-events-none">
               <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
             </button>
-            <button type="button" wire:click="nextMonth" aria-label="Next month"
-              class="size-11 inline-flex items-center justify-center rounded-xl border border-[#D9DED9] bg-white hover:bg-[#EEF1EE] transition">
+            <button type="button" wire:click="nextMonth" aria-label="Next month" @disabled(! $this->canGoNext)
+              class="size-11 inline-flex items-center justify-center rounded-xl border border-[#D9DED9] bg-white hover:bg-[#EEF1EE] transition disabled:opacity-40 disabled:pointer-events-none">
               <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
             </button>
             <h2 class="ms-1.5 text-lg sm:text-xl font-bold text-[#123524]">

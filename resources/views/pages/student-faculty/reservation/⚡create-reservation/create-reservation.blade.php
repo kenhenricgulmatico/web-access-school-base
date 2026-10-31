@@ -41,7 +41,8 @@
                     </label>
                     <input type="date"
                         wire:model="used_date"
-                        min="{{ date('Y-m-d') }}"
+                        min="{{ \App\Support\BookingDate::min() }}"
+                        max="{{ \App\Support\BookingDate::max() }}"
                         class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
                     @error('used_date') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                 </div>

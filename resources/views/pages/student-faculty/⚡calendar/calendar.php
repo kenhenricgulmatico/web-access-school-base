@@ -2,6 +2,7 @@
 
 use App\Models\RequestItem;
 use App\Models\Resource;
+use App\Support\BookingDate;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -37,23 +38,63 @@ new #[Layout('layouts.student-faculty')] class extends Component
         $this->selectedDate = now()->format('Y-m-d');
     }
 
+    /** Earliest month the calendar can show: 12 months back (for history). */
+    protected function firstMonth(): Carbon
+    {
+        return now()->startOfMonth()->subMonths(12);
+    }
+
+    /** Latest month the calendar can show: the last month users can book in. */
+    protected function lastMonth(): Carbon
+    {
+        return Carbon::parse(BookingDate::max())->startOfMonth();
+    }
+
+    protected function currentMonth(): Carbon
+    {
+        return Carbon::create($this->year, $this->month, 1)->startOfMonth();
+    }
+
+    #[Computed]
+    public function canGoPrevious(): bool
+    {
+        return $this->currentMonth()->gt($this->firstMonth());
+    }
+
+    #[Computed]
+    public function canGoNext(): bool
+    {
+        return $this->currentMonth()->lt($this->lastMonth());
+    }
+
     public function previousMonth(): void
     {
-        $d = Carbon::create($this->year, $this->month, 1)->subMonth();
+        if (! $this->canGoPrevious()) {
+            return;
+        }
+        $d = $this->currentMonth()->subMonth();
         $this->year  = $d->year;
         $this->month = $d->month;
     }
 
     public function nextMonth(): void
     {
-        $d = Carbon::create($this->year, $this->month, 1)->addMonth();
+        if (! $this->canGoNext()) {
+            return;
+        }
+        $d = $this->currentMonth()->addMonth();
         $this->year  = $d->year;
         $this->month = $d->month;
     }
 
     public function selectDate(string $date): void
     {
-        $this->selectedDate = Carbon::parse($date)->format('Y-m-d');
+        // Ignore anything that is not a real Y-m-d date inside the shown range.
+        $d = Carbon::createFromFormat('!Y-m-d', $date) ?: null;
+        if (! $d || $d->lt($this->firstMonth()) || $d->gt($this->lastMonth()->endOfMonth())) {
+            return;
+        }
+        $this->selectedDate = $d->format('Y-m-d');
     }
 
     public function setTab(string $tab): void
