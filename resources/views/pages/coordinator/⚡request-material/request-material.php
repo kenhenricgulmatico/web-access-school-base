@@ -2,6 +2,7 @@
 
 use App\Models\Request as ResourceRequest;
 use App\Models\Notification;
+use App\Notifications\RequestStatusNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
@@ -108,6 +109,19 @@ new #[Layout('layouts.coordinator')] class extends Component
                 ]);
             });
 
+            // ✅ E-mail the requester
+            $itemsList = $request->items
+                ->map(fn ($i) => "{$i->item_name} (x{$i->quantity})")
+                ->implode(', ');
+
+            rescue(fn () => $request->user?->notify(new RequestStatusNotification(
+                status:       'approved',
+                approverName: "{$approverName} (Program Head)",
+                requestKind:  'Material Request',
+                details:      $itemsList,
+                requestId:    $request->id,
+            )));
+
             session()->flash('message', 'Request approved. Department allocation updated.');
             unset($this->requests);
         } catch (\RuntimeException $e) {
@@ -183,6 +197,16 @@ new #[Layout('layouts.coordinator')] class extends Component
             'type'       => 'Gmail',
             'status'     => 'pending',
         ]);
+
+        // ✅ E-mail the requester
+        rescue(fn () => $request->user?->notify(new RequestStatusNotification(
+            status:       'rejected',
+            approverName: "{$approverName} (Program Head)",
+            requestKind:  'Material Request',
+            details:      $itemsList,
+            reason:       $this->rejectReason ?: null,
+            requestId:    $request->id,
+        )));
 
         session()->flash('message', 'Request rejected and requester notified.');
 

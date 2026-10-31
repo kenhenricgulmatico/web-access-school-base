@@ -2,6 +2,7 @@
 
 use App\Models\Notification;
 use App\Models\Request as ResourceRequest;
+use App\Notifications\RequestStatusNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -120,6 +121,15 @@ new #[Layout('layouts.coordinator')] class extends Component
             'type'       => 'Gmail',
             'status'     => 'pending',
         ]);
+
+        // ✅ E-mail the requester
+        rescue(fn () => $request->user?->notify(new RequestStatusNotification(
+            status:       'approved',
+            approverName: "{$approverName} (Program Head)",
+            requestKind:  'Facility Reservation',
+            details:      $details,
+            requestId:    $request->id,
+        )));
     }
 
     // ============================================================
@@ -183,6 +193,16 @@ new #[Layout('layouts.coordinator')] class extends Component
             'type'       => 'Gmail',
             'status'     => 'pending',
         ]);
+
+        // ✅ E-mail the requester
+        rescue(fn () => $request->user?->notify(new RequestStatusNotification(
+            status:       'rejected',
+            approverName: "{$approverName} (Program Head)",
+            requestKind:  'Facility Reservation',
+            details:      $details,
+            reason:       $this->rejectReason ?: null,
+            requestId:    $request->id,
+        )));
 
         session()->flash('message', 'Reservation rejected and requester notified.');
 

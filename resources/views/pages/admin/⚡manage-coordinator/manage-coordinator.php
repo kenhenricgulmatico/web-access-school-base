@@ -3,6 +3,7 @@
 use App\Models\Request as ResourceRequest;
 use App\Models\Resource;
 use App\Models\Notification;
+use App\Notifications\RequestStatusNotification;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -214,6 +215,9 @@ new #[Layout('layouts.admin')] class extends Component
             return;
         }
 
+        // ✅ E-mail the Program Head who made the request
+        $this->emailRequester($request->id, 'approved');
+
         session()->flash('message', 'Request approved. Inventory updated.');
     }
 
@@ -283,9 +287,38 @@ new #[Layout('layouts.admin')] class extends Component
             'status'     => 'pending',
         ]);
 
+        // ✅ E-mail the Program Head who made the request
+        $this->emailRequester($request->id, 'rejected', $this->rejectReason ?: null);
+
         session()->flash('message', 'Request rejected and requester notified.');
 
         $this->cancelReject();
+    }
+
+    protected function emailRequester(int $requestId, string $status, ?string $reason = null): void
+    {
+        $request = ResourceRequest::with(['user', 'items'])->find($requestId);
+        if (! $request?->user) {
+            return;
+        }
+
+        $facilityItem = $request->items->firstWhere('resource_id', null);
+        $details = $request->items
+            ->map(fn ($i) => $i->resource_id
+                ? "{$i->item_name} (x{$i->quantity})"
+                : "{$i->item_name} on " . \Carbon\Carbon::parse($i->request_date)->format('M d, Y')
+                    . ($i->start_time ? " ({$i->start_time} - {$i->end_time})" : ''))
+            ->implode(', ') ?: $request->purpose;
+
+        rescue(fn () => $request->user->notify(new RequestStatusNotification(
+            status:       $status,
+            approverName: Auth::user()->name . ' (Admin)',
+            requestKind:  $facilityItem ? 'Facility Reservation' : 'Material Request',
+            details:      $details,
+            reason:       $reason,
+            requestId:    $request->id,
+            link:         route('coordinator.request-to-admin.view-admin', $request->id),
+        )));
     }
 
     public function clearFilters()

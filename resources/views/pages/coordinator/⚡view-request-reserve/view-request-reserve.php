@@ -4,6 +4,7 @@ namespace App\Livewire\Coordinator;
 
 use App\Models\Notification;
 use App\Models\Request as ResourceRequest;
+use App\Notifications\RequestStatusNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -71,5 +72,14 @@ new #[Layout('layouts.coordinator')] class extends Component
             'type'       => 'Gmail',
             'status'     => 'pending',
         ]);
+
+        // ✅ E-mail the requester
+        rescue(fn () => $this->requestModel->user?->notify(new RequestStatusNotification(
+            status:       $verb,
+            approverName: "{$approverName} (Program Head)",
+            requestKind:  $facilityItem ? 'Facility Reservation' : 'Material Request',
+            details:      $details,
+            requestId:    $this->requestModel->id,
+        )));
     }
 };

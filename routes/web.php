@@ -99,6 +99,9 @@ Route::middleware(['auth', 'approved', 'role:faculty|student', 'department'])->p
 
     Route::livewire('/view/material-reservation/{id}', 'pages::student-faculty.view-material-reservation')->name('portal.view-material-reservation');
 
+    //Calendar
+    Route::livewire('/calendar', 'pages::student-faculty.calendar')->name('portal.calendar');
+
     //Profile
     Route::livewire('/profile', 'pages::student-faculty.profile')->name('portal.profile');
 
