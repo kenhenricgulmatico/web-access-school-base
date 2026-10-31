@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Coordinator\RequestToAdmin;
 
+use App\Models\RequestType;
 use App\Support\BookingDate;
 use App\Models\Request as ResourceRequest;
 use App\Models\RequestItem;
@@ -35,13 +36,13 @@ new #[Layout('layouts.coordinator')] class extends Component
             'items.*.quantity'    => 'nullable|integer|min:1',
         ];
 
-        if ($this->request_type_id == 1) {
+        if ($this->request_type_id == RequestType::FACILITY) {
             $rules['facility_name'] = 'required|string|max:255';
             $rules['start_time']    = 'required';
             $rules['end_time']      = 'required|after:start_time';
         }
 
-        if ($this->request_type_id == 2) {
+        if ($this->request_type_id == RequestType::MATERIAL) {
             $rules['items']               = 'required|array|min:1';
             $rules['items.*.resource_id'] = 'required|exists:resources,id';
             $rules['items.*.quantity']    = 'required|integer|min:1';
@@ -165,7 +166,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     {
         $this->resetErrorBag('facility_name');
 
-        if ($this->request_type_id == 1 && $conflictMessage = $this->facilityConflict()) {
+        if ($this->request_type_id == RequestType::FACILITY && $conflictMessage = $this->facilityConflict()) {
             $this->addError('facility_name', $conflictMessage);
         }
     }
@@ -218,7 +219,7 @@ new #[Layout('layouts.coordinator')] class extends Component
         $this->request_type_id = $request->request_type_id;
         $this->purpose         = $request->purpose;
 
-        if ($request->request_type_id == 1) {
+        if ($request->request_type_id == RequestType::FACILITY) {
             $facilityItem = $request->items->whereNull('resource_id')->first();
 
             $this->facility_name = $facilityItem?->item_name ?? '';
@@ -275,12 +276,12 @@ new #[Layout('layouts.coordinator')] class extends Component
             return;
         }
 
-        if ($this->request_type_id == 1 && !in_array($this->facility_name, $this->facilityOptions)) {
+        if ($this->request_type_id == RequestType::FACILITY && !in_array($this->facility_name, $this->facilityOptions)) {
             $this->addError('facility_name', 'Please select a valid facility.');
             return;
         }
 
-        if ($this->request_type_id == 1) {
+        if ($this->request_type_id == RequestType::FACILITY) {
             if ($conflictMessage = $this->facilityConflict()) {
                 $this->addError('facility_name', $conflictMessage);
                 return;
@@ -322,7 +323,7 @@ new #[Layout('layouts.coordinator')] class extends Component
         $request->update(['purpose' => $this->purpose]);
         $request->items()->delete();
 
-        if ($this->request_type_id == 1) {
+        if ($this->request_type_id == RequestType::FACILITY) {
             RequestItem::create([
                 'request_id'   => $request->id,
                 'resource_id'  => null,

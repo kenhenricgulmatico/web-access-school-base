@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\ReturnTracking;
 use App\Models\Notification;
 use App\Models\Request as ResourceRequest;
 use App\Notifications\RequestStatusNotification;
@@ -100,6 +101,9 @@ new #[Layout('layouts.coordinator')] class extends Component
                 }
 
                 $request->update(['status' => 'approved']);
+
+                // ✅ Returnable items (chairs, projectors…) get a "return by" date
+                ReturnTracking::assignDueDates($request);
 
                 DB::table('request_approvals')->updateOrInsert(
                     ['request_id' => $request->id, 'approver_id' => Auth::id()],

@@ -658,6 +658,15 @@
                                         <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                                     @enderror
                                 </div>
+
+                                {{-- Returnable --}}
+                                <label for="is_returnable" class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-neutral-700 cursor-pointer">
+                                    <input id="is_returnable" type="checkbox" wire:model="is_returnable" class="mt-0.5 size-4 rounded border-gray-300 text-teal-600">
+                                    <span>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-neutral-300">Must be returned</span>
+                                        <span class="block text-xs text-gray-500 dark:text-neutral-400">Turn on for items that are borrowed and given back (chairs, projectors). Leave off for supplies that are used up (bond paper, markers).</span>
+                                    </span>
+                                </label>
                             </div>
 
                             {{-- Footer --}}
@@ -807,6 +816,15 @@
                                         <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                                     @enderror
                                 </div>
+
+                                {{-- Returnable --}}
+                                <label for="edit_is_returnable" class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-neutral-700 cursor-pointer">
+                                    <input id="edit_is_returnable" type="checkbox" wire:model="edit_is_returnable" class="mt-0.5 size-4 rounded border-gray-300 text-teal-600">
+                                    <span>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-neutral-300">Must be returned</span>
+                                        <span class="block text-xs text-gray-500 dark:text-neutral-400">Turn on for items that are borrowed and given back (chairs, projectors). Leave off for supplies that are used up (bond paper, markers).</span>
+                                    </span>
+                                </label>
 
                                 {{-- Note --}}
                                 <div class="flex items-start gap-2.5 rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/20 px-3.5 py-3">

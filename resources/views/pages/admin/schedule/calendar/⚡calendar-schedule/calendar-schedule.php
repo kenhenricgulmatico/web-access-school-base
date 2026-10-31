@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 // use App\Models\Schedule;
+use App\Models\RequestType;
 use App\Models\Request as ResourceRequest;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -80,7 +81,7 @@ new #[Layout('layouts.admin')] class extends Component
         $rows = \Illuminate\Support\Facades\DB::table('request_items as ri')
             ->join('requests as r', 'r.id', '=', 'ri.request_id')
             ->where('r.status', 'approved')
-            ->whereIn('r.request_type_id', [1, 2])
+            ->whereIn('r.request_type_id', [RequestType::FACILITY, RequestType::MATERIAL])
             ->whereBetween('ri.request_date', [$start->toDateString(), $end->toDateString()])
             ->select('ri.request_date', 'r.request_type_id')
             ->distinct()
@@ -92,7 +93,7 @@ new #[Layout('layouts.admin')] class extends Component
             $key = \Carbon\Carbon::parse($row->request_date)->format('Y-m-d');
             $days[$key] ??= ['reservation' => false, 'material' => false];
 
-            if ((int) $row->request_type_id === 1) {
+            if ((int) $row->request_type_id === RequestType::FACILITY) {
                 $days[$key]['reservation'] = true;
             } else {
                 $days[$key]['material'] = true;
@@ -108,7 +109,7 @@ public function selectedDateEvents()
     if (!$this->selectedDate) return [];
 
     $reservations = ResourceRequest::with(['user.department', 'items'])
-        ->where('request_type_id', 1)
+        ->where('request_type_id', RequestType::FACILITY)
         ->where('status', 'approved')
         ->whereHas('items', fn($q) =>
             $q->whereDate('request_date', $this->selectedDate)
@@ -116,7 +117,7 @@ public function selectedDateEvents()
         ->get();
 
     $materials = ResourceRequest::with(['user.department', 'items'])
-        ->where('request_type_id', 2)
+        ->where('request_type_id', RequestType::MATERIAL)
         ->where('status', 'approved')
         ->whereHas('items', fn($q) =>
             $q->whereDate('request_date', $this->selectedDate)

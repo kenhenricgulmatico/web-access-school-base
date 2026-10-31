@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\RequestType;
 use App\Models\Department;
 use App\Models\Request as ResourceRequest;
 use App\Models\Resource;
@@ -114,7 +115,7 @@ new #[Layout('layouts.admin')] class extends Component
     public function facilityRequests()
     {
         return $this->adminVisibleRequests()
-            ->where('request_type_id', 1)
+            ->where('request_type_id', RequestType::FACILITY)
             ->count();
     }
 
@@ -122,7 +123,7 @@ new #[Layout('layouts.admin')] class extends Component
     public function materialRequests()
     {
         return $this->adminVisibleRequests()
-            ->where('request_type_id', 2)
+            ->where('request_type_id', RequestType::MATERIAL)
             ->count();
     }
 

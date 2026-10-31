@@ -45,7 +45,7 @@
             <div>
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 dark:text-neutral-500 mb-1">Type</p>
                 <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full
-                    {{ $reservation->request_type_id == 1 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' }}">
+                    {{ $reservation->request_type_id == \App\Models\RequestType::FACILITY ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' }}">
                     {{ $reservation->requestType?->type_name ?? '—' }}
                 </span>
             </div>

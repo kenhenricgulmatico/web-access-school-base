@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\RequestType;
 use App\Models\RequestItem;
 use App\Models\Resource;
 use App\Support\BookingDate;
@@ -149,7 +150,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
         return [
             'id'         => $request->id,
             'status'     => $request->status,
-            'isFacility' => (int) $request->request_type_id === 1,
+            'isFacility' => (int) $request->request_type_id === RequestType::FACILITY,
             'title'      => $title,
             'time'       => ($facility && $facility->start_time)
                 ? Carbon::parse($facility->start_time)->format('g:i A') . ' – ' . Carbon::parse($facility->end_time)->format('g:i A')
@@ -159,6 +160,13 @@ new #[Layout('layouts.student-faculty')] class extends Component
                 : null,
             'purpose'    => $request->purpose,
             'reason'     => $reason,
+            // ✅ Borrowed items still to be returned, e.g. "Chair (x2) — return by Nov 03 (Due in 3 days)"
+            'returns'    => $materials
+                ->filter(fn ($m) => $m->due_back_at && ! $m->returned_at)
+                ->map(fn ($m) => [
+                    'text'    => "{$m->item_name} (x{$m->quantity}) — return by " . $m->due_back_at->format('M d') . ' (' . \App\Support\ReturnTracking::label($m) . ')',
+                    'overdue' => $m->isOverdue(),
+                ])->values()->all(),
         ];
     }
 

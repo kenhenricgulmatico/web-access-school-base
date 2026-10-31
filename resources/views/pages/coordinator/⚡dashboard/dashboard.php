@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Coordinator;
 
+use App\Models\RequestType;
 use App\Models\Request as ResourceRequest;
 use App\Models\User;
 use Livewire\Attributes\Computed;
@@ -49,7 +50,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     #[Computed]
     public function facilityRequests()
     {
-        return ResourceRequest::where('request_type_id', 1)
+        return ResourceRequest::where('request_type_id', RequestType::FACILITY)
             ->whereHas('user', fn($q) => $this->deptFilter($q))
             ->count();
     }
@@ -57,7 +58,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     #[Computed]
     public function materialRequests()
     {
-        return ResourceRequest::where('request_type_id', 2)
+        return ResourceRequest::where('request_type_id', RequestType::MATERIAL)
             ->whereHas('user', fn($q) => $this->deptFilter($q))
             ->count();
     }
@@ -102,8 +103,8 @@ new #[Layout('layouts.coordinator')] class extends Component
                 $q->role('student')->orWhere(fn($q2) => $q2->role('faculty'));
             })
             ->withCount([
-                'requests as facility_count' => fn($q) => $q->where('request_type_id', 1),
-                'requests as material_count' => fn($q) => $q->where('request_type_id', 2),
+                'requests as facility_count' => fn($q) => $q->where('request_type_id', RequestType::FACILITY),
+                'requests as material_count' => fn($q) => $q->where('request_type_id', RequestType::MATERIAL),
             ])
             ->get()
             ->map(function ($user) {
@@ -118,7 +119,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     #[Computed]
     public function studentFacilityRequests()
     {
-        return ResourceRequest::where('request_type_id', 1)
+        return ResourceRequest::where('request_type_id', RequestType::FACILITY)
             ->whereHas('user', function ($q) {
                 $this->deptFilter($q);
                 $q->role('student');
@@ -129,7 +130,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     #[Computed]
     public function studentMaterialRequests()
     {
-        return ResourceRequest::where('request_type_id', 2)
+        return ResourceRequest::where('request_type_id', RequestType::MATERIAL)
             ->whereHas('user', function ($q) {
                 $this->deptFilter($q);
                 $q->role('student');
@@ -140,7 +141,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     #[Computed]
     public function facultyFacilityRequests()
     {
-        return ResourceRequest::where('request_type_id', 1)
+        return ResourceRequest::where('request_type_id', RequestType::FACILITY)
             ->whereHas('user', function ($q) {
                 $this->deptFilter($q);
                 $q->role('faculty');
@@ -151,7 +152,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     #[Computed]
     public function facultyMaterialRequests()
     {
-        return ResourceRequest::where('request_type_id', 2)
+        return ResourceRequest::where('request_type_id', RequestType::MATERIAL)
             ->whereHas('user', function ($q) {
                 $this->deptFilter($q);
                 $q->role('faculty');

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\StudentFaculty;
 
+use App\Models\RequestType;
 use App\Models\Request as ResourceRequest;
 use App\Models\RequestItem;
 use Illuminate\Support\Facades\Auth;
@@ -31,7 +32,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     {
         return ResourceRequest::with(['items'])
             ->where('user_id', Auth::id())
-            ->where('request_type_id', 2) // Material Request
+            ->where('request_type_id', RequestType::MATERIAL) // Material Request
             ->latest()
             ->paginate(10);
     }

@@ -138,7 +138,7 @@
                             {{-- Type --}}
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full
-                                    {{ $req->request_type_id == 1 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' }}">
+                                    {{ $req->request_type_id == \App\Models\RequestType::FACILITY ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' }}">
                                     {{ $req->requestType?->type_name ?? '—' }}
                                 </span>
                             </td>

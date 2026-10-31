@@ -56,7 +56,7 @@
                                     {{-- Type --}}
                                     <td class="px-6 py-4">
                                         <span class="px-2 py-1 text-xs font-medium rounded-full
-                                            @if($request->request_type_id == 1) bg-green-100 text-green-700
+                                            @if($request->request_type_id == \App\Models\RequestType::FACILITY) bg-green-100 text-green-700
                                             @else bg-red-100 text-red-700 @endif">
                                             {{ $request->requestType->type_name ?? 'N/A' }}
                                         </span>
@@ -192,7 +192,7 @@
                     @enderror
                 </div>
 
-                @if($request_type_id == 1)
+                @if($request_type_id == \App\Models\RequestType::FACILITY)
                 <div class="space-y-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-700">
                     <p class="text-sm font-semibold text-green-700 dark:text-green-300">Facility Details</p>
 

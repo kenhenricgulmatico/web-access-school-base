@@ -38,6 +38,7 @@ new #[Layout('layouts.admin')] class extends Component
     public int    $initial_quantity  = 0;
     public string $unit              = 'Ream';
     public string $material_supplier = '';
+    public bool   $is_returnable     = false; // must be given back (chairs, projectors…)
 
     // Edit Material Form
     public int    $edit_id            = 0;
@@ -46,6 +47,7 @@ new #[Layout('layouts.admin')] class extends Component
     public string $edit_type_name     = '';
     public string $edit_unit          = 'Ream';
     public string $edit_status        = 'available';
+    public bool   $edit_is_returnable = false;
 
     public function mount(): void
     {
@@ -162,6 +164,7 @@ new #[Layout('layouts.admin')] class extends Component
         $this->edit_type_name     = $resource->resourceType->type_name ?? '';
         $this->edit_unit          = $resource->unit ?? 'Ream';
         $this->edit_status        = $resource->status ?? 'available';
+        $this->edit_is_returnable = (bool) $resource->is_returnable;
 
         $this->showEditModal = true;
     }
@@ -177,7 +180,7 @@ new #[Layout('layouts.admin')] class extends Component
             'resource_name', 'description', 'type_name', 'initial_quantity',
             'unit', 'material_supplier',
             'edit_id', 'edit_resource_name', 'edit_description', 'edit_type_name',
-            'edit_unit', 'edit_status',
+            'edit_unit', 'edit_status', 'is_returnable', 'edit_is_returnable',
         ]);
         $this->arrival_date = now()->format('Y-m-d');
         $this->unit         = 'Ream';
@@ -240,6 +243,7 @@ new #[Layout('layouts.admin')] class extends Component
                 'quantity_available' => $this->initial_quantity,
                 'unit'               => $this->unit,
                 'status'             => 'available',
+                'is_returnable'      => $this->is_returnable,
             ]);
 
             if ($this->initial_quantity > 0) {
@@ -287,6 +291,7 @@ new #[Layout('layouts.admin')] class extends Component
                 'resource_type_id' => $resourceType->id,
                 'unit'             => $this->edit_unit,
                 'status'           => $this->edit_status,
+                'is_returnable'    => $this->edit_is_returnable,
             ]);
 
             $this->closeModal();

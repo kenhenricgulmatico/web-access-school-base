@@ -75,7 +75,7 @@
                 @endif
 
                 {{-- Facility Fields --}}
-                @if($request_type_id == 1)
+                @if($request_type_id == \App\Models\RequestType::FACILITY)
                 <div class="space-y-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-700">
                     <p class="text-sm font-semibold text-green-700 dark:text-green-300">Facility Details</p>
 
@@ -182,7 +182,7 @@
                 @endif
 
                 {{-- Material Request (standalone type) --}}
-                @if($request_type_id == 2)
+                @if($request_type_id == \App\Models\RequestType::MATERIAL)
                 <div class="space-y-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-700">
                     <p class="text-sm font-semibold text-red-700 dark:text-red-300">Materials Needed <span class="text-red-500">*</span></p>
 

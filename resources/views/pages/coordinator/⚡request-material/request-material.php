@@ -1,5 +1,7 @@
 <?php
 
+use App\Support\ReturnTracking;
+use App\Models\RequestType;
 use App\Models\Request as ResourceRequest;
 use App\Models\Notification;
 use App\Notifications\RequestStatusNotification;
@@ -23,7 +25,7 @@ new #[Layout('layouts.coordinator')] class extends Component
 
     protected function scopedQuery()
     {
-        return ResourceRequest::where('request_type_id', 2)
+        return ResourceRequest::where('request_type_id', RequestType::MATERIAL)
             ->where('department_id', Auth::user()->department_id)
             ->whereHas('user', function ($query) {
                 $query->role(['student', 'faculty']);
@@ -83,6 +85,9 @@ new #[Layout('layouts.coordinator')] class extends Component
                 }
 
                 $request->update(['status' => 'approved']);
+
+                // ✅ Returnable items (chairs, projectors…) get a "return by" date
+                ReturnTracking::assignDueDates($request);
 
                 // ── Record the approval ──
                 DB::table('request_approvals')->updateOrInsert(

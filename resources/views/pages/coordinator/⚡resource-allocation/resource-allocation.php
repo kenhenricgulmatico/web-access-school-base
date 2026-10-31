@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\RequestType;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -92,7 +93,7 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->leftJoin('departments as d', 'd.id', '=', 'u.department_id')   // requester's department
             ->where('u.department_id', $departmentId)                        // based on their department
             ->where('req.user_id', '!=', Auth::id())                         // not my own requests
-            ->whereIn('req.request_type_id', [1, 2])
+            ->whereIn('req.request_type_id', [RequestType::FACILITY, RequestType::MATERIAL])
             ->whereIn('req.status', ['approved', 'rejected'])
             // only student / faculty requesters (excludes program heads)
             ->whereExists(function ($q) {
@@ -146,7 +147,7 @@ new #[Layout('layouts.coordinator')] class extends Component
                 $row->after  = $balance;
             }
 
-            $row->source = $row->request_type_id == 1 ? 'With facility reservation' : 'Material request';
+            $row->source = $row->request_type_id == RequestType::FACILITY ? 'With facility reservation' : 'Material request';
 
             return $row;
         });

@@ -117,6 +117,16 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
               <span class="truncate">Resource Allocation</span>
             </a>
           </li>
+          <li>
+            <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition min-w-0
+                {{ request()->routeIs('coordinator.borrowed-items')
+                    ? 'bg-[#123524] text-white font-medium shadow-sm'
+                    : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
+                focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800" href="{{ route('coordinator.borrowed-items') }}">
+              <svg class="shrink-0 size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"/></svg>
+              <span class="truncate">Borrowed Items</span>
+            </a>
+          </li>
         </ul>
       </div>
 

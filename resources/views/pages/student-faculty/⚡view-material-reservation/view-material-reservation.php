@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\RequestType;
 use App\Models\Request as ResourceRequest;
 use App\Models\RequestItem;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +24,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
             ->with(['items', 'approvals.approver'])
             ->findOrFail($id);
 
-        $this->isFacility = $this->requestModel->request_type_id === 1;
+        $this->isFacility = (int) $this->requestModel->request_type_id === RequestType::FACILITY;
     }
 
     /**

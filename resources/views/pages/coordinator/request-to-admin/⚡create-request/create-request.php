@@ -83,13 +83,13 @@ new #[Layout('layouts.coordinator')] class extends Component
             'materials.*.quantity'    => 'nullable|integer|min:1',
         ];
 
-        if ($this->request_type_id == 1) {
+        if ($this->request_type_id == RequestType::FACILITY) {
             $rules['facility_name'] = 'required|string|max:255';
             $rules['start_time']    = 'required';
             $rules['end_time']      = 'required|after:start_time';
         }
 
-        if ($this->request_type_id == 2) {
+        if ($this->request_type_id == RequestType::MATERIAL) {
             $rules['materials'] = 'required|array|min:1';
             $rules['materials.*.resource_id'] = 'required|exists:resources,id';
             $rules['materials.*.quantity']    = 'required|integer|min:1';
@@ -272,7 +272,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     {
         $this->resetErrorBag('end_time');
 
-        if ($this->request_type_id == 1 && $this->start_time && $this->end_time) {
+        if ($this->request_type_id == RequestType::FACILITY && $this->start_time && $this->end_time) {
             if ($this->end_time <= $this->start_time) {
                 $this->addError('end_time', 'End time must be after start time.');
             }
@@ -283,7 +283,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     {
         $this->resetErrorBag('facility_name');
 
-        if ($this->request_type_id == 1 && $conflictMessage = $this->facilityConflict()) {
+        if ($this->request_type_id == RequestType::FACILITY && $conflictMessage = $this->facilityConflict()) {
             $this->addError('facility_name', $conflictMessage);
         }
     }
@@ -328,7 +328,7 @@ new #[Layout('layouts.coordinator')] class extends Component
             return;
         }
 
-        if ($this->request_type_id == 1) {
+        if ($this->request_type_id == RequestType::FACILITY) {
             if ($conflictMessage = $this->facilityConflict()) {
                 $this->addError('facility_name', $conflictMessage);
                 return;
@@ -381,7 +381,7 @@ new #[Layout('layouts.coordinator')] class extends Component
             'current_responsibility_center_id' => $user->responsibility_center_id ?? null,
         ]);
 
-        if ($this->request_type_id == 1) {
+        if ($this->request_type_id == RequestType::FACILITY) {
             RequestItem::create([
                 'request_id'   => $request->id,
                 'resource_id'  => null,
@@ -402,15 +402,15 @@ new #[Layout('layouts.coordinator')] class extends Component
                 'item_name'    => $resource->resource_name,
                 'quantity'     => $material['quantity'],
                 'request_date' => $this->request_date,
-                'start_time'   => $this->request_type_id == 1 ? $this->start_time : null,
-                'end_time'     => $this->request_type_id == 1 ? $this->end_time : null,
+                'start_time'   => $this->request_type_id == RequestType::FACILITY ? $this->start_time : null,
+                'end_time'     => $this->request_type_id == RequestType::FACILITY ? $this->end_time : null,
             ]);
         }
 
-        $typeName = $this->request_type_id == 1 ? 'Facility Reservation' : 'Material Request';
+        $typeName = $this->request_type_id == RequestType::FACILITY ? 'Facility Reservation' : 'Material Request';
         $admins   = User::role('admin')->get();
 
-        if ($this->request_type_id == 1) {
+        if ($this->request_type_id == RequestType::FACILITY) {
             $materialsSummary = $selectedMaterials->isNotEmpty()
                 ? ' Materials: ' . $selectedMaterials->map(function ($m) {
                     $resource = Resource::find($m['resource_id']);

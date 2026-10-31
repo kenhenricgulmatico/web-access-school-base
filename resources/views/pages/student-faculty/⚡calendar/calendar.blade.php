@@ -200,6 +200,14 @@
                   <span class="text-[13px] leading-relaxed text-[#5C6862]">{{ \Illuminate\Support\Str::limit($req['purpose'], 100) }}</span>
                 @endif
 
+                @foreach($req['returns'] as $ret)
+                  <span class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] leading-snug
+                    {{ $ret['overdue'] ? 'bg-[#FCE9E7] text-[#A3271B]' : 'bg-[#FCF0D6] text-[#7A4D00]' }}">
+                    <svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"/></svg>
+                    {{ $ret['text'] }}
+                  </span>
+                @endforeach
+
                 @if($req['reason'])
                   <span class="px-3 py-2.5 rounded-xl bg-[#FCE9E7] text-[#A3271B] text-[13px] leading-snug">
                     <strong>Reason:</strong> {{ $req['reason'] }}

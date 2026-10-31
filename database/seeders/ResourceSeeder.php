@@ -20,7 +20,7 @@ class ResourceSeeder extends Seeder
             ['name' => 'Marker',           'type' => 'Writing Materials', 'unit' => 'Set'],
 
             // Furniture (Pcs)
-            ['name' => 'Chair',            'type' => 'Furniture',       'unit' => 'Pcs'],
+            ['name' => 'Chair',            'type' => 'Furniture',       'unit' => 'Pcs', 'returnable' => true],
         ];
 
         foreach ($materials as $material) {
@@ -38,6 +38,7 @@ class ResourceSeeder extends Seeder
                     'quantity_available' => 0,
                     'unit'               => $material['unit'],
                     'status'             => 'available',
+                    'is_returnable'      => $material['returnable'] ?? false,
                 ]
             );
         }

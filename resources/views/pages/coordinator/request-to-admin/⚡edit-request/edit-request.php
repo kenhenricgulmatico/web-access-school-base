@@ -91,7 +91,7 @@ new #[Layout('layouts.coordinator')] class extends Component
                 return $resource;
             });
 
-        if ($this->request_type_id == 1) {
+        if ($this->request_type_id == RequestType::FACILITY) {
             $facilityItem = $request->items->firstWhere('resource_id', null);
 
             if ($facilityItem) {
@@ -112,7 +112,7 @@ new #[Layout('layouts.coordinator')] class extends Component
                 ->toArray();
         }
 
-        if ($this->request_type_id == 2) {
+        if ($this->request_type_id == RequestType::MATERIAL) {
             $firstItem = $request->items->first();
             $this->request_date = $firstItem?->request_date;
 
@@ -136,13 +136,13 @@ new #[Layout('layouts.coordinator')] class extends Component
             'materials.*.quantity'    => 'nullable|integer|min:1',
         ];
 
-        if ($this->request_type_id == 1) {
+        if ($this->request_type_id == RequestType::FACILITY) {
             $rules['facility_name'] = 'required|string|max:255';
             $rules['start_time']    = 'required';
             $rules['end_time']      = 'required|after:start_time';
         }
 
-        if ($this->request_type_id == 2) {
+        if ($this->request_type_id == RequestType::MATERIAL) {
             $rules['materials'] = 'required|array|min:1';
             $rules['materials.*.resource_id'] = 'required|exists:resources,id';
             $rules['materials.*.quantity']    = 'required|integer|min:1';
@@ -356,7 +356,7 @@ new #[Layout('layouts.coordinator')] class extends Component
             'purpose' => $this->purpose,
         ]);
 
-        if ($this->request_type_id == 1) {
+        if ($this->request_type_id == RequestType::FACILITY) {
             $facilityItem = $this->requestModel->items()->whereNull('resource_id')->first();
 
             $facilityData = [
@@ -377,7 +377,7 @@ new #[Layout('layouts.coordinator')] class extends Component
             }
         }
 
-        if ($this->request_type_id == 2) {
+        if ($this->request_type_id == RequestType::MATERIAL) {
             $this->requestModel->items()->update(['request_date' => $this->request_date]);
         }
 
@@ -396,8 +396,8 @@ new #[Layout('layouts.coordinator')] class extends Component
                 'item_name'    => $resource->resource_name,
                 'quantity'     => $material['quantity'],
                 'request_date' => $this->request_date,
-                'start_time'   => $this->request_type_id == 1 ? $this->start_time : null,
-                'end_time'     => $this->request_type_id == 1 ? $this->end_time : null,
+                'start_time'   => $this->request_type_id == RequestType::FACILITY ? $this->start_time : null,
+                'end_time'     => $this->request_type_id == RequestType::FACILITY ? $this->end_time : null,
             ];
 
             if (!empty($material['id'])) {

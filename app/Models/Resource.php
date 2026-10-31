@@ -20,6 +20,11 @@ class Resource extends Model
         'unit',
         'quantity_available',
         'status',
+        'is_returnable',
+    ];
+
+    protected $casts = [
+        'is_returnable' => 'boolean',
     ];
 
     public function allocations(): HasMany

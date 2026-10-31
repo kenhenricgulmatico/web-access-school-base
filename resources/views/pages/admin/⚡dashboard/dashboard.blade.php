@@ -162,7 +162,7 @@
                         </td>
                         <td class="px-6 py-4">
                             <span class="px-2 py-1 text-xs font-medium rounded-full
-                                @if($request->request_type_id == 1) bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400
+                                @if($request->request_type_id == \App\Models\RequestType::FACILITY) bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400
                                 @else bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 @endif">
                                 {{ $request->requestType->type_name ?? 'N/A' }}
                             </span>
@@ -215,7 +215,7 @@
 
         $rowsData = $hist->map(fn ($h) => [
             'id'     => $h->id,
-            'type'   => $h->request_type_id == 1 ? 'facility' : 'material',
+            'type'   => $h->request_type_id == \App\Models\RequestType::FACILITY ? 'facility' : 'material',
             'group'  => $groupOf($h->status),
             'search' => strtolower($h->purpose . ' ' . $h->items->pluck('item_name')->implode(' ')),
         ])->values();
@@ -385,7 +385,7 @@
                                 <tbody class="divide-y divide-gray-100 dark:divide-neutral-700">
                                     @foreach ($hist as $h)
                                         @php
-                                            $isFacility = $h->request_type_id == 1;
+                                            $isFacility = $h->request_type_id == \App\Models\RequestType::FACILITY;
                                             $group      = $groupOf($h->status);
                                             $itemsText  = $h->items->take(2)->map(fn ($i) => $isFacility ? $i->item_name : $i->item_name . ' × ' . $i->quantity)->implode(', ');
                                             $moreItems  = $h->items->count() - 2;

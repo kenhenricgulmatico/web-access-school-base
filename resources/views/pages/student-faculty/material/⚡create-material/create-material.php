@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\RequestType;
 use App\Models\Request as ResourceRequest;
 use App\Models\RequestItem;
 use App\Models\Notification;
@@ -178,7 +179,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
         $request = ResourceRequest::create([
             'user_id' => $user->id,
             'department_id' => $user->department_id,
-            'request_type_id' => 2,
+            'request_type_id' => RequestType::MATERIAL,
             'purpose' => $this->purpose,
             'status' => 'pending',
             'current_responsibility_center_id' => $user->responsibility_center_id ?? null,

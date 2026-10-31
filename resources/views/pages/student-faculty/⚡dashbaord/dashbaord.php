@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\RequestType;
 use App\Models\Request as ResourceRequest;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +22,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     public function totalFacilityReservations(): int
     {
         return ResourceRequest::where('user_id', Auth::id())
-            ->where('request_type_id', 1)
+            ->where('request_type_id', RequestType::FACILITY)
             ->where('status', 'approved')
             ->count();
     }
@@ -30,7 +31,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     public function approvedFacilityReservations(): int
     {
         return ResourceRequest::where('user_id', Auth::id())
-            ->where('request_type_id', 1)
+            ->where('request_type_id', RequestType::FACILITY)
             ->where('status', 'approved')
             ->count();
     }
@@ -39,7 +40,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     public function pendingFacilityReservations(): int
     {
         return ResourceRequest::where('user_id', Auth::id())
-            ->where('request_type_id', 1)
+            ->where('request_type_id', RequestType::FACILITY)
             ->where('status', 'pending')
             ->count();
     }
@@ -56,7 +57,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     public function totalMaterialRequests(): int
     {
         return ResourceRequest::where('user_id', Auth::id())
-            ->where('request_type_id', 2)
+            ->where('request_type_id', RequestType::MATERIAL)
             ->where('status', 'approved')
             ->count();
     }
@@ -65,7 +66,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     public function approvedMaterialRequests(): int
     {
         return ResourceRequest::where('user_id', Auth::id())
-            ->where('request_type_id', 2)
+            ->where('request_type_id', RequestType::MATERIAL)
             ->where('status', 'approved')
             ->count();
     }
@@ -74,7 +75,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     public function pendingMaterialRequests(): int
     {
         return ResourceRequest::where('user_id', Auth::id())
-            ->where('request_type_id', 2)
+            ->where('request_type_id', RequestType::MATERIAL)
             ->where('status', 'pending')
             ->count();
     }
@@ -87,7 +88,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     public function totalPendingRequests(): int
     {
         return ResourceRequest::where('user_id', Auth::id())
-            ->whereIn('request_type_id', [1, 2])
+            ->whereIn('request_type_id', [RequestType::FACILITY, RequestType::MATERIAL])
             ->where('status', 'pending')
             ->count();
     }
@@ -101,12 +102,12 @@ new #[Layout('layouts.student-faculty')] class extends Component
     {
         return ResourceRequest::with('items')
             ->where('user_id', Auth::id())
-            ->whereIn('request_type_id', [1, 2])
+            ->whereIn('request_type_id', [RequestType::FACILITY, RequestType::MATERIAL])
             ->latest()
             ->take(7)
             ->get()
             ->map(function ($req) {
-                $isFacility = (int) $req->request_type_id === 1;
+                $isFacility = (int) $req->request_type_id === RequestType::FACILITY;
                 $firstItem = $req->items->first();
 
                 $details = $isFacility
@@ -143,7 +144,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
             $month = Carbon::now()->subMonths($i);
 
             $count = ResourceRequest::where('user_id', Auth::id())
-                ->where('request_type_id', 1)
+                ->where('request_type_id', RequestType::FACILITY)
                 ->where('status', 'approved')
                 ->whereYear('created_at', $month->year)
                 ->whereMonth('created_at', $month->month)
@@ -167,7 +168,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
             $month = Carbon::now()->subMonths($i);
 
             $count = ResourceRequest::where('user_id', Auth::id())
-                ->where('request_type_id', 2)
+                ->where('request_type_id', RequestType::MATERIAL)
                 ->where('status', 'approved')
                 ->whereYear('created_at', $month->year)
                 ->whereMonth('created_at', $month->month)

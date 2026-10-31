@@ -68,6 +68,9 @@ Route::middleware(['auth', 'approved', 'program head', 'department'])->prefix('p
     //Resource allocation
     Route::livewire('/resource-allocation', 'pages::coordinator.resource-allocation')->name('coordinator.resource-allocation');
 
+    //Borrowed items (return tracking)
+    Route::livewire('/borrowed-items', 'pages::coordinator.borrowed-items')->name('coordinator.borrowed-items');
+
     //Request to admin
     Route::livewire('/request-to-admin/view-request', 'pages::coordinator.request-to-admin.view-request')->name('coordinator.request-to-admin.view-request');
     Route::livewire('/request-to-admin/create', 'pages::coordinator.request-to-admin.create-request')->name('coordinator.request-to-admin.create-request');
