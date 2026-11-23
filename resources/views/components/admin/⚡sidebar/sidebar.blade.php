@@ -55,6 +55,21 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
                             Program Head Requests
                         </a>
                     </li>
+                                        {{-- ✅ NEW: Borrowed Items (Pcs) --}}
+                    <li>
+                        <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
+                            {{ request()->routeIs('admin.borrowed-items')
+                                ? 'bg-[#123524] text-white font-medium shadow-sm'
+                                : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
+                            focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
+                            href="/admin/borrowed-items">
+                            <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="9 14 4 9 9 4"/>
+                                <path d="M20 20v-7a4 4 0 0 0-4-4H4"/>
+                            </svg>
+                            Borrowed Items
+                        </a>
+                    </li>
                 </ul>
             </div>
 
@@ -127,7 +142,7 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
                                 <line x1="8" y1="2" x2="8" y2="6"/>
                                 <line x1="3" y1="10" x2="21" y2="10"/>
                             </svg>
-                            Facility Schedule
+                            Facility Room
                         </a>
                     </li>
                 </ul>

@@ -3,6 +3,7 @@
 use App\Support\ReturnTracking;
 use App\Models\Notification;
 use App\Models\Request as ResourceRequest;
+use App\Models\User;
 use App\Notifications\RequestStatusNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -212,8 +213,22 @@ new #[Layout('layouts.coordinator')] class extends Component
         )));
     }
 
+    /**
+     * Is there an APPROVED booking that overlaps this slot?
+     *
+     * ✅ FIX: The Program Head's OWN approved booking (the one they sent to
+     * Admin for this same student/faculty slot) is NOT counted as a conflict.
+     * We skip an approved booking when:
+     *   - it was made by a Program Head of THIS department, AND
+     *   - it fully covers the student's time slot.
+     * Any other overlap (another student, another department, a partial
+     * overlap) is still blocked.
+     */
     protected function facilityHasConflict(string $facilityName, string $date, string $startTime, string $endTime, int $excludeRequestId): bool
     {
+        $departmentId  = Auth::user()->department_id;
+        $userMorphType = (new User)->getMorphClass();
+
         return DB::table('request_items as ri')
             ->join('requests as req', 'req.id', '=', 'ri.request_id')
             ->where('req.status', 'approved')
@@ -223,6 +238,23 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->whereDate('ri.request_date', $date)
             ->where('ri.start_time', '<', $endTime)
             ->where('ri.end_time', '>', $startTime)
+            // ✅ Ignore the Program Head's own booking that covers this slot
+            ->whereNot(function ($q) use ($departmentId, $userMorphType, $startTime, $endTime) {
+                $q->where('ri.start_time', '<=', $startTime)
+                  ->where('ri.end_time', '>=', $endTime)
+                  ->whereExists(function ($sub) use ($departmentId, $userMorphType) {
+                      $sub->select(DB::raw(1))
+                          ->from('users as u')
+                          ->join('model_has_roles as mhr', function ($join) use ($userMorphType) {
+                              $join->on('mhr.model_id', '=', 'u.id')
+                                   ->where('mhr.model_type', $userMorphType);
+                          })
+                          ->join('roles as r', 'r.id', '=', 'mhr.role_id')
+                          ->whereColumn('u.id', 'req.user_id')
+                          ->where('r.name', 'program head')
+                          ->where('u.department_id', $departmentId);
+                  });
+            })
             ->exists();
     }
 };

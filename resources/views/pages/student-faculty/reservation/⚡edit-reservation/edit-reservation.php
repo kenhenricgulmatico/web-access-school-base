@@ -25,9 +25,12 @@ new #[Layout('layouts.student-faculty')] class extends Component
     public $availableResources = [];
     public array $materials = [];
 
+    // ✅ When the borrowed Pcs items will be returned (max 1 month)
+    public $return_by = '';
+
     protected function rules()
     {
-        return [
+        return $this->returnByRules() + [
             'facility_name'           => 'required|string|max:255',
             'used_date'               => BookingDate::rules(),
             'start_time'              => 'required',
@@ -52,7 +55,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     protected function messages(): array
     {
         // ✅ Booking date: today up to ~6 months ahead (see App\Support\BookingDate)
-        return array_merge($this->messages, BookingDate::messages('used_date'));
+        return array_merge($this->messages, BookingDate::messages('used_date'), $this->returnByMessages());
     }
 
     public function mount($id)
@@ -95,6 +98,10 @@ new #[Layout('layouts.student-faculty')] class extends Component
             'quantity'    => $item->quantity,
         ])->values()->toArray();
 
+        // ✅ Return date chosen earlier (saved on the Pcs items only)
+        $saved = $materialItems->whereNotNull('due_back_at')->first()?->due_back_at;
+        $this->return_by = $saved ? $saved->format('Y-m-d') : '';
+
         $facilityType = ResourceType::where('type_name', 'Facility')->first();
 
         if ($facilityType) {
@@ -119,14 +126,53 @@ new #[Layout('layouts.student-faculty')] class extends Component
             sort($this->facilityOptions);
         }
 
-        $this->availableResources = Resource::where('status', 'available')
-            ->where('quantity_available', '>', 0)
-            ->whereHas('resourceType', fn($q) =>
-                $q->where('type_name', 'not like', '%facility%')
-                  ->where('type_name', 'not like', '%Facility%')
+        // ✅ Only Pcs items (chairs…) — see borrowableResources()
+        $this->availableResources = $this->borrowableResources();
+    }
+
+    /**
+     * ✅ Items a student / faculty may add to a reservation:
+     *    - Ream / Set items (bond paper, markers…): ONLY what their department has.
+     *    - Pcs items (chairs…): what the department has + what the Admin can still lend.
+     *      The department does not need to have them yet — the Program Head can borrow
+     *      them from the Admin first (Request to Admin), then approve.
+     */
+    protected function borrowableResources()
+    {
+        $departmentId = Auth::user()->department_id;
+
+        if (! $departmentId) {
+            return collect();
+        }
+
+        return \Illuminate\Support\Facades\DB::table('resources')
+            ->join('resource_types', 'resource_types.id', '=', 'resources.resource_type_id')
+            ->leftJoin('resource_all_locations', function ($join) use ($departmentId) {
+                $join->on('resource_all_locations.resource_id', '=', 'resources.id')
+                     ->where('resource_all_locations.department_id', '=', $departmentId);
+            })
+            ->where('resources.status', 'available')
+            ->where('resource_types.type_name', 'not like', '%facility%')
+            ->orderBy('resources.resource_name')
+            ->select(
+                'resources.id',
+                'resources.resource_name',
+                'resources.unit',
+                // Pcs: department + Admin  |  Ream / Set: department only
+                \Illuminate\Support\Facades\DB::raw("CASE WHEN resources.unit = 'Pcs'
+                      THEN COALESCE(resource_all_locations.allocated_quantity, 0) + resources.quantity_available
+                      ELSE COALESCE(resource_all_locations.allocated_quantity, 0)
+                 END as quantity_available")
             )
-            ->orderBy('resource_name')
-            ->get();
+            ->get()
+            ->filter(fn ($resource) => (int) $resource->quantity_available > 0)
+            ->values();
+    }
+
+    /** The item the user picked (null when it is not available for the department). */
+    protected function borrowableResource($resourceId)
+    {
+        return collect($this->availableResources)->firstWhere('id', (int) $resourceId);
     }
 
     public function addMaterial()
@@ -190,18 +236,16 @@ new #[Layout('layouts.student-faculty')] class extends Component
                 return;
             }
 
-            $existingQty = 0;
-            if (!empty($material['item_id'])) {
-                $existingItem = $request->items->firstWhere('id', $material['item_id']);
-                if ($existingItem && $existingItem->resource_id == $resource->id) {
-                    $existingQty = $existingItem->quantity;
-                }
+            // ✅ Not more than what is available (Pcs: department + Admin, Ream / Set: department)
+            $choice = $this->borrowableResource($material['resource_id']);
+
+            if (! $choice) {
+                $this->addError("materials.$i.resource_id", 'This material is not available for your department.');
+                return;
             }
 
-            $effectivelyAvailable = $resource->quantity_available + $existingQty;
-
-            if ((int) $material['quantity'] > $effectivelyAvailable) {
-                $this->addError("materials.$i.quantity", "Only {$effectivelyAvailable} {$resource->resource_name} available.");
+            if ((int) $material['quantity'] > (int) $choice->quantity_available) {
+                $this->addError("materials.$i.quantity", "Only {$choice->quantity_available} {$choice->resource_name} available.");
                 return;
             }
         }
@@ -231,6 +275,8 @@ new #[Layout('layouts.student-faculty')] class extends Component
                         'request_date' => $this->used_date,
                         'start_time'   => $this->start_time,
                         'end_time'     => $this->end_time,
+                        // ✅ Only Pcs items get the return date. Ream / Set: none.
+                        'due_back_at'  => ($resource->unit === 'Pcs' && $this->return_by) ? $this->return_by : null,
                     ]);
                     $keptItemIds[] = $item->id;
                 }
@@ -243,6 +289,8 @@ new #[Layout('layouts.student-faculty')] class extends Component
                     'request_date' => $this->used_date,
                     'start_time'   => $this->start_time,
                     'end_time'     => $this->end_time,
+                    // ✅ Only Pcs items get the return date. Ream / Set: none.
+                    'due_back_at'  => ($resource->unit === 'Pcs' && $this->return_by) ? $this->return_by : null,
                 ]);
                 $keptItemIds[] = $newItem->id;
             }
@@ -272,6 +320,64 @@ new #[Layout('layouts.student-faculty')] class extends Component
         session()->flash('success', 'Reservation updated successfully!');
 
         return redirect()->route('portal.reservation');
+    }
+
+    // ============================================================
+    // ✅ RETURN DEADLINE — ONLY for items counted in pieces (Pcs, e.g. chairs)
+    //    Ream and Set items are used up, so they never get a return date.
+    // ============================================================
+
+    /** Longest a borrower may keep Pcs items: 1 month. */
+    public const MAX_BORROW_MONTHS = 1;
+
+    /** True when at least one selected item has unit "Pcs" (it must be returned). */
+    public function hasBorrowItems(): bool
+    {
+        $ids = collect($this->materials)
+            ->pluck('resource_id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+
+        return $ids && \App\Models\Resource::whereIn('id', $ids)->where('unit', 'Pcs')->exists();
+    }
+
+    /** Earliest return date: the reservation day (never before today). */
+    public function returnByMin(): string
+    {
+        $start = $this->used_date ? \Carbon\Carbon::parse($this->used_date) : today();
+
+        return ($start->lt(today()) ? today() : $start)->format('Y-m-d');
+    }
+
+    /** Latest return date: 1 month after the earliest date. */
+    public function returnByMax(): string
+    {
+        return \Carbon\Carbon::parse($this->returnByMin())
+            ->addMonthsNoOverflow(self::MAX_BORROW_MONTHS)
+            ->format('Y-m-d');
+    }
+
+    /** Validation for the return date (only when Pcs items are selected). */
+    protected function returnByRules(): array
+    {
+        return $this->hasBorrowItems()
+            ? ['return_by' => 'required|date|after_or_equal:' . $this->returnByMin() . '|before_or_equal:' . $this->returnByMax()]
+            : [];
+    }
+
+    protected function returnByMessages(): array
+    {
+        $min = \Carbon\Carbon::parse($this->returnByMin())->format('M d, Y');
+        $max = \Carbon\Carbon::parse($this->returnByMax())->format('M d, Y');
+
+        return [
+            'return_by.required'        => 'Please choose when you will return the borrowed items.',
+            'return_by.date'            => 'Please enter a valid return date.',
+            'return_by.after_or_equal'  => "The return date cannot be before {$min}.",
+            'return_by.before_or_equal' => "You can borrow items for 1 month only. Please return them by {$max}.",
+        ];
     }
 
     public function cancel()

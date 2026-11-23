@@ -24,12 +24,20 @@ new #[Layout('layouts.admin')] class extends Component
 
     /**
      * Requests from Program Head accounts only land here for Admin's review.
+     *
+     * ✅ Only Ream / Set items (and facility-only requests) are shown here.
+     *    Any request that borrows a Pcs item (chairs…) is handled on the
+     *    Borrowed Items page instead, where the Admin sets a return deadline.
      */
     protected function incomingRequestsQuery()
     {
         return ResourceRequest::whereHas('user', function ($query) {
-            $query->role(['program head']);
-        });
+                $query->role(['program head']);
+            })
+            ->whereDoesntHave('items', function ($item) {
+                $item->whereNotNull('resource_id')
+                     ->whereHas('resource', fn ($r) => $r->where('unit', 'Pcs'));
+            });
     }
 
     #[Computed]
@@ -342,7 +350,7 @@ new #[Layout('layouts.admin')] class extends Component
             ->where('req.id', '!=', $excludeRequestId)
             ->whereNull('ri.resource_id')
             ->where('ri.item_name', $facilityName)
-            ->whereDate('ri.request_date', $date)
+            ->whereDate('ri.request_date', $facilityName ? $date : $date)
             ->where('ri.start_time', '<', $endTime)
             ->where('ri.end_time', '>', $startTime)
             ->exists();

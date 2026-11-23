@@ -17,6 +17,18 @@ new #[Layout('layouts.admin')] class extends Component
 
     protected array $excludedTypes = ['Facility'];
 
+    /**
+     * ✅ Maximum stock allowed per unit.
+     *    Pcs  → up to 10,000
+     *    Ream → up to 1,000
+     *    Set  → up to 1,000
+     */
+    public const UNIT_LIMITS = [
+        'Pcs'  => 10000,
+        'Ream' => 1000,
+        'Set'  => 1000,
+    ];
+
     public string $search       = '';
     public string $statusFilter = '';
     public bool $showModal      = false;
@@ -24,8 +36,10 @@ new #[Layout('layouts.admin')] class extends Component
     public bool $showEditModal  = false;
 
     // Add Stock Form
-    public int    $resource_id    = 0;
-    public int    $quantity_added = 1;
+    // ✅ Untyped on purpose: when the input box is cleared, Livewire sends ""
+    //    (a string). A typed `int` property would crash with a TypeError.
+    public $resource_id    = 0;
+    public $quantity_added = 1;
     public string $supplier       = '';
     public string $arrival_date   = '';
     public string $arrival_time   = '';
@@ -35,7 +49,7 @@ new #[Layout('layouts.admin')] class extends Component
     public string $resource_name     = '';
     public string $description       = '';
     public string $type_name         = '';
-    public int    $initial_quantity  = 0;
+    public        $initial_quantity  = 0; // ✅ untyped (see above)
     public string $unit              = 'Ream';
     public string $material_supplier = '';
     public bool   $is_returnable     = false; // must be given back (chairs, projectors…)
@@ -188,6 +202,12 @@ new #[Layout('layouts.admin')] class extends Component
         $this->edit_status  = 'available';
     }
 
+    /** Max stock for a unit (null = no limit for unknown units). */
+    protected function unitLimit(?string $unit): ?int
+    {
+        return self::UNIT_LIMITS[$unit ?: 'Ream'] ?? null;
+    }
+
     public function addStock(): void
     {
         // ✅ Server-side guard
@@ -200,13 +220,28 @@ new #[Layout('layouts.admin')] class extends Component
         ]);
 
         $resource = Resource::with('resourceType')->findOrFail($this->resource_id);
-        $before   = $resource->quantity_available;
-        $after    = $before + $this->quantity_added;
+        $qtyAdded = (int) $this->quantity_added;
+        $before   = (int) $resource->quantity_available;
+        $after    = $before + $qtyAdded;
+
+        // ✅ Unit limit check (Pcs 10,000 / Ream 1,000 / Set 1,000)
+        $unit  = $resource->unit ?: 'Ream';
+        $limit = $this->unitLimit($unit);
+
+        if ($limit !== null && $after > $limit) {
+            $canAdd = max($limit - $before, 0);
+            $this->addError(
+                'quantity_added',
+                "Stock limit for {$unit} is " . number_format($limit) . " {$unit}. "
+                . "Current stock is " . number_format($before) . ", so you can only add up to " . number_format($canAdd) . " more."
+            );
+            return;
+        }
 
         Stock::create([
             'resource_id'     => $this->resource_id,
             'user_id'         => Auth::id(),
-            'quantity_added'  => $this->quantity_added,
+            'quantity_added'  => $qtyAdded,
             'quantity_before' => $before,
             'quantity_after'  => $after,
             'supplier'        => $this->supplier !== '' ? $this->supplier : ($resource->resourceType->type_name ?? 'Unspecified'),
@@ -225,13 +260,20 @@ new #[Layout('layouts.admin')] class extends Component
         // ✅ Server-side guard
         abort_unless(auth()->user()->can('stock-materials.create'), 403);
 
+        // ✅ Unit limit (Pcs 10,000 / Ream 1,000 / Set 1,000)
+        $limit = $this->unitLimit($this->unit);
+
         $this->validate([
             'resource_name'     => 'required|string|max:255',
             'type_name'         => 'required|string|max:255|not_in:' . implode(',', $this->excludedTypes),
-            'initial_quantity'  => 'required|integer|min:0',
+            'initial_quantity'  => 'required|integer|min:0' . ($limit !== null ? '|max:' . $limit : ''),
             'unit'              => 'required|string|max:50',
             'material_supplier' => 'nullable|string|max:255',
+        ], [
+            'initial_quantity.max' => "Stock limit for {$this->unit} is " . number_format((int) $limit) . " {$this->unit}.",
         ]);
+
+        $initialQty = (int) $this->initial_quantity;
 
         try {
             $resourceType = ResourceType::firstOrCreate(['type_name' => $this->type_name]);
@@ -240,19 +282,19 @@ new #[Layout('layouts.admin')] class extends Component
                 'resource_name'      => $this->resource_name,
                 'description'        => $this->description !== '' ? $this->description : $this->resource_name,
                 'resource_type_id'   => $resourceType->id,
-                'quantity_available' => $this->initial_quantity,
+                'quantity_available' => $initialQty,
                 'unit'               => $this->unit,
                 'status'             => 'available',
                 'is_returnable'      => $this->is_returnable,
             ]);
 
-            if ($this->initial_quantity > 0) {
+            if ($initialQty > 0) {
                 Stock::create([
                     'resource_id'     => $resource->id,
                     'user_id'         => Auth::id(),
-                    'quantity_added'  => $this->initial_quantity,
+                    'quantity_added'  => $initialQty,
                     'quantity_before' => 0,
-                    'quantity_after'  => $this->initial_quantity,
+                    'quantity_after'  => $initialQty,
                     'supplier'        => $this->material_supplier !== '' ? $this->material_supplier : $resourceType->type_name,
                     'arrival_date'    => now()->format('Y-m-d'),
                     'remarks'         => 'Initial stock',
@@ -281,8 +323,20 @@ new #[Layout('layouts.admin')] class extends Component
             'edit_status'        => 'required|in:available,unavailable,maintenance',
         ]);
 
+        // ✅ Changing the unit must not leave the stock above the new unit's limit
+        $resource = Resource::findOrFail($this->edit_id);
+        $limit    = $this->unitLimit($this->edit_unit);
+
+        if ($limit !== null && $resource->quantity_available > $limit) {
+            $this->addError(
+                'edit_unit',
+                "Stock limit for {$this->edit_unit} is " . number_format($limit) . " {$this->edit_unit}, "
+                . "but this material has " . number_format($resource->quantity_available) . " in stock. Choose another unit."
+            );
+            return;
+        }
+
         try {
-            $resource     = Resource::findOrFail($this->edit_id);
             $resourceType = ResourceType::firstOrCreate(['type_name' => $this->edit_type_name]);
 
             $resource->update([

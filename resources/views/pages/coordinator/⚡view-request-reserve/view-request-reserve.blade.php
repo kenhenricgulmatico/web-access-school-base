@@ -113,7 +113,13 @@
           <div class="bg-gray-50 dark:bg-neutral-900/40 rounded-lg divide-y divide-gray-200 dark:divide-neutral-700">
             @foreach($materialItems as $material)
               <div class="px-4 py-2.5 flex items-center justify-between">
-                <p class="text-sm text-gray-700 dark:text-neutral-300">{{ $material->item_name }}</p>
+                <div>
+                  <p class="text-sm text-gray-700 dark:text-neutral-300">{{ $material->item_name }}</p>
+                  {{-- ✅ Return date the student/faculty chose (Pcs items only) --}}
+                  @if($material->due_back_at)
+                    <p class="text-xs font-medium text-amber-700 dark:text-amber-300">Return by {{ $material->due_back_at->format('M d, Y') }}</p>
+                  @endif
+                </div>
                 <span class="text-xs font-medium text-red-600 bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded-full">x{{ $material->quantity }}</span>
               </div>
             @endforeach
@@ -125,6 +131,27 @@
       @endif
 
     </div>
+
+    {{-- ✅ Department does not have enough → send the missing items to the Admin --}}
+    @if($requestModel->status === 'pending')
+      @php $__shortage = \App\Support\DepartmentStock::shortage($requestModel); @endphp
+      @if($__shortage->isNotEmpty())
+      <div class="px-6 py-4 bg-indigo-50 dark:bg-indigo-950/30 border-t border-indigo-100 dark:border-indigo-900 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="flex-1 text-sm text-indigo-900 dark:text-indigo-200">
+          <p class="font-semibold">Your department does not have enough for this request.</p>
+          <p class="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">
+            {{ $__shortage->map(fn ($r) => "{$r->item_name}: has {$r->in_department}, needs {$r->requested} {$r->unit}")->implode(' · ') }}
+          </p>
+        </div>
+        @can('program-head-requests.create')
+          <a href="{{ route('coordinator.request-to-admin.create-request', ['from' => $requestModel->id]) }}" wire:navigate
+             class="shrink-0 px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-center">
+            Forward to Admin
+          </a>
+        @endcan
+      </div>
+      @endif
+    @endif
 
     {{-- Actions --}}
     @if($requestModel->status === 'pending')

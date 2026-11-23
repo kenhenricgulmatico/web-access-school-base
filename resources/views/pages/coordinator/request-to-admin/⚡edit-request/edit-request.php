@@ -31,6 +31,9 @@ new #[Layout('layouts.coordinator')] class extends Component
     public array $materials = [];
     public $availableResources = [];
 
+    // ✅ When the borrowed Pcs items will be returned (max 1 month)
+    public $return_by = '';
+
     public function mount(int $id)
     {
         // ✅ Server-side guard — requires `program-head-requests.update`
@@ -125,6 +128,10 @@ new #[Layout('layouts.coordinator')] class extends Component
                 ->values()
                 ->toArray();
         }
+
+        // ✅ Return date the Program Head chose earlier (saved on the Pcs items only)
+        $savedReturnBy = $request->items->whereNotNull('resource_id')->whereNotNull('due_back_at')->first()?->due_back_at;
+        $this->return_by = $savedReturnBy ? $savedReturnBy->format('Y-m-d') : '';
     }
 
     protected function rules()
@@ -148,6 +155,11 @@ new #[Layout('layouts.coordinator')] class extends Component
             $rules['materials.*.quantity']    = 'required|integer|min:1';
         }
 
+        // ✅ Borrowing Pcs items → a return date is required (max 1 month). Ream / Set: not asked.
+        if ($this->hasBorrowItems()) {
+            $rules['return_by'] = 'required|date|after_or_equal:' . $this->returnByMin() . '|before_or_equal:' . $this->returnByMax();
+        }
+
         return $rules;
     }
 
@@ -168,7 +180,48 @@ new #[Layout('layouts.coordinator')] class extends Component
     protected function messages(): array
     {
         // ✅ Booking date: today up to ~6 months ahead (see App\Support\BookingDate)
-        return array_merge($this->messages, BookingDate::messages('request_date'));
+        $min = \Carbon\Carbon::parse($this->returnByMin())->format('M d, Y');
+        $max = \Carbon\Carbon::parse($this->returnByMax())->format('M d, Y');
+
+        return array_merge($this->messages, BookingDate::messages('request_date'), [
+            'return_by.required'        => 'Please choose when you will return the borrowed items.',
+            'return_by.date'            => 'Please enter a valid return date.',
+            'return_by.after_or_equal'  => "The return date cannot be before {$min} (the day you need the items).",
+            'return_by.before_or_equal' => "You can borrow items for 1 month only. Please return them by {$max}.",
+        ]);
+    }
+
+    // ============================================================
+    // ✅ RETURN DEADLINE — ONLY for items counted in pieces (Pcs)
+    //    Ream and Set items are used up, so they never get a return date.
+    // ============================================================
+
+    /** Longest a Program Head may keep borrowed Pcs items: 1 month after the day they need them. */
+    public const MAX_BORROW_MONTHS = 1;
+
+    /** True when at least one selected material has unit "Pcs" (it must be returned). */
+    public function hasBorrowItems(): bool
+    {
+        return collect($this->materials)
+            ->pluck('resource_id')
+            ->filter()
+            ->contains(fn ($id) => ($this->getMaterialResource($id)?->unit) === 'Pcs');
+    }
+
+    /** Earliest return date: the day the items are needed (never before today). */
+    public function returnByMin(): string
+    {
+        $needed = $this->request_date ? \Carbon\Carbon::parse($this->request_date) : today();
+
+        return ($needed->lt(today()) ? today() : $needed)->format('Y-m-d');
+    }
+
+    /** Latest return date: 1 month after the day the items are needed. */
+    public function returnByMax(): string
+    {
+        return \Carbon\Carbon::parse($this->returnByMin())
+            ->addMonthsNoOverflow(self::MAX_BORROW_MONTHS)
+            ->format('Y-m-d');
     }
 
     #[Computed]
@@ -398,6 +451,8 @@ new #[Layout('layouts.coordinator')] class extends Component
                 'request_date' => $this->request_date,
                 'start_time'   => $this->request_type_id == RequestType::FACILITY ? $this->start_time : null,
                 'end_time'     => $this->request_type_id == RequestType::FACILITY ? $this->end_time : null,
+                // ✅ Only Pcs items get the return date (the Admin can still adjust it). Ream / Set: none.
+                'due_back_at'  => $resource->unit === 'Pcs' && $this->return_by ? $this->return_by : null,
             ];
 
             if (!empty($material['id'])) {

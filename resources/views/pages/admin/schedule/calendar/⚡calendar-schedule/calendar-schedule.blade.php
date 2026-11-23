@@ -66,6 +66,7 @@
               <div class="flex flex-col items-center py-0.5">
                 @if($day)
                   <button wire:click="selectDate('{{ $dateKey }}')"
+                    title="{{ $this->relativeDayLabel($dateKey) }}"
                     class="relative w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center text-[11px] sm:text-sm rounded-xl sm:rounded-2xl transition font-semibold
                       {{ $isSelected
                         ? 'bg-teal-500 text-white shadow-md shadow-teal-200 dark:shadow-none scale-105'
@@ -129,7 +130,30 @@
                 </p>
               </div>
             </div>
-            <span class="text-[8px] sm:text-[10px] font-bold text-gray-300 dark:text-neutral-600 uppercase tracking-widest">Events</span>
+
+            {{-- ✅ Relative day label: Today / Tomorrow / Yesterday / In 3 days / 2 days ago --}}
+            @php
+              $relLabel = $this->relativeDayLabel($selectedDate);
+              $relClass = match (true) {
+                $relLabel === 'Today'                    => 'bg-teal-500 text-white',
+                $relLabel === 'Tomorrow',
+                str_starts_with($relLabel, 'In ')        => 'bg-blue-50 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800',
+                default                                  => 'bg-gray-100 text-gray-600 ring-1 ring-gray-200 dark:bg-neutral-700 dark:text-neutral-300 dark:ring-neutral-600',
+              };
+            @endphp
+            <div class="flex items-center gap-2 shrink-0">
+              @if($relLabel)
+                <span class="inline-flex items-center py-1 px-2.5 sm:px-3 text-[10px] sm:text-xs font-bold rounded-full {{ $relClass }}">
+                  {{ $relLabel }}
+                </span>
+              @endif
+              @if($relLabel !== 'Today')
+                <button wire:click="goToday"
+                  class="inline-flex items-center py-1 px-2.5 sm:px-3 text-[10px] sm:text-xs font-semibold rounded-full border border-teal-200 text-teal-700 hover:bg-teal-50 dark:border-teal-800 dark:text-teal-300 dark:hover:bg-teal-900/30 transition">
+                  Go to Today
+                </button>
+              @endif
+            </div>
           </div>
 
           {{-- Events List --}}

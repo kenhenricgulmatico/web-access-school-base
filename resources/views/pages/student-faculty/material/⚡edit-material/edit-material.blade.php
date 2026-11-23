@@ -21,7 +21,7 @@
 
                 @if(empty($availableResources))
                     <div class="mb-4 p-3 sm:p-4 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800 text-xs sm:text-sm">
-                        No materials are currently allocated to your department. Please contact your Program Head or Admin.
+                        No materials are available for your department right now. Please contact your Program Head.
                     </div>
                 @endif
 
@@ -65,15 +65,26 @@
                                         wire:key="select-{{ $index }}-{{ count($rowOptions) }}"
                                         class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                                         <option value="">Select material</option>
-                                        @foreach($rowOptions as $resource)
-                                            <option wire:key="opt-{{ $index }}-{{ $resource['resource_id'] }}" value="{{ $resource['resource_id'] }}">
-                                                {{ $resource['resource_name'] }} ({{ $resource['allocated_quantity'] }} {{ $resource['unit'] ?: 'Ream' }} available)
-                                            </option>
-                                        @endforeach
+                                        @php
+                                            $__opts    = collect($rowOptions);
+                                            $__borrow  = $__opts->filter(fn ($o) => ($o['unit'] ?? '') === 'Pcs');
+                                            $__supply  = $__opts->reject(fn ($o) => ($o['unit'] ?? '') === 'Pcs');
+                                        @endphp
+                                        @if($__borrow->isNotEmpty())
+                                            <optgroup label="Borrow — must be returned (Pcs)">
+                                                @foreach($__borrow as $o)
+                                                    <option value="{{ $o['resource_id'] }}">{{ $o['resource_name'] }} — {{ $o['allocated_quantity'] }} Pcs available</option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endif
+                                        @if($__supply->isNotEmpty())
+                                            <optgroup label="Supplies — no need to return (Ream / Set)">
+                                                @foreach($__supply as $o)
+                                                    <option value="{{ $o['resource_id'] }}">{{ $o['resource_name'] }} — {{ $o['allocated_quantity'] }} {{ ($o['unit'] ?? '') ?: 'Ream' }} available</option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endif
                                     </select>
-                                    @if($available)
-                                        <p class="text-[10px] text-gray-500 mt-1">Available: {{ $available }}</p>
-                                    @endif
                                     @error("items.{$index}.resource_id")
                                         <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                                     @enderror
@@ -114,6 +125,35 @@
                             </div>
                         @endforeach
                     </div>
+
+                    {{-- ✅ Return date — ONLY when borrowing Pcs items (chairs…). Not for Ream / Set. --}}
+                    @if($this->hasBorrowItems())
+                    <div class="p-4 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 space-y-3">
+                        <div class="flex items-start gap-3">
+                            <span class="shrink-0 inline-flex items-center justify-center size-9 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-800/40 dark:text-amber-300">
+                                <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </span>
+                            <div>
+                                <p class="text-sm font-semibold text-amber-900 dark:text-amber-200">You are borrowing items that must be returned</p>
+                                <p class="text-xs text-amber-800/80 dark:text-amber-300/80">
+                                    Items counted in pieces (like chairs) go back to your Program Head. You can keep them for
+                                    <strong>1 month at most</strong> — until {{ \Carbon\Carbon::parse($this->returnByMax())->format('M d, Y') }}.
+                                </p>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="return_by" class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                                Return by <span class="text-red-500">*</span>
+                            </label>
+                            <input id="return_by" type="date" wire:model.live="return_by"
+                                min="{{ $this->returnByMin() }}" max="{{ $this->returnByMax() }}"
+                                class="w-full sm:w-64 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
+                            @error('return_by')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                    @endif
 
                     {{-- Buttons --}}
                     <div class="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-gray-100 dark:border-neutral-700/50">

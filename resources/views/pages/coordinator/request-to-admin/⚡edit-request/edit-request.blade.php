@@ -247,6 +247,35 @@
                 </div>
                 @endif
 
+                {{-- ✅ Return deadline — ONLY when borrowing Pcs items (chairs…). Not for Ream / Set. --}}
+                @if($request_type_id && $this->hasBorrowItems())
+                <div class="p-4 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 space-y-3">
+                    <div class="flex items-start gap-3">
+                        <span class="shrink-0 inline-flex items-center justify-center size-9 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-800/40 dark:text-amber-300">
+                            <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </span>
+                        <div>
+                            <p class="text-sm font-semibold text-amber-900 dark:text-amber-200">You are borrowing Pcs items that must be returned</p>
+                            <p class="text-xs text-amber-800/80 dark:text-amber-300/80">
+                                Items counted in pieces (like chairs) go back to the Admin. You can keep them for
+                                <strong>1 month at most</strong> — until {{ \Carbon\Carbon::parse($this->returnByMax())->format('M d, Y') }}.
+                            </p>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="return_by" class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                            Return by <span class="text-red-500">*</span>
+                        </label>
+                        <input id="return_by" type="date" wire:model.live="return_by"
+                            min="{{ $this->returnByMin() }}" max="{{ $this->returnByMax() }}"
+                            class="w-full sm:w-64 px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
+                        @error('return_by')
+                            <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+                @endif
+
                 {{-- Buttons --}}
                 <div class="flex gap-3 pt-2">
                     <button type="submit"

@@ -74,6 +74,14 @@
                   {{-- Items --}}
                   <td class="px-6 py-3 text-sm text-gray-700 dark:text-neutral-300">
                     {{ $request->items->map(fn ($i) => "{$i->item_name} x{$i->quantity}")->implode(', ') }}
+                    {{-- ✅ Return date the student/faculty chose for Pcs items --}}
+                    @php $returnBy = $request->items->whereNotNull('due_back_at')->first()?->due_back_at; @endphp
+                    @if($returnBy)
+                      <br><span class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                        <svg class="size-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Return by {{ $returnBy->format('M d, Y') }}
+                      </span>
+                    @endif
                   </td>
 
                   {{-- Purpose --}}
@@ -124,6 +132,20 @@
                           View
                         </a>
                       @endcan
+
+                      {{-- ✅ Department does not have enough → send the missing items to the Admin --}}
+                      @if($request->status === 'pending')
+                        @php $__short = \App\Support\DepartmentStock::summary($request); @endphp
+                        @if($__short)
+                          @can('program-head-requests.create')
+                            <a href="{{ route('coordinator.request-to-admin.create-request', ['from' => $request->id]) }}" wire:navigate
+                               title="{{ $__short }}"
+                               class="px-2.5 py-1 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                              Forward to Admin
+                            </a>
+                          @endcan
+                        @endif
+                      @endif
 
                       {{-- Accept / Reject (only if pending) --}}
                       @if($request->status === 'pending')

@@ -52,6 +52,7 @@ Route::middleware(['auth', 'approved', 'admin'])->prefix('admin')->group(functio
     //Inventory
     Route::livewire('/inventory-stock-material', 'pages::admin.inventory.stock-material')->name('admin.inventory-stock-material');
     Route::livewire('/inventory-stock-history', 'pages::admin.inventory.stock-history')->name('admin.inventory-stock-history');
+    Route::livewire('/borrowed-items', 'pages::admin.inventory.borrowed-item')->name('admin.borrowed-items');
 });
 
 

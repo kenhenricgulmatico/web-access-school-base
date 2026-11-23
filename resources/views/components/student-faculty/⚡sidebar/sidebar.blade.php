@@ -178,20 +178,6 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
 
     </nav>
 
-    {{-- Footer: CSAV mini badge --}}
-    <footer class="mt-auto p-3 border-t border-gray-200 dark:border-neutral-700">
-      <a href="{{ route('coordinator.profile') }}" class="flex items-center gap-2.5 px-2 py-2 rounded-lg bg-gradient-to-r from-[#123524]/5 to-[#D4A537]/5 dark:from-white/5 dark:to-[#D4A537]/10 min-w-0 hover:from-[#123524]/10 hover:to-[#D4A537]/10 dark:hover:from-white/10 dark:hover:to-[#D4A537]/20 transition">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/LogoCSAV.png"
-            alt="CSAV"
-            class="w-6 h-6 rounded-full bg-white p-0.5 ring-1 ring-[#D4A537]/40 object-contain shrink-0">
-        <div class="leading-tight min-w-0">
-          <p class="text-[11px] font-semibold text-gray-700 dark:text-white truncate">CSAV Portal</p>
-          <p class="text-[10px] text-muted-foreground-1 dark:text-gray-100/60 truncate">
-            {{ Auth::user()->department?->department_name ?? 'Student & Faculty' }}
-          </p>
-        </div>
-      </a>
-    </footer>
 
   </div>
 </div>

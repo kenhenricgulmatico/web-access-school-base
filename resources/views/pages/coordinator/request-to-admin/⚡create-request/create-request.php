@@ -30,6 +30,13 @@ new #[Layout('layouts.coordinator')] class extends Component
     public array $materials = [];
     public $availableResources = [];
 
+    // ✅ When the borrowed Pcs items will be returned (max 1 month)
+    public $return_by = '';
+
+    // ✅ Student / faculty request this was forwarded from ("Forward to Admin")
+    public ?int $forwardedFromId = null;
+    public string $forwardedFromName = '';
+
     public function mount(): void
     {
         // ✅ Server-side guard — creating a request to admin requires `program-head-requests.create`
@@ -71,6 +78,54 @@ new #[Layout('layouts.coordinator')] class extends Component
                 );
                 return $resource;
             });
+
+        // ✅ "Forward to Admin": fill the form with what the student's request still needs
+        if ($from = (int) request()->query('from')) {
+            $this->prefillFromStudentRequest($from);
+        }
+    }
+
+    /**
+     * Pre-fill this form from a pending student / faculty request of the same department:
+     * only the items (and quantities) the department is still missing.
+     */
+    protected function prefillFromStudentRequest(int $id): void
+    {
+        $source = ResourceRequest::with(['user', 'items.resource'])
+            ->where('department_id', Auth::user()->department_id)
+            ->where('status', 'pending')
+            ->whereHas('user', fn ($u) => $u->whereDoesntHave('roles', fn ($r) => $r->where('name', 'program head')))
+            ->find($id);
+
+        if (! $source) {
+            session()->flash('error', 'That request can no longer be forwarded (it may already be approved or rejected).');
+            return;
+        }
+
+        $missing = \App\Support\DepartmentStock::shortage($source)
+            ->filter(fn ($row) => $this->getMaterialResource($row->resource_id)); // the Admin must have it
+
+        if ($missing->isEmpty()) {
+            session()->flash('error', 'Your department already has enough for this request — you can accept it directly.');
+            return;
+        }
+
+        $this->forwardedFromId   = $source->id;
+        $this->forwardedFromName = $source->user->name ?? 'a student';
+
+        $this->request_type_id = RequestType::MATERIAL;
+        $this->request_date    = today()->format('Y-m-d');
+        $this->purpose         = \Illuminate\Support\Str::limit("For {$this->forwardedFromName}'s request #{$source->id}: {$source->purpose}", 500, '');
+        $this->materials       = $missing
+            ->map(fn ($row) => ['resource_id' => $row->resource_id, 'quantity' => $row->missing])
+            ->values()
+            ->toArray();
+
+        // Use the student's return date when it fits the Program Head's 1-month limit
+        $studentReturn = $source->items->whereNotNull('due_back_at')->first()?->due_back_at?->format('Y-m-d');
+        if ($studentReturn && $studentReturn >= $this->returnByMin() && $studentReturn <= $this->returnByMax()) {
+            $this->return_by = $studentReturn;
+        }
     }
 
     protected function rules()
@@ -95,6 +150,11 @@ new #[Layout('layouts.coordinator')] class extends Component
             $rules['materials.*.quantity']    = 'required|integer|min:1';
         }
 
+        // ✅ Borrowing Pcs items → a return date is required (max 1 month). Ream / Set: not asked.
+        if ($this->hasBorrowItems()) {
+            $rules['return_by'] = 'required|date|after_or_equal:' . $this->returnByMin() . '|before_or_equal:' . $this->returnByMax();
+        }
+
         return $rules;
     }
 
@@ -116,7 +176,15 @@ new #[Layout('layouts.coordinator')] class extends Component
     protected function messages(): array
     {
         // ✅ Booking date: today up to ~6 months ahead (see App\Support\BookingDate)
-        return array_merge($this->messages, BookingDate::messages('request_date'));
+        $min = \Carbon\Carbon::parse($this->returnByMin())->format('M d, Y');
+        $max = \Carbon\Carbon::parse($this->returnByMax())->format('M d, Y');
+
+        return array_merge($this->messages, BookingDate::messages('request_date'), [
+            'return_by.required'        => 'Please choose when you will return the borrowed items.',
+            'return_by.date'            => 'Please enter a valid return date.',
+            'return_by.after_or_equal'  => "The return date cannot be before {$min} (the day you need the items).",
+            'return_by.before_or_equal' => "You can borrow items for 1 month only. Please return them by {$max}.",
+        ]);
     }
 
     protected function formatQuantity(int $qtyInPcs, ?string $unit, ?int $piecesPerPack): string
@@ -133,6 +201,39 @@ new #[Layout('layouts.coordinator')] class extends Component
         }
 
         return "{$qtyInPcs} ". ($unit ?: 'Ream');
+    }
+
+    // ============================================================
+    // ✅ RETURN DEADLINE — ONLY for items counted in pieces (Pcs)
+    //    Ream and Set items are used up, so they never get a return date.
+    // ============================================================
+
+    /** Longest a Program Head may keep borrowed Pcs items: 1 month after the day they need them. */
+    public const MAX_BORROW_MONTHS = 1;
+
+    /** True when at least one selected material has unit "Pcs" (it must be returned). */
+    public function hasBorrowItems(): bool
+    {
+        return collect($this->materials)
+            ->pluck('resource_id')
+            ->filter()
+            ->contains(fn ($id) => ($this->getMaterialResource($id)?->unit) === 'Pcs');
+    }
+
+    /** Earliest return date: the day the items are needed (never before today). */
+    public function returnByMin(): string
+    {
+        $needed = $this->request_date ? \Carbon\Carbon::parse($this->request_date) : today();
+
+        return ($needed->lt(today()) ? today() : $needed)->format('Y-m-d');
+    }
+
+    /** Latest return date: 1 month after the day the items are needed. */
+    public function returnByMax(): string
+    {
+        return \Carbon\Carbon::parse($this->returnByMin())
+            ->addMonthsNoOverflow(self::MAX_BORROW_MONTHS)
+            ->format('Y-m-d');
     }
 
     #[Computed]
@@ -241,7 +342,7 @@ new #[Layout('layouts.coordinator')] class extends Component
 
     public function updatedRequestTypeId()
     {
-        $this->reset(['facility_name', 'start_time', 'end_time', 'materials']);
+        $this->reset(['facility_name', 'start_time', 'end_time', 'materials', 'return_by']);
         $this->start_time = '09:00';
         $this->end_time   = '10:00';
     }
@@ -404,6 +505,8 @@ new #[Layout('layouts.coordinator')] class extends Component
                 'request_date' => $this->request_date,
                 'start_time'   => $this->request_type_id == RequestType::FACILITY ? $this->start_time : null,
                 'end_time'     => $this->request_type_id == RequestType::FACILITY ? $this->end_time : null,
+                // ✅ Only Pcs items get the return date (the Admin can still adjust it). Ream / Set: none.
+                'due_back_at'  => $resource->unit === 'Pcs' && $this->return_by ? $this->return_by : null,
             ]);
         }
 
@@ -428,6 +531,11 @@ new #[Layout('layouts.coordinator')] class extends Component
             $details = "Items: {$itemsList}";
         }
 
+        // ✅ Tell the Admin when the Program Head will return the Pcs items
+        if ($this->hasBorrowItems() && $this->return_by) {
+            $details .= ' Will return borrowed items by ' . \Carbon\Carbon::parse($this->return_by)->format('M d, Y') . '.';
+        }
+
         foreach ($admins as $admin) {
             Notification::create([
                 'user_id' => $admin->id,
@@ -441,6 +549,21 @@ new #[Layout('layouts.coordinator')] class extends Component
                 $typeName,
                 $details
             ));
+        }
+
+        // ✅ Forwarded: tell the student their Program Head asked the Admin for the items
+        if ($this->forwardedFromId) {
+            $source = ResourceRequest::find($this->forwardedFromId);
+
+            if ($source) {
+                Notification::create([
+                    'user_id'    => $source->user_id,
+                    'request_id' => $source->id,
+                    'message'    => "{$user->name} (Program Head) asked the Admin for the items in your request. It will be approved once they arrive.",
+                    'type'       => 'Gmail',
+                    'status'     => 'pending',
+                ]);
+            }
         }
 
         session()->flash('success', 'Request submitted successfully!');

@@ -19,6 +19,9 @@ new #[Layout('layouts.student-faculty')] class extends Component
 
     public $availableResources = [];
 
+    // ✅ When the borrowed Pcs items will be returned (max 1 month)
+    public $return_by = '';
+
     protected $rules = [
         'purpose' => 'required|string|min:10|max:500',
         'items' => 'required|array|min:1',
@@ -34,6 +37,17 @@ new #[Layout('layouts.student-faculty')] class extends Component
         'items.*.resource_id.exists' => 'Selected material is invalid.',
         'items.*.quantity.min' => 'Quantity must be at least 1',
     ];
+
+    // Livewire uses these methods (they add the return-date rule to $rules / $messages)
+    protected function rules(): array
+    {
+        return array_merge($this->rules, $this->returnByRules());
+    }
+
+    protected function messages(): array
+    {
+        return array_merge($this->messages, $this->returnByMessages());
+    }
 
     protected function formatQuantity(int $qtyInPcs, ?string $unit): string
     {
@@ -52,12 +66,18 @@ new #[Layout('layouts.student-faculty')] class extends Component
 
         $user = Auth::user();
 
+        // ✅ What students / faculty can request:
+        //    - Ream / Set items (bond paper, markers…): ONLY what their department has.
+        //    - Pcs items (chairs…): what the department has + what the Admin can still lend.
+        //      The department does not need to have them yet — the Program Head can borrow
+        //      them from the Admin first (Request to Admin), then approve this request.
         if ($user->department_id) {
-            $this->availableResources = DB::table('resource_all_locations')
-                ->join('resources', 'resources.id', '=', 'resource_all_locations.resource_id')
+            $this->availableResources = DB::table('resources')
                 ->join('resource_types', 'resource_types.id', '=', 'resources.resource_type_id')
-                ->where('resource_all_locations.department_id', $user->department_id)
-                ->where('resource_all_locations.allocated_quantity', '>', 0)
+                ->leftJoin('resource_all_locations', function ($join) use ($user) {
+                    $join->on('resource_all_locations.resource_id', '=', 'resources.id')
+                         ->where('resource_all_locations.department_id', '=', $user->department_id);
+                })
                 ->where('resources.status', 'available')
                 ->where('resource_types.type_name', '!=', 'Facility')
                 ->orderBy('resources.resource_name')
@@ -65,16 +85,22 @@ new #[Layout('layouts.student-faculty')] class extends Component
                     'resources.id as resource_id',
                     'resources.resource_name',
                     'resources.unit',
-                    'resource_all_locations.allocated_quantity'
+                    // Pcs: department + Admin  |  Ream / Set: department only
+                    DB::raw("CASE WHEN resources.unit = 'Pcs'
+                                  THEN COALESCE(resource_all_locations.allocated_quantity, 0) + resources.quantity_available
+                                  ELSE COALESCE(resource_all_locations.allocated_quantity, 0)
+                             END as allocated_quantity")
                 )
                 ->get()
+                ->filter(fn ($resource) => (int) $resource->allocated_quantity > 0)
                 ->map(function ($resource) {
                     $resource->available_formatted = $this->formatQuantity(
                         (int) $resource->allocated_quantity,
-                        $resource->unit,
+                        $resource->unit
                     );
                     return (array) $resource;
                 })
+                ->values()
                 ->toArray();
         }
     }
@@ -160,18 +186,16 @@ new #[Layout('layouts.student-faculty')] class extends Component
         }
 
         foreach ($this->items as $i => $item) {
-            $allocation = DB::table('resource_all_locations')
-                ->join('resources', 'resources.id', '=', 'resource_all_locations.resource_id')
-                ->where('resource_all_locations.resource_id', $item['resource_id'])
-                ->where('resource_all_locations.department_id', $user->department_id)
-                ->select('resource_all_locations.allocated_quantity', 'resources.unit')
-                ->first();
+            // ✅ Not more than what is available (Pcs: department + Admin, Ream / Set: department)
+            $choice = $this->getMaterialResource($item['resource_id']);
 
-            if (!$allocation || (int) $item['quantity'] > $allocation->allocated_quantity) {
-                $available = $allocation
-                    ? $this->formatQuantity((int) $allocation->allocated_quantity, $allocation->unit)
-                    : '0 Pcs';
-                $this->addError("items.$i.quantity", "Only {$available} available in your department.");
+            if (! $choice) {
+                $this->addError("items.$i.resource_id", 'This material is not available for your department.');
+                return;
+            }
+
+            if ((int) $item['quantity'] > (int) $choice['allocated_quantity']) {
+                $this->addError("items.$i.quantity", "Only {$choice['available_formatted']} available.");
                 return;
             }
         }
@@ -196,6 +220,8 @@ new #[Layout('layouts.student-faculty')] class extends Component
                 'request_date' => now()->toDateString(),
                 'start_time' => null,
                 'end_time' => null,
+                // ✅ Only Pcs items get the return date. Ream / Set: none.
+                'due_back_at' => ($resource->unit === 'Pcs' && $this->return_by) ? $this->return_by : null,
             ]);
         }
 
@@ -225,6 +251,64 @@ new #[Layout('layouts.student-faculty')] class extends Component
         return collect($this->availableResources)
             ->reject(fn ($resource) => in_array((int) $resource['resource_id'], $selectedElsewhere))
             ->all();
+    }
+
+    // ============================================================
+    // ✅ RETURN DEADLINE — ONLY for items counted in pieces (Pcs, e.g. chairs)
+    //    Ream and Set items are used up, so they never get a return date.
+    // ============================================================
+
+    /** Longest a borrower may keep Pcs items: 1 month. */
+    public const MAX_BORROW_MONTHS = 1;
+
+    /** True when at least one selected item has unit "Pcs" (it must be returned). */
+    public function hasBorrowItems(): bool
+    {
+        $ids = collect($this->items)
+            ->pluck('resource_id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+
+        return $ids && \App\Models\Resource::whereIn('id', $ids)->where('unit', 'Pcs')->exists();
+    }
+
+    /** Earliest return date: today — the day the request is made (never before today). */
+    public function returnByMin(): string
+    {
+        $start = today();
+
+        return ($start->lt(today()) ? today() : $start)->format('Y-m-d');
+    }
+
+    /** Latest return date: 1 month after the earliest date. */
+    public function returnByMax(): string
+    {
+        return \Carbon\Carbon::parse($this->returnByMin())
+            ->addMonthsNoOverflow(self::MAX_BORROW_MONTHS)
+            ->format('Y-m-d');
+    }
+
+    /** Validation for the return date (only when Pcs items are selected). */
+    protected function returnByRules(): array
+    {
+        return $this->hasBorrowItems()
+            ? ['return_by' => 'required|date|after_or_equal:' . $this->returnByMin() . '|before_or_equal:' . $this->returnByMax()]
+            : [];
+    }
+
+    protected function returnByMessages(): array
+    {
+        $min = \Carbon\Carbon::parse($this->returnByMin())->format('M d, Y');
+        $max = \Carbon\Carbon::parse($this->returnByMax())->format('M d, Y');
+
+        return [
+            'return_by.required'        => 'Please choose when you will return the borrowed items.',
+            'return_by.date'            => 'Please enter a valid return date.',
+            'return_by.after_or_equal'  => "The return date cannot be before {$min}.",
+            'return_by.before_or_equal' => "You can borrow items for 1 month only. Please return them by {$max}.",
+        ];
     }
 
     public function cancel()
