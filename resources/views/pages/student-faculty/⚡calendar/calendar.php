@@ -26,6 +26,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     public string $selectedDate = '';
     public string $activeTab    = 'facility'; // facility | material
     public string $department   = '';         // '' = all departments, otherwise a department id
+    public string $room         = '';         // ✅ '' = every room, otherwise one facility's bookings only
 
     public function mount(): void
     {
@@ -83,6 +84,12 @@ new #[Layout('layouts.student-faculty')] class extends Component
             : now()->format('Y-m-d');
     }
 
+    /** Only a real facility name can be picked (anything else = all rooms). */
+    public function updatedRoom($value): void
+    {
+        $this->room = in_array($value, $this->roomOptions, true) ? $value : '';
+    }
+
     public function updatedActiveTab($value): void
     {
         $this->activeTab = in_array($value, ['facility', 'material'], true) ? $value : 'facility';
@@ -91,6 +98,29 @@ new #[Layout('layouts.student-faculty')] class extends Component
     // ============================================================
     // DATA
     // ============================================================
+
+    /** ✅ Facilities that can be reserved (for the room filter and "Book this room"). */
+    #[Computed]
+    public function roomOptions(): array
+    {
+        return \App\Models\Resource::whereHas('resourceType', fn ($q) => $q->where('type_name', \App\Models\ResourceType::FACILITY))
+            ->where('status', 'available')
+            ->orderBy('resource_name')
+            ->pluck('resource_name')
+            ->all();
+    }
+
+    /** ✅ Can a new reservation be made for this day? (today up to the booking window) */
+    public function canBook(string $date): bool
+    {
+        return $date >= BookingDate::min() && $date <= BookingDate::max();
+    }
+
+    /** Link to Create Reservation with the room / date filled in. */
+    public function bookUrl(string $date, ?string $room = null): string
+    {
+        return route('portal.create-reservation', array_filter(['facility' => $room, 'date' => $date]));
+    }
 
     #[Computed]
     public function departments(): array
@@ -119,7 +149,10 @@ new #[Layout('layouts.student-faculty')] class extends Component
             ->where(function ($q) use ($myDept) {
                 $q->where(fn ($f) => $f
                         ->where('request_type_id', RequestType::FACILITY)
-                        ->when($this->department !== '', fn ($d) => $d->where('department_id', (int) $this->department)))
+                        ->when($this->department !== '', fn ($d) => $d->where('department_id', (int) $this->department))
+                        // ✅ Room filter: only this facility's bookings
+                        ->when($this->room !== '', fn ($r) => $r->whereHas('items', fn ($i) => $i
+                            ->whereNull('resource_id')->where('item_name', $this->room))))
                   ->orWhere(fn ($m) => $m
                         ->where('request_type_id', RequestType::MATERIAL)
                         ->where('department_id', $myDept ?? 0));

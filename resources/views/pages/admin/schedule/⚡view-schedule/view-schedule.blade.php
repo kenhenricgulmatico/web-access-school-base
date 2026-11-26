@@ -9,6 +9,13 @@
         </div>
     @endif
 
+    @if(session()->has('error'))
+        <div class="p-3 bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400 rounded-lg text-sm font-medium flex items-center gap-2">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 8v4m0 4h.01"/></svg>
+            {{ session('error') }}
+        </div>
+    @endif
+
     {{-- Header --}}
     <div class="flex items-center justify-between flex-wrap gap-3">
         <div>
@@ -61,16 +68,23 @@
                     </div>
 
                     {{-- Status --}}
+                    @php $upcoming = $this->upcomingCounts[$facility->resource_name] ?? 0; @endphp
                     <div>
                         {{-- ✅ Toggle — requires `facility-schedule.update` --}}
                         @can('facility-schedule.update')
                             <button wire:click="toggleStatus({{ $facility->id }})"
+                                @if($facility->status === 'available')
+                                    wire:confirm="{{ $upcoming ? 'Put ' . $facility->resource_name . ' under maintenance? It has ' . $upcoming . ' upcoming ' . \Illuminate\Support\Str::plural('booking', $upcoming) . ' — those people will be notified.' : 'Put ' . $facility->resource_name . ' under maintenance?' }}"
+                                @endif
                                 class="px-2.5 py-1 text-[11px] font-semibold rounded-full transition
                                     {{ $facility->status === 'available'
                                         ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-200'
                                         : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 hover:bg-amber-200' }}">
                                 {{ $facility->status === 'available' ? 'Available' : 'Under Maintenance' }}
                             </button>
+                            @if($upcoming)
+                                <p class="mt-1 text-[11px] text-gray-500 dark:text-neutral-400">{{ $upcoming }} upcoming {{ \Illuminate\Support\Str::plural('booking', $upcoming) }}</p>
+                            @endif
                         @else
                             <span class="px-2.5 py-1 text-[11px] font-semibold rounded-full
                                 {{ $facility->status === 'available'
@@ -97,7 +111,7 @@
                         {{-- ✅ Delete — requires `facility-schedule.delete` --}}
                         @can('facility-schedule.delete')
                             <button wire:click="delete({{ $facility->id }})"
-                                wire:confirm="Delete this facility?"
+                                wire:confirm="{{ $upcoming ? $facility->resource_name . ' has ' . $upcoming . ' upcoming bookings, so it cannot be deleted. Try anyway?' : 'Delete ' . $facility->resource_name . '?' }}"
                                 class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition"
                                 title="Delete">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

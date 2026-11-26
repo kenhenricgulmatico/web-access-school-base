@@ -104,6 +104,11 @@ class ReturnTrackingTest extends TestCase
         $this->assertSame(7, $this->allocated());
 
         $item = $req->items()->first();
+
+        // The faculty member gives it back first ("Return to Program Head")
+        Livewire::actingAs($student)->test('pages::student-faculty.borrowed-items')
+            ->call('requestReturn', $item->id);
+
         Livewire::actingAs($ph)->test('pages::coordinator.borrowed-items')
             ->call('openReturn', $item->id)
             ->set('returnCondition', 'good')
@@ -201,7 +206,8 @@ class ReturnTrackingTest extends TestCase
 
         Livewire::actingAs($admin)->test('pages::admin.inventory.stock-material')
             ->call('openEditModal', $res->id)
-            ->set('edit_is_returnable', true)
+            // "Must be returned" now comes from the type: Material = returned, Supplies = used up
+            ->set('edit_type_name', \App\Models\ResourceType::MATERIAL)
             ->call('updateMaterial');
 
         $this->assertTrue($res->fresh()->is_returnable);

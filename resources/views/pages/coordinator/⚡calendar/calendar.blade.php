@@ -45,6 +45,17 @@
             <option value="{{ $id }}">{{ $name }}{{ (int) $id === (int) $this->myDepartmentId ? ' (yours)' : '' }}</option>
           @endforeach
         </select>
+
+        {{-- ✅ Room filter: see one room's bookings for the whole month --}}
+        <label class="sr-only" for="cal-room">Room</label>
+        <select id="cal-room" wire:model.live="room"
+          x-show="tab === 'facility'" @if(! $isFacility) style="display: none" @endif
+          class="w-full sm:w-auto min-h-11 ps-3 pe-9 rounded-xl border border-[#D9DED9] dark:border-[#2A4B3A] bg-white dark:bg-[#16281F] text-sm font-medium text-[#1F2A24] dark:text-neutral-100 focus:border-[#123524] dark:focus:border-[#7FBF8E] focus:ring-[#123524] dark:focus:ring-[#7FBF8E]">
+          <option value="">All rooms</option>
+          @foreach($this->roomOptions as $roomName)
+            <option value="{{ $roomName }}">{{ $roomName }}</option>
+          @endforeach
+        </select>
         <span x-show="tab === 'material'" @if($isFacility) style="display: none" @endif
           class="inline-flex items-center gap-2 min-h-11 px-4 rounded-xl border border-[#D9DED9] dark:border-[#2A4B3A] bg-white dark:bg-[#16281F] text-sm font-medium text-[#1F2A24] dark:text-neutral-100">
           <span class="size-2 rounded-full bg-[#B8862A]"></span>
@@ -56,7 +67,7 @@
 
     {{-- Fades while a new month / department is loading --}}
     <div class="flex flex-col lg:flex-row gap-6 items-start transition-opacity"
-         wire:loading.class="opacity-50 pointer-events-none" wire:target="previousMonth, nextMonth, goToToday, department">
+         wire:loading.class="opacity-50 pointer-events-none" wire:target="previousMonth, nextMonth, goToToday, department, room">
 
       {{-- ===== Month grid (compact, same size as the Admin calendar) ===== --}}
       <section aria-label="Month view" class="w-full lg:w-[340px] xl:w-[380px] shrink-0 bg-white dark:bg-[#16281F] border border-[#E1E6E1] dark:border-[#2A4B3A] rounded-2xl sm:rounded-3xl overflow-hidden">
@@ -132,7 +143,7 @@
           <span x-show="tab === 'facility'" @if(! $isFacility) style="display: none" @endif class="inline-flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-[#1C7A4A]"></span>Approved facility reservations</span>
           <span x-show="tab === 'material'" @if($isFacility) style="display: none" @endif class="inline-flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-[#B8862A]"></span>Approved material requests</span>
           <span class="text-[#8A968F] dark:text-neutral-500">·</span>
-          <span x-show="tab === 'facility'" @if(! $isFacility) style="display: none" @endif>{{ $department !== '' ? ($this->departments[(int) $department] ?? '') : 'All departments' }}</span>
+          <span x-show="tab === 'facility'" @if(! $isFacility) style="display: none" @endif>{{ $department !== '' ? ($this->departments[(int) $department] ?? '') : 'All departments' }}{{ $this->room !== '' ? ' · ' . $this->room : '' }}</span>
           <span x-show="tab === 'material'" @if($isFacility) style="display: none" @endif>{{ $this->departments[(int) $this->myDepartmentId] ?? 'No department' }}</span>
         </div>
       </section>
@@ -242,7 +253,9 @@
               @empty
                 <div class="flex flex-col items-center gap-2.5 px-5 py-9 bg-white dark:bg-[#16281F] border border-dashed border-[#CBD3CC] dark:border-[#2A4B3A] rounded-2xl text-center">
                   <svg class="size-8 text-[#8A968F] dark:text-neutral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                  <p class="text-sm font-semibold text-[#33403A] dark:text-neutral-200">No facility reservations on this day</p>
+                  <p class="text-sm font-semibold text-[#33403A] dark:text-neutral-200">
+                    {{ $this->room !== '' ? $this->room . ' is free all day' : 'No facility reservations on this day' }}
+                  </p>
                   <p class="text-[13px] text-[#5C6862] dark:text-neutral-400">Pick another date{{ count($materials) ? ', or check the Material tab' : '' }}.</p>
                 </div>
               @endforelse

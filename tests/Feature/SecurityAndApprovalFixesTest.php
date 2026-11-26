@@ -180,8 +180,9 @@ class SecurityAndApprovalFixesTest extends TestCase
     {
         $dept = $this->createDepartment();
         $admin = $this->createUser('admin', $dept);
-        $student = $this->createUser('faculty', $dept);
-        $req = $this->facilityRequest($dept, $student, 'approved');
+        // The Admin calendar shows the Program Heads' requests (faculty ones reach the Admin through them)
+        $programHead = $this->createUser('program head', $dept);
+        $req = $this->facilityRequest($dept, $programHead, 'approved');
         $date = $req->items()->first()->request_date;
         $date = \Carbon\Carbon::parse($date);
 

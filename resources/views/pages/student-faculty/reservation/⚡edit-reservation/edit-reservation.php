@@ -3,6 +3,7 @@
 namespace App\Livewire\Portal;
 
 use App\Support\BookingDate;
+use App\Support\TimeSlots;
 use App\Models\Request as ResourceRequest;
 use App\Models\RequestItem;
 use App\Models\Resource;
@@ -33,8 +34,9 @@ new #[Layout('layouts.student-faculty')] class extends Component
         return $this->returnByRules() + [
             'facility_name'           => 'required|string|max:255',
             'used_date'               => BookingDate::rules(),
-            'start_time'              => 'required',
-            'end_time'                => 'required|after:start_time',
+            // ✅ 30-minute steps (see App\Support\TimeSlots)
+            'start_time'              => TimeSlots::rules()['start_time'],
+            'end_time'                => TimeSlots::rules()['end_time'],
             'purpose'                 => 'required|string|min:10|max:500',
             'materials.*.resource_id' => 'nullable|exists:resources,id',
             'materials.*.quantity'    => 'nullable|integer|min:1',
@@ -55,7 +57,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     protected function messages(): array
     {
         // ✅ Booking date: today up to ~6 months ahead (see App\Support\BookingDate)
-        return array_merge($this->messages, BookingDate::messages('used_date'), $this->returnByMessages());
+        return array_merge($this->messages, BookingDate::messages('used_date'), TimeSlots::messages(), $this->returnByMessages());
     }
 
     public function mount($id)
@@ -81,6 +83,12 @@ new #[Layout('layouts.student-faculty')] class extends Component
             return redirect()->route('portal.reservation');
         }
 
+        // ✅ Endorsed to the Admin → the Admin is reviewing exactly this version; no edits
+        if (\App\Support\ForwardedRequests::isWaitingForAdmin($request)) {
+            session()->flash('error', 'This request was sent to the Admin by your Program Head, so it can no longer be edited. Cancel it and make a new one if you need changes.');
+            return redirect()->route('portal.reservation');
+        }
+
         $this->reservation_id = $request->id;
 
         $facilityItem  = $request->items->firstWhere('resource_id', null);
@@ -88,8 +96,11 @@ new #[Layout('layouts.student-faculty')] class extends Component
 
         $this->facility_name = $facilityItem->item_name ?? '';
         $this->used_date     = optional($facilityItem)->request_date ?? date('Y-m-d');
-        $this->start_time    = optional($facilityItem)->start_time ?? '09:00';
-        $this->end_time      = optional($facilityItem)->end_time ?? '10:00';
+        // ✅ The database has "09:00:00", the pickers use "09:00" — without this the
+        //    dropdown didn't match and could show the wrong time
+        $this->start_time    = TimeSlots::normalize(optional($facilityItem)->start_time) ?? '09:00';
+        $this->end_time      = TimeSlots::normalize(optional($facilityItem)->end_time) ?? '10:00';
+        $this->used_date     = $this->used_date ? \Carbon\Carbon::parse($this->used_date)->format('Y-m-d') : date('Y-m-d');
         $this->purpose       = $request->purpose;
 
         $this->materials = $materialItems->map(fn ($item) => [
@@ -187,6 +198,52 @@ new #[Layout('layouts.student-faculty')] class extends Component
         $this->materials = array_values($this->materials);
     }
 
+    // ─────────────────────────────────────────────────────────────────
+    // ✅ LIVE "ALREADY BOOKED" FEEDBACK (same as Create Reservation)
+    // ─────────────────────────────────────────────────────────────────
+
+    /** Approved bookings of the picked facility / day — not counting this reservation. */
+    public function getDayBookingsProperty(): array
+    {
+        return TimeSlots::approvedBookings($this->facility_name, $this->used_date, (int) $this->reservation_id);
+    }
+
+    public function startIsTaken(string $start): bool
+    {
+        $end = \Carbon\Carbon::createFromFormat('H:i', $start)->addMinutes(TimeSlots::STEP)->format('H:i');
+
+        return TimeSlots::overlaps($start, $end, $this->dayBookings);
+    }
+
+    public function endIsTaken(string $end): bool
+    {
+        return $this->start_time && TimeSlots::overlaps($this->start_time, $end, $this->dayBookings);
+    }
+
+    public function updatedFacilityName(): void { $this->checkConflictLive(); }
+    public function updatedUsedDate(): void     { $this->checkConflictLive(); }
+    public function updatedEndTime(): void      { $this->checkConflictLive(); }
+
+    public function updatedStartTime(): void
+    {
+        // Keep the end after the new start (default: 1 hour later)
+        if (! $this->end_time || $this->end_time <= $this->start_time) {
+            $this->end_time = TimeSlots::defaultEnd($this->start_time);
+        }
+
+        $this->checkConflictLive();
+    }
+
+    protected function checkConflictLive(): void
+    {
+        $this->resetErrorBag(['start_time', 'facility_name']);
+
+        if ($this->facility_name && $this->used_date && $this->start_time && $this->end_time
+            && TimeSlots::overlaps($this->start_time, $this->end_time, $this->dayBookings)) {
+            $this->addError('start_time', 'This facility is already booked for an overlapping time. Please choose another slot.');
+        }
+    }
+
     public function update()
     {
         // ✅ Server-side guard — updating requires update permission on either type
@@ -202,7 +259,8 @@ new #[Layout('layouts.student-faculty')] class extends Component
 
         $request = ResourceRequest::with('items')->findOrFail($this->reservation_id);
 
-        if ($request->user_id !== Auth::id() || $request->status !== 'pending') {
+        if ($request->user_id !== Auth::id() || $request->status !== 'pending'
+            || \App\Support\ForwardedRequests::isWaitingForAdmin($request)) {
             session()->flash('error', 'This reservation can no longer be edited.');
             return redirect()->route('portal.reservation');
         }

@@ -1,9 +1,9 @@
 <div class="select-none">
 <div class="max-w-3xl mx-auto px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-    <div class="bg-white dark:bg-neutral-800 border rounded-xl shadow overflow-hidden">
+    <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
 
         {{-- Header --}}
-        <div class="px-6 py-4 border-b">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-neutral-700">
             <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">Create Request to Admin</h2>
             <p class="text-sm text-gray-600 dark:text-neutral-400">Submit a facility reservation or material request</p>
         </div>
@@ -28,14 +28,62 @@
             @if($forwardedFromId)
                 <div class="mb-4 p-4 rounded-lg bg-indigo-50 text-indigo-900 border border-indigo-200 text-sm dark:bg-indigo-950/30 dark:text-indigo-200 dark:border-indigo-900">
                     <p class="font-semibold">Forwarding {{ $forwardedFromName }}'s request to the Admin</p>
-                    <p class="text-xs mt-0.5">Everything from the request is already filled in. Check it, then click <strong>Submit Request</strong>.
-                        When the Admin approves, {{ $forwardedFromName }}'s request is <strong>approved automatically</strong>.</p>
+                    <p class="text-xs mt-0.5">The details below come from {{ $forwardedFromName }}'s request and can't be changed here,
+                        so the Admin approves exactly what was asked for. When the Admin approves, {{ $forwardedFromName }}'s request is <strong>approved automatically</strong>.</p>
                 </div>
             @endif
 
             {{-- ✅ Only users with `program-head-requests.create` can see & submit this form --}}
             @can('program-head-requests.create')
             <form wire:submit="submit" class="space-y-6">
+
+                {{-- ✅ Endorsing: a locked summary of the faculty request (nothing to edit except the return date) --}}
+                @if($forwardedFromId)
+                    @php
+                        $isFac   = $request_type_id == \App\Models\RequestType::FACILITY;
+                        $picked  = collect($materials)->filter(fn ($m) => ! empty($m['resource_id']));
+                    @endphp
+                    <div class="rounded-xl border border-gray-200 dark:border-neutral-700 divide-y divide-gray-100 dark:divide-neutral-700 text-sm">
+                        <div class="flex justify-between gap-4 px-4 py-2.5">
+                            <span class="text-gray-500 dark:text-neutral-400">Request type</span>
+                            <span class="font-medium text-gray-800 dark:text-neutral-200">{{ $isFac ? 'Facility Reservation' : 'Material Request' }}</span>
+                        </div>
+                        @if($isFac)
+                            <div class="flex justify-between gap-4 px-4 py-2.5">
+                                <span class="text-gray-500 dark:text-neutral-400">Facility</span>
+                                <span class="font-medium text-gray-800 dark:text-neutral-200">{{ $facility_name }}</span>
+                            </div>
+                            <div class="flex justify-between gap-4 px-4 py-2.5">
+                                <span class="text-gray-500 dark:text-neutral-400">Date &amp; time</span>
+                                <span class="font-medium text-gray-800 dark:text-neutral-200 text-right">
+                                    {{ \Carbon\Carbon::parse($request_date)->format('M d, Y') }} ·
+                                    {{ \Carbon\Carbon::parse($start_time)->format('g:i A') }} – {{ \Carbon\Carbon::parse($end_time)->format('g:i A') }}
+                                </span>
+                            </div>
+                        @else
+                            <div class="flex justify-between gap-4 px-4 py-2.5">
+                                <span class="text-gray-500 dark:text-neutral-400">Date needed</span>
+                                <span class="font-medium text-gray-800 dark:text-neutral-200">{{ \Carbon\Carbon::parse($request_date)->format('M d, Y') }}</span>
+                            </div>
+                        @endif
+                        <div class="flex justify-between gap-4 px-4 py-2.5">
+                            <span class="text-gray-500 dark:text-neutral-400">Items</span>
+                            <span class="font-medium text-gray-800 dark:text-neutral-200 text-right">
+                                @forelse($picked as $m)
+                                    {{ $this->getMaterialResource($m['resource_id'])?->resource_name }} ×{{ $m['quantity'] }}@if(! $loop->last)<br>@endif
+                                @empty
+                                    <span class="text-gray-400">None</span>
+                                @endforelse
+                            </span>
+                        </div>
+                        <div class="px-4 py-2.5">
+                            <span class="block text-gray-500 dark:text-neutral-400 mb-0.5">Purpose</span>
+                            <span class="text-gray-800 dark:text-neutral-200">{{ $purpose }}</span>
+                        </div>
+                    </div>
+                    @error('facility_name') <p class="text-xs text-red-500 font-medium">{{ $message }}</p> @enderror
+                    @error('materials') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
+                @else
 
                 {{-- Request Type --}}
                 <div>
@@ -54,24 +102,11 @@
                     @enderror
                 </div>
 
-                {{-- Shared: Purpose --}}
+                {{-- Shared: Date --}}
                 @if($request_type_id)
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-                        Purpose <span class="text-red-500">*</span>
-                    </label>
-                    <textarea wire:model="purpose" rows="3"
-                        placeholder="State your purpose..."
-                        class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200"></textarea>
-                    @error('purpose')
-                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                {{-- Shared: Date --}}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-                        Date <span class="text-red-500">*</span>
+                        {{ $request_type_id == \App\Models\RequestType::FACILITY ? 'Reservation Date' : 'Date Needed' }} <span class="text-red-500">*</span>
                     </label>
                     <input type="date" wire:model.live="request_date"
                         min="{{ \App\Support\BookingDate::min() }}"
@@ -104,39 +139,20 @@
                         @enderror
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-                                Start Time <span class="text-red-500">*</span>
-                            </label>
-                            <input type="time" wire:model.live="start_time"
-                                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
-                            @error('start_time')
-                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-                                End Time <span class="text-red-500">*</span>
-                            </label>
-                            <input type="time" wire:model.live="end_time"
-                                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
-                            @error('end_time')
-                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
+                    @include('partials.reservation-day-bookings', ['date' => $request_date])
+
+                    @include('partials.reservation-time-pickers')
                 </div>
 
                 {{-- Materials — OPTIONAL add-on to a facility reservation --}}
-                <div class="border-t pt-5">
+                <div class="border-t border-gray-200 dark:border-neutral-700 pt-5">
                     <div class="flex items-center justify-between mb-2">
                         <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300">
                             Materials Needed <span class="text-xs font-normal text-gray-400">(optional — e.g. bench for court)</span>
                         </label>
                         <button type="button"
                             wire:click="addMaterial"
-                            class="text-xs px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition font-medium">
+                            class="text-xs px-3 py-1.5 bg-[#1C6B45]/10 text-[#1C6B45] dark:text-green-300 border border-[#1C6B45]/30 rounded-lg hover:bg-[#1C6B45]/15 transition font-medium">
                             + Add Material
                         </button>
                     </div>
@@ -153,20 +169,27 @@
                                 $warning   = $this->getStockWarning($material['resource_id'] ?? null, $material['quantity'] ?? null);
                                 $rowOptions = $this->getResourcesForRow($index);
                             @endphp
-                            <div wire:key="fac-material-{{ $index }}" class="flex items-start gap-2 bg-red-50/50 border border-red-100 rounded-lg p-3">
+                            <div wire:key="fac-material-{{ $index }}" class="flex items-start gap-2 bg-gray-50 dark:bg-neutral-700/40 border border-gray-200 dark:border-neutral-700 rounded-lg p-3">
                                 <div class="flex-1">
                                     <select wire:model.live="materials.{{ $index }}.resource_id"
                                         class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
                                         <option value="">Select material</option>
-                                        @foreach($rowOptions as $resource)
-                                            <option wire:key="row-{{ $index }}--resource--{{$resource->id}}" value="{{$resource->id}}">
-                                                {{ $resource->resource_name }} ({{ $resource->quantity_available }} {{ $resource->unit ?: 'Ream'}} available)
-                                            </option>
+                                        {{-- ✅ Same as the faculty form: grouped into Material (returned) / Supplies (used up) --}}
+                                        @foreach([
+                                            'Material — must be returned'           => collect($rowOptions)->filter(fn ($o) => ! empty($o->is_returnable)),
+                                            'Supplies — used up, no need to return' => collect($rowOptions)->reject(fn ($o) => ! empty($o->is_returnable)),
+                                        ] as $groupLabel => $groupOptions)
+                                            @if($groupOptions->isNotEmpty())
+                                            <optgroup label="{{ $groupLabel }}">
+                                                @foreach($groupOptions as $resource)
+                                                    <option wire:key="row-{{ $index }}--resource--{{$resource->id}}" value="{{$resource->id}}">
+                                                        {{ $resource->resource_name }} ({{ $resource->quantity_available }} {{ $resource->unit ?: 'Ream'}} available)
+                                                    </option>
+                                                @endforeach
+                                            </optgroup>
+                                            @endif
                                         @endforeach
                                     </select>
-                                    @if($available)
-                                        <p class="text-[10px] text-gray-500 mt-1">Available: {{ $available }}</p>
-                                    @endif
                                     @error('materials.' . $index . '.resource_id') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div class="w-32">
@@ -175,7 +198,7 @@
                                         placeholder="Qty {{$this->getMaterialResource($material['resource_id'] ?? null)->unit ?? 'ream'}}"
                                         class="w-full px-3 py-2 text-sm rounded-lg border {{ $warning ? 'border-red-400' : 'border-gray-300 dark:border-neutral-600' }} bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
                                     @if($breakdown)
-                                        <p class="text-[10px] text-blue-600 font-medium mt-1">Requesting: {{ $breakdown }}</p>
+                                        <p class="text-[10px] text-[#1C6B45] dark:text-green-400 font-medium mt-1">Requesting: {{ $breakdown }}</p>
                                     @endif
                                     @if($warning)
                                         <p class="text-[10px] text-red-500 mt-1 font-medium">{{ $warning }}</p>
@@ -192,8 +215,8 @@
 
                 {{-- Material Request (standalone type) --}}
                 @if($request_type_id == \App\Models\RequestType::MATERIAL)
-                <div class="space-y-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-700">
-                    <p class="text-sm font-semibold text-red-700 dark:text-red-300">Materials Needed <span class="text-red-500">*</span></p>
+                <div class="space-y-4 p-4 bg-gray-50 dark:bg-neutral-900/30 rounded-xl border border-gray-200 dark:border-neutral-700">
+                    <p class="text-sm font-semibold text-gray-800 dark:text-neutral-200">Materials Needed <span class="text-red-500">*</span></p>
 
                     <div class="space-y-3">
                         @foreach($materials as $index => $material)
@@ -208,15 +231,22 @@
                                     <select wire:model.live="materials.{{ $index }}.resource_id"
                                         class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
                                         <option value="">Select material</option>
-                                        @foreach($rowOptions as $resource)
-                                            <option wire:key="row-{{ $index }}--resource--{{$resource->id}}" value="{{$resource->id}}">
-                                                {{ $resource->resource_name }} ({{ $resource->quantity_available }} {{ $resource->unit ?: 'Ream'}} available)
-                                            </option>
+                                        {{-- ✅ Same as the faculty form: grouped into Material (returned) / Supplies (used up) --}}
+                                        @foreach([
+                                            'Material — must be returned'           => collect($rowOptions)->filter(fn ($o) => ! empty($o->is_returnable)),
+                                            'Supplies — used up, no need to return' => collect($rowOptions)->reject(fn ($o) => ! empty($o->is_returnable)),
+                                        ] as $groupLabel => $groupOptions)
+                                            @if($groupOptions->isNotEmpty())
+                                            <optgroup label="{{ $groupLabel }}">
+                                                @foreach($groupOptions as $resource)
+                                                    <option wire:key="row-{{ $index }}--resource--{{$resource->id}}" value="{{$resource->id}}">
+                                                        {{ $resource->resource_name }} ({{ $resource->quantity_available }} {{ $resource->unit ?: 'Ream'}} available)
+                                                    </option>
+                                                @endforeach
+                                            </optgroup>
+                                            @endif
                                         @endforeach
                                     </select>
-                                    @if($available)
-                                        <p class="text-[10px] text-gray-500 mt-1">Available: {{ $available }}</p>
-                                    @endif
                                     @error('materials.' . $index . '.resource_id') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div class="w-32">
@@ -225,7 +255,7 @@
                                         placeholder="Qty {{$this->getMaterialResource($material['resource_id'] ?? null)->unit ?? 'ream'}}"
                                         class="w-full px-3 py-2 text-sm rounded-lg border {{ $warning ? 'border-red-400' : 'border-gray-300 dark:border-neutral-600' }} bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
                                     @if($breakdown)
-                                        <p class="text-[10px] text-blue-600 font-medium mt-1">Requesting: {{ $breakdown }}</p>
+                                        <p class="text-[10px] text-[#1C6B45] dark:text-green-400 font-medium mt-1">Requesting: {{ $breakdown }}</p>
                                     @endif
                                     @if($warning)
                                         <p class="text-[10px] text-red-500 mt-1 font-medium">{{ $warning }}</p>
@@ -241,7 +271,7 @@
                     </div>
 
                     <button type="button" wire:click="addMaterial"
-                        class="mt-2 px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                        class="mt-2 px-4 py-2 text-sm bg-[#123524] hover:bg-[#0B2418] text-white rounded-lg transition">
                         + Add Item
                     </button>
 
@@ -250,6 +280,13 @@
                     @enderror
                 </div>
                 @endif
+
+                {{-- Purpose (after the details, same order as the faculty form) --}}
+                @if($request_type_id)
+                @include('partials.purpose-field', ['placeholder' => 'What is it for? (at least 10 characters)'])
+                @endif
+
+                @endif {{-- end: normal (not endorsing) form --}}
 
                 {{-- ✅ Return deadline — ONLY when borrowing Pcs items (chairs…). Not for Ream / Set. --}}
                 @if($request_type_id && $this->hasBorrowItems())
@@ -280,18 +317,26 @@
                 </div>
                 @endif
 
+                {{-- ✅ Where the Admin will see it --}}
+                @if($request_type_id)
+                <p class="flex items-start gap-2 text-xs text-gray-600 dark:text-neutral-400 bg-gray-50 dark:bg-neutral-900/40 border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2">
+                    <svg class="size-4 shrink-0 mt-px text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>{{ $this->destinationHint() }}</span>
+                </p>
+                @endif
+
                 {{-- Buttons --}}
                 @if($request_type_id)
                 <div class="flex gap-3 pt-2">
                     <button type="submit"
-                        wire:loading.attr="disabled"
+                        wire:loading.attr="disabled" wire:target="submit"
                         wire:loading.class="opacity-50 cursor-not-allowed"
-                        class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition">
+                        class="px-6 py-2 bg-[#123524] hover:bg-[#0B2418] text-white rounded-lg font-medium transition">
                         <span wire:loading.remove wire:target="submit">Submit Request</span>
                         <span wire:loading wire:target="submit">Submitting...</span>
                     </button>
                     <button type="button" wire:click="cancel"
-                        class="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition">
+                        class="px-6 py-2 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-200 hover:bg-gray-50 dark:hover:bg-neutral-600 rounded-lg font-medium transition">
                         Cancel
                     </button>
                 </div>

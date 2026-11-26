@@ -75,6 +75,10 @@ new #[Layout('layouts.coordinator')] class extends Component
             'overdue'     => (clone $this->baseQuery())->whereNull('returned_at')->whereDate('due_back_at', '<', today())->count(),
             'returned'    => (clone $this->baseQuery())->whereNotNull('returned_at')->count(),
             'mine'        => (clone $this->myItemsQuery())->whereNull('returned_at')->count(),
+            // ✅ Faculty items due today or tomorrow, still with the faculty member
+            'due_soon'    => (clone $this->baseQuery())->whereNull('returned_at')->whereNull('return_requested_at')
+                                ->whereDate('due_back_at', '>=', today())
+                                ->whereDate('due_back_at', '<=', today()->addDay())->count(),
         ];
     }
 
@@ -100,6 +104,20 @@ new #[Layout('layouts.coordinator')] class extends Component
         }
 
         return $q->paginate(15);
+    }
+
+    /** ✅ request_id => how many of its items the faculty sent back and I haven't confirmed yet. */
+    #[Computed]
+    public function sentBackCounts(): array
+    {
+        return (clone $this->baseQuery())
+            ->whereNull('returned_at')
+            ->whereNotNull('return_requested_at')
+            ->selectRaw('request_id, COUNT(*) as n')
+            ->groupBy('request_id')
+            ->pluck('n', 'request_id')
+            ->map(fn ($n) => (int) $n)
+            ->all();
     }
 
     public function openReturn(int $id): void
@@ -144,30 +162,90 @@ new #[Layout('layouts.coordinator')] class extends Component
         }
 
         try {
-            ReturnTracking::markReturned($item, $this->returnCondition, $this->returnNotes, Auth::user());
+            $message = $this->confirmOne($item, $this->returnCondition, $this->returnNotes ?: null);
         } catch (\RuntimeException $e) {
             session()->flash('error', $e->getMessage());
             $this->returningId = null;
             return;
         }
 
-        // ✅ Item came from the Admin (endorsed request) → send it straight back to the Admin, no second click
+        session()->flash('message', $message);
+
+        $this->returningId = null;
+        unset($this->items, $this->counts, $this->readyForAdminCount, $this->myItems, $this->myOverdueCount, $this->sentBackCounts);
+    }
+
+    /**
+     * ✅ Confirm one returned item: mark it returned, send it on to the Admin when it came
+     *    from the Admin, and tell the faculty member it was received (with the condition).
+     *    Returns the message for the Program Head.
+     */
+    protected function confirmOne(RequestItem $item, string $condition, ?string $notes): string
+    {
+        ReturnTracking::markReturned($item, $condition, $notes, Auth::user());
+
+        $conditionText = RequestItem::CONDITIONS[$condition] ?? ucfirst($condition);
+        $borrower      = $item->request?->user;
+
+        // Tell the faculty member their return was received
+        if ($borrower) {
+            Notification::create([
+                'user_id'    => $borrower->id,
+                'request_id' => $item->request_id,
+                'message'    => Auth::user()->name . " confirmed your return of {$item->item_name} (x{$item->quantity}) — condition: {$conditionText}."
+                              . ($notes ? " Note: {$notes}" : ''),
+                'type'       => 'Return',
+                'status'     => 'pending',
+            ]);
+        }
+
+        // Item came from the Admin (endorsed request) → send it straight back to the Admin, no second click
         $adminItem = ReturnTracking::adminItemFor($item);
 
         if ($adminItem && ! $adminItem->returned_at && ! $adminItem->return_requested_at) {
-            $condition = RequestItem::CONDITIONS[$this->returnCondition] ?? ucfirst($this->returnCondition);
-            $this->sendToAdmin($adminItem, "Returned by {$item->request?->user?->name} in {$condition} condition"
-                . ($this->returnNotes ? " — {$this->returnNotes}" : '') . '.');
+            $this->sendToAdmin($adminItem, "Returned by {$borrower?->name} in {$conditionText} condition"
+                . ($notes ? " — {$notes}" : '') . '.');
 
-            session()->flash('message', "\"{$item->item_name}\" returned by the faculty member and sent back to the Admin. The Admin will confirm it when they receive it.");
-        } else {
-            session()->flash('message', $this->returnCondition === 'good'
-                ? "\"{$item->item_name}\" marked as returned and added back to your department's stock."
-                : "\"{$item->item_name}\" marked as returned ({$this->returnCondition}). It was not added back to stock.");
+            return "\"{$item->item_name}\" returned by the faculty member and sent back to the Admin. The Admin will confirm it when they receive it.";
         }
 
+        return $condition === 'good'
+            ? "\"{$item->item_name}\" marked as returned and added back to your department's stock."
+            : "\"{$item->item_name}\" marked as returned ({$condition}). It was not added back to stock.";
+    }
+
+    /** ✅ Every item of one request that the faculty sent back → confirm all in Good condition. */
+    public function confirmAllGood(int $requestId): void
+    {
+        abort_unless(auth()->user()->can('requests.approve'), 403);
+
+        $items = $this->baseQuery()
+            ->with('request.user')
+            ->where('request_id', $requestId)
+            ->whereNull('returned_at')
+            ->whereNotNull('return_requested_at')
+            ->get();
+
+        if ($items->isEmpty()) {
+            session()->flash('error', 'There is nothing to confirm for this request.');
+            return;
+        }
+
+        $done = 0;
+        foreach ($items as $item) {
+            try {
+                $this->confirmOne($item, 'good', null);
+                $done++;
+            } catch (\RuntimeException $e) {
+                // already confirmed by someone else — skip it
+            }
+        }
+
+        $who = $items->first()->request?->user?->name ?? 'the faculty member';
+        session()->flash('message', "Confirmed {$done} " . str('item')->plural($done) . " from {$who} in Good condition.");
+
         $this->returningId = null;
-        unset($this->items, $this->counts, $this->readyForAdminCount, $this->myItems, $this->myOverdueCount);
+        unset($this->items, $this->counts, $this->readyForAdminCount, $this->myItems, $this->myOverdueCount, $this->sentBackCounts);
     }
 
     /** Mark a borrowed-from-Admin item as "on its way back" and tell every Admin. */
@@ -258,10 +336,15 @@ new #[Layout('layouts.coordinator')] class extends Component
         $facility = (int) RequestType::FACILITY;
         $days     = (int) ReturnTracking::RETURN_DAYS;
 
+        // ✅ Works on MySQL (the app) and SQLite (the tests)
+        $plusDays = \Illuminate\Support\Facades\DB::getDriverName() === 'sqlite'
+            ? "date(request_items.request_date, '+{$days} days')"
+            : "DATE_ADD(request_items.request_date, INTERVAL {$days} DAY)";
+
         return "COALESCE(request_items.due_back_at, CASE
                     WHEN (SELECT r.request_type_id FROM requests r WHERE r.id = request_items.request_id) = {$facility}
                     THEN request_items.request_date
-                    ELSE DATE_ADD(request_items.request_date, INTERVAL {$days} DAY)
+                    ELSE {$plusDays}
                 END)";
     }
 
@@ -319,6 +402,18 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->whereNull('returned_at')
             ->whereNull('return_requested_at')
             ->whereRaw($this->dueDateSql() . ' < ?', [today()->toDateString()])
+            ->count();
+    }
+
+    /** ✅ My items due back to the Admin today or tomorrow (not sent back yet). */
+    #[Computed]
+    public function myDueSoonCount(): int
+    {
+        return (clone $this->myItemsQuery())
+            ->whereNull('returned_at')
+            ->whereNull('return_requested_at')
+            ->whereRaw($this->dueDateSql() . ' >= ?', [today()->toDateString()])
+            ->whereRaw($this->dueDateSql() . ' <= ?', [today()->addDay()->toDateString()])
             ->count();
     }
 
@@ -385,9 +480,25 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->whereNull('returned_at')
             ->findOrFail($id);
 
+        if (! $item->return_requested_at) {
+            return; // nothing to cancel
+        }
+
         $item->forceFill(['return_requested_at' => null])->save();
 
-        session()->flash('message', "Return for \"{$item->item_name}\" was cancelled.");
+        // ✅ The Admin was told "… is returning …" — tell them it's off
+        $who = Auth::user()->name;
+        foreach (User::role('admin')->get() as $admin) {
+            Notification::create([
+                'user_id'    => $admin->id,
+                'request_id' => $item->request_id,
+                'message'    => "{$who} (Program Head) cancelled the return of {$item->quantity} pcs of \"{$item->item_name}\". The items are still with them — no need to check.",
+                'type'       => 'Gmail',
+                'status'     => 'pending',
+            ]);
+        }
+
+        session()->flash('message', "Return for \"{$item->item_name}\" was cancelled. The Admin was told.");
         unset($this->myItems, $this->items, $this->counts, $this->myOverdueCount, $this->readyForAdminCount);
     }
 };

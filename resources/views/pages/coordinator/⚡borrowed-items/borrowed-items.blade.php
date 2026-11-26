@@ -37,6 +37,20 @@
     </div>
   @endif
 
+  {{-- ✅ My items due back to the Admin today / tomorrow --}}
+  @if($this->myDueSoonCount > 0)
+    <div class="mb-4 flex flex-wrap items-center gap-2 px-4 py-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800 dark:bg-amber-950/30 dark:border-amber-900 dark:text-amber-300">
+      <svg class="size-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>
+        <strong>{{ $this->myDueSoonCount }} {{ \Illuminate\Support\Str::plural('item', $this->myDueSoonCount) }}</strong>
+        borrowed from the Admin {{ $this->myDueSoonCount === 1 ? 'is' : 'are' }} due back today or tomorrow.
+      </span>
+      @if($view !== 'mine')
+        <button type="button" wire:click="$set('view', 'mine')" class="font-semibold underline">View</button>
+      @endif
+    </div>
+  @endif
+
   {{-- ✅ Switch: Students & Faculty | My borrowed items --}}
   <div class="flex gap-2 mb-4 border-b border-gray-200 dark:border-neutral-700" role="tablist" aria-label="Whose borrowed items">
     @foreach(['students' => 'Faculty', 'mine' => 'My borrowed items'] as $key => $label)
@@ -57,8 +71,8 @@
          ============================================================ --}}
     <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-          <thead class="bg-gray-50 dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-400">
+        <table class="min-w-full text-sm block sm:table">
+          <thead class="hidden sm:table-header-group bg-gray-50 dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-400">
             <tr>
               <th class="px-4 py-3 font-semibold">Item</th>
               <th class="px-4 py-3 font-semibold">Return by</th>
@@ -66,7 +80,7 @@
               <th class="px-4 py-3 font-semibold text-right">Action</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100 dark:divide-neutral-700">
+          <tbody class="block sm:table-row-group divide-y divide-gray-100 dark:divide-neutral-700">
             @forelse($this->myItems as $item)
               @php
                 $dueDate     = \Carbon\Carbon::parse($item->due_date);
@@ -83,16 +97,16 @@
                   default                                                   => 'bg-gray-100 text-gray-700',
                 };
               @endphp
-              <tr wire:key="mine-{{ $item->id }}">
-                <td class="px-4 py-3">
+              <tr wire:key="mine-{{ $item->id }}" class="block sm:table-row py-3 sm:py-0">
+                <td class="block sm:table-cell px-4 py-0.5 sm:py-3">
                   <p class="font-semibold text-gray-900 dark:text-neutral-100">{{ $item->item_name }}</p>
                   <p class="text-xs text-gray-500">{{ number_format($item->quantity) }} pcs</p>
                   @if($facultyItem)
                     <p class="text-xs text-gray-500">For {{ $facultyItem->request?->user?->name ?? 'a faculty member' }}</p>
                   @endif
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-neutral-300">{{ $dueDate->format('M d, Y') }}</td>
-                <td class="px-4 py-3">
+                <td class="block sm:table-cell px-4 py-0.5 sm:py-3 whitespace-nowrap text-gray-700 dark:text-neutral-300"><span class="sm:hidden text-xs text-gray-500">Return by </span>{{ $dueDate->format('M d, Y') }}</td>
+                <td class="block sm:table-cell px-4 py-0.5 sm:py-3">
                   <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold {{ $badge }}">{{ $label }}</span>
                   @if($item->returned_at)
                     <p class="text-xs text-gray-500 mt-1">
@@ -116,7 +130,7 @@
                     </div>
                   @endif
                 </td>
-                <td class="px-4 py-3 text-right whitespace-nowrap">
+                <td class="block sm:table-cell px-4 pt-2 pb-1 sm:py-3 text-left sm:text-right sm:whitespace-nowrap">
                   @if(! $item->returned_at && ! $item->return_requested_at && $withFaculty)
                     {{-- ✅ The faculty member must return it to me first --}}
                     <span class="inline-flex items-center min-h-10 px-3 rounded-lg bg-gray-100 text-gray-500 text-xs font-semibold dark:bg-neutral-700 dark:text-neutral-300"
@@ -129,12 +143,15 @@
                   @elseif(! $item->returned_at && ! $item->return_requested_at)
                     <button type="button" wire:click="requestReturn({{ $item->id }})"
                       wire:confirm="Return {{ $item->quantity }} pcs of {{ $item->item_name }} to the Admin?"
-                      class="min-h-10 px-3 rounded-lg bg-[#123524] text-white text-xs font-semibold hover:bg-[#0B2418] transition">
+                      wire:loading.attr="disabled" wire:target="requestReturn({{ $item->id }})"
+                      class="disabled:opacity-60 min-h-10 px-3 rounded-lg bg-[#123524] text-white text-xs font-semibold hover:bg-[#0B2418] transition">
                       Return to Admin
                     </button>
                   @elseif(! $item->returned_at)
                     <button type="button" wire:click="cancelRequestReturn({{ $item->id }})"
-                      class="min-h-10 px-3 rounded-lg border border-gray-300 text-xs font-medium bg-white hover:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-200">
+                      wire:confirm="Cancel the return of {{ $item->item_name }}? The Admin will be told the items are still with you."
+                      wire:loading.attr="disabled" wire:target="cancelRequestReturn({{ $item->id }})"
+                      class="disabled:opacity-60 min-h-10 px-3 rounded-lg border border-gray-300 text-xs font-medium bg-white hover:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-200">
                       Cancel return
                     </button>
                   @endif
@@ -142,7 +159,7 @@
               </tr>
             @empty
               <tr>
-                <td colspan="4" class="px-4 py-12 text-center text-sm text-gray-500">You have not borrowed any items from the Admin.</td>
+                <td colspan="4" class="block sm:table-cell px-4 py-12 text-center text-sm text-gray-500">You have not borrowed any items from the Admin.</td>
               </tr>
             @endforelse
           </tbody>
@@ -170,6 +187,17 @@
       </div>
     @endif
 
+    {{-- ✅ Faculty items due today / tomorrow — remind people before they're late --}}
+    @if($this->counts['due_soon'] > 0)
+      <div class="mb-4 flex flex-wrap items-center gap-2 px-4 py-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800 dark:bg-amber-950/30 dark:border-amber-900 dark:text-amber-300">
+        <svg class="size-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>
+          <strong>{{ $this->counts['due_soon'] }} {{ \Illuminate\Support\Str::plural('item', $this->counts['due_soon']) }}</strong>
+          borrowed by faculty {{ $this->counts['due_soon'] === 1 ? 'is' : 'are' }} due today or tomorrow.
+        </span>
+      </div>
+    @endif
+
     {{-- Tabs + search --}}
     <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
       <div class="inline-flex p-1 bg-gray-100 dark:bg-neutral-800 rounded-xl gap-1" role="tablist" aria-label="Filter borrowed items">
@@ -194,8 +222,8 @@
     {{-- Table --}}
     <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-          <thead class="bg-gray-50 dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-400">
+        <table class="min-w-full text-sm block sm:table">
+          <thead class="hidden sm:table-header-group bg-gray-50 dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-400">
             <tr>
               <th class="px-4 py-3 font-semibold">Item</th>
               <th class="px-4 py-3 font-semibold">Borrower</th>
@@ -204,7 +232,7 @@
               <th class="px-4 py-3 font-semibold text-right">Action</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100 dark:divide-neutral-700">
+          <tbody class="block sm:table-row-group divide-y divide-gray-100 dark:divide-neutral-700">
             @forelse($this->items as $item)
               @php
                 $sentBack  = ! $item->returned_at && $item->return_requested_at;   // ✅ faculty clicked "Return to Program Head"
@@ -222,20 +250,20 @@
                   default => 'bg-gray-100 text-gray-700',
                 };
               @endphp
-              <tr wire:key="item-{{ $item->id }}">
-                <td class="px-4 py-3">
+              <tr wire:key="item-{{ $item->id }}" class="block sm:table-row py-3 sm:py-0">
+                <td class="block sm:table-cell px-4 py-0.5 sm:py-3">
                   <p class="font-semibold text-gray-900 dark:text-neutral-100">{{ $item->item_name }}</p>
                   <p class="text-xs text-gray-500">Qty {{ $item->quantity }}</p>
                   @if($adminItem)
                     <span class="inline-flex mt-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">Borrowed from the Admin</span>
                   @endif
                 </td>
-                <td class="px-4 py-3 text-gray-700 dark:text-neutral-300">
+                <td class="block sm:table-cell px-4 py-0.5 sm:py-3 text-gray-700 dark:text-neutral-300">
                   {{ $item->request->user->name ?? '—' }}
                   <p class="text-xs text-gray-500">{{ $item->request->user->email ?? '' }}</p>
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-neutral-300">{{ $item->due_back_at->format('M d, Y') }}</td>
-                <td class="px-4 py-3">
+                <td class="block sm:table-cell px-4 py-0.5 sm:py-3 whitespace-nowrap text-gray-700 dark:text-neutral-300"><span class="sm:hidden text-xs text-gray-500">Return by </span>{{ $item->due_back_at->format('M d, Y') }}</td>
+                <td class="block sm:table-cell px-4 py-0.5 sm:py-3">
                   <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold {{ $badge }}">{{ $label }}</span>
                   @if($item->returned_at)
                     <p class="text-xs text-gray-500 mt-1">
@@ -268,7 +296,7 @@
                     @endif
                   @endif
                 </td>
-                <td class="px-4 py-3 text-right whitespace-nowrap">
+                <td class="block sm:table-cell px-4 pt-2 pb-1 sm:py-3 text-left sm:text-right sm:whitespace-nowrap">
                   @if($item->returned_at && $adminItem && ! $adminItem->returned_at)
                     {{-- ✅ Faculty gave it back → now I return it to the Admin (same row, not "My borrowed items") --}}
                     @if(! $adminItem->return_requested_at)
@@ -280,7 +308,9 @@
                       </button>
                     @else
                       <button type="button" wire:click="cancelRequestReturn({{ $adminItem->id }})"
-                        class="min-h-10 px-3 rounded-lg border border-gray-300 text-xs font-medium bg-white hover:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-200">
+                        wire:confirm="Cancel the return of {{ $adminItem->item_name }}? The Admin will be told the items are still with you."
+                        wire:loading.attr="disabled" wire:target="cancelRequestReturn({{ $adminItem->id }})"
+                        class="disabled:opacity-60 min-h-10 px-3 rounded-lg border border-gray-300 text-xs font-medium bg-white hover:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-200">
                         Cancel return
                       </button>
                     @endif
@@ -292,6 +322,16 @@
                           class="min-h-10 px-3 rounded-lg bg-[#123524] text-white text-xs font-semibold hover:bg-[#0B2418] transition">
                           {{ $adminItem && ! $adminItem->returned_at ? 'Confirm & send to Admin' : 'Confirm return' }}
                         </button>
+                        {{-- ✅ Several items from this request sent back → confirm them all as Good in one go --}}
+                        @php $sentBackHere = $this->sentBackCounts[$item->request_id] ?? 0; @endphp
+                        @if($sentBackHere > 1)
+                          <button type="button" wire:click="confirmAllGood({{ $item->request_id }})"
+                            wire:confirm="Confirm all {{ $sentBackHere }} items from {{ $item->request->user->name ?? 'this faculty member' }} as returned in GOOD condition? (Use “Confirm return” for anything damaged or lost.)"
+                            wire:loading.attr="disabled" wire:target="confirmAllGood({{ $item->request_id }})"
+                            class="block sm:ml-auto mt-1.5 text-xs font-medium text-[#1C6B45] dark:text-green-300 hover:underline disabled:opacity-60">
+                            Confirm all {{ $sentBackHere }} as Good
+                          </button>
+                        @endif
                       @elseif($isOverdue)
                         {{-- ✅ Overdue: message the faculty member --}}
                         @if($reminded?->isToday())
@@ -323,8 +363,8 @@
 
               {{-- Inline "mark returned" form --}}
               @if($returningId === $item->id)
-                <tr wire:key="form-{{ $item->id }}" class="bg-gray-50 dark:bg-neutral-900/40">
-                  <td colspan="5" class="px-4 py-4">
+                <tr wire:key="form-{{ $item->id }}" class="block sm:table-row bg-gray-50 dark:bg-neutral-900/40">
+                  <td colspan="5" class="block sm:table-cell px-4 py-4">
                     <form wire:submit="confirmReturn" class="flex flex-col sm:flex-row sm:items-end gap-3">
                       <div>
                         <label for="cond-{{ $item->id }}" class="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1">Condition</label>
@@ -342,8 +382,8 @@
                         @error('returnNotes') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                       </div>
                       <div class="flex gap-2">
-                        <button type="button" wire:click="cancelReturn" class="min-h-10 px-3 rounded-lg border border-gray-300 text-sm font-medium bg-white hover:bg-gray-50">Cancel</button>
-                        <button type="submit" class="min-h-10 px-3 rounded-lg bg-[#123524] text-white text-sm font-semibold hover:bg-[#0B2418]">
+                        <button type="button" wire:click="cancelReturn" class="min-h-10 px-3 rounded-lg border border-gray-300 text-sm font-medium bg-white hover:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-200">Cancel</button>
+                        <button type="submit" wire:loading.attr="disabled" wire:target="confirmReturn" class="min-h-10 px-3 rounded-lg bg-[#123524] text-white text-sm font-semibold hover:bg-[#0B2418] disabled:opacity-60">
                           {{ $adminItem && ! $adminItem->returned_at ? 'Confirm & send to Admin' : 'Confirm return' }}
                         </button>
                       </div>
@@ -358,7 +398,7 @@
               @endif
             @empty
               <tr>
-                <td colspan="5" class="px-4 py-12 text-center text-sm text-gray-500">
+                <td colspan="5" class="block sm:table-cell px-4 py-12 text-center text-sm text-gray-500">
                   @if($filter === 'overdue') No overdue items.
                   @elseif($filter === 'returned') No returned items yet.
                   @else Nothing is currently borrowed.

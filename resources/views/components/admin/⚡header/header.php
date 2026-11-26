@@ -74,7 +74,12 @@ new class extends Component
             $notification->update(['status' => 'sent']);
         }
 
-        $this->redirect($this->resolveUrl((string) $notification->message));
+        // ✅ Linked to a request → open that request (or Borrowed Items for a Pcs borrowing)
+        $url = $notification->request_id
+            ? \App\Support\AdminRequestNotice::adminUrl((int) $notification->request_id)
+            : null;
+
+        $this->redirect($url ?? $this->resolveUrl((string) $notification->message));
     }
 
     public function markAllAsRead(): void

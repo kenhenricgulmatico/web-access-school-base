@@ -1,8 +1,8 @@
 <div class="select-none">
 <div class="max-w-4xl mx-auto px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-    <div class="bg-white dark:bg-neutral-800 border rounded-xl shadow overflow-hidden">
+    <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
 
-        <div class="px-6 py-4 border-b">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-neutral-700">
             <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">Create Reservation</h2>
             <p class="text-sm text-gray-600 dark:text-neutral-400">Fill out the form to reserve a facility</p>
         </div>
@@ -25,7 +25,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                         Facility Name <span class="text-red-500">*</span>
                     </label>
-                    <select wire:model="facility_name"
+                    <select wire:model.live="facility_name"
                         class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
                         <option value="">Select a facility</option>
                         @foreach($facilityOptions as $facility)
@@ -47,57 +47,44 @@
                     @error('used_date') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-                            Start Time <span class="text-red-500">*</span>
-                        </label>
-                        <select wire:model="start_time"
-                            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
-                            <option value="08:00">8:00 AM</option>
-                            <option value="09:00">9:00 AM</option>
-                            <option value="10:00">10:00 AM</option>
-                            <option value="11:00">11:00 AM</option>
-                            <option value="12:00">12:00 PM</option>
-                            <option value="13:00">1:00 PM</option>
-                            <option value="14:00">2:00 PM</option>
-                            <option value="15:00">3:00 PM</option>
-                            <option value="16:00">4:00 PM</option>
-                            <option value="17:00">5:00 PM</option>
-                        </select>
-                        @error('start_time') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                {{-- ✅ What is already booked for this facility on this day --}}
+                @if($facility_name && $used_date)
+                    @php $bookings = $this->dayBookings; @endphp
+                    <div class="rounded-lg border p-3 text-sm {{ count($bookings) ? 'border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800' : 'border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800' }}"
+                         wire:loading.class="opacity-60" wire:target="facility_name, used_date">
+                        @if(count($bookings))
+                            <p class="font-medium text-amber-900 dark:text-amber-200 mb-1.5">
+                                Already booked on {{ \Carbon\Carbon::parse($used_date)->format('M d, Y') }}:
+                            </p>
+                            <ul class="space-y-1">
+                                @foreach($bookings as $b)
+                                    <li class="flex items-center gap-2 text-amber-800 dark:text-amber-300">
+                                        <span class="size-1.5 rounded-full bg-amber-500 shrink-0"></span>
+                                        <span class="font-semibold">{{ $b['label'] }}</span>
+                                        <span class="text-xs text-amber-700/80 dark:text-amber-400/80">· {{ $b['department'] }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                            <p class="text-xs text-amber-700/80 dark:text-amber-400/80 mt-2">Pick a time that doesn't overlap these. Booked start times are greyed out below.</p>
+                        @else
+                            <p class="text-green-800 dark:text-green-300">
+                                <span class="font-semibold">{{ $facility_name }}</span> is free all day on {{ \Carbon\Carbon::parse($used_date)->format('M d, Y') }} — no approved bookings yet.
+                            </p>
+                        @endif
                     </div>
+                @endif
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-                            End Time <span class="text-red-500">*</span>
-                        </label>
-                        <select wire:model="end_time"
-                            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
-                            <option value="09:00">9:00 AM</option>
-                            <option value="10:00">10:00 AM</option>
-                            <option value="11:00">11:00 AM</option>
-                            <option value="12:00">12:00 PM</option>
-                            <option value="13:00">1:00 PM</option>
-                            <option value="14:00">2:00 PM</option>
-                            <option value="15:00">3:00 PM</option>
-                            <option value="16:00">4:00 PM</option>
-                            <option value="17:00">5:00 PM</option>
-                            <option value="18:00">6:00 PM</option>
-                        </select>
-                        @error('end_time') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
-                    </div>
-                </div>
+                @include('partials.reservation-time-pickers')
 
                 {{-- MATERIALS PICKER --}}
-                <div class="border-t pt-5">
+                <div class="border-t border-gray-200 dark:border-neutral-700 pt-5">
                     <div class="flex items-center justify-between mb-2">
                         <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300">
                             Materials Needed <span class="text-xs font-normal text-gray-400">(optional — e.g. bench for court)</span>
                         </label>
                         <button type="button"
                             wire:click="addMaterial"
-                            class="text-xs px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition font-medium">
+                            class="text-xs px-3 py-1.5 bg-[#1C6B45]/10 text-[#1C6B45] dark:text-green-300 border border-[#1C6B45]/30 rounded-lg hover:bg-[#1C6B45]/15 transition font-medium">
                             + Add Material
                         </button>
                     </div>
@@ -113,7 +100,7 @@
                     <div class="space-y-3">
                         @foreach($materials as $index => $material)
                         @php $rowOptions = $this->getMaterialOptionsForRow($index); @endphp
-                            <div wire:key="material-{{ $index }}" class="flex items-start gap-2 bg-red-50/50 border border-red-100 rounded-lg p-3">
+                            <div wire:key="material-{{ $index }}" class="flex items-start gap-2 bg-gray-50 dark:bg-neutral-700/40 border border-gray-200 dark:border-neutral-700 rounded-lg p-3">
                                 <div class="flex-1">
                                     <select wire:model.live="materials.{{ $index }}.resource_id"
                                         wire:key="material-select-{{$index}}--{{$rowOptions->count()}}"
@@ -157,7 +144,7 @@
                                         class="w-full px-3 py-2 text-sm rounded-lg border {{ $__over ? 'border-red-400' : 'border-gray-300 dark:border-neutral-600' }} bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200">
                                     {{-- ✅ "Requesting: 1 Ream" / "1 Set" / "10 Pcs" --}}
                                     @if($__pick && $__qty > 0)
-                                        <p class="text-[10px] text-blue-600 font-medium mt-1">Requesting: {{ $__qty }} {{ $__unit }}</p>
+                                        <p class="text-[10px] text-[#1C6B45] dark:text-green-400 font-medium mt-1">Requesting: {{ $__qty }} {{ $__unit }}</p>
                                     @endif
                                     @if($__over)
                                         <p class="text-[10px] text-red-500 mt-1 font-medium">More than what is in stock — please request less</p>
@@ -176,16 +163,7 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-                        Purpose <span class="text-red-500">*</span>
-                    </label>
-                    <textarea wire:model="purpose"
-                        rows="4"
-                        placeholder="State your purpose for using this facility..."
-                        class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200"></textarea>
-                    @error('purpose') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
-                </div>
+                @include('partials.purpose-field', ['placeholder' => 'What will you use the facility for? (at least 10 characters)'])
 
                 {{-- ✅ Return date — ONLY when borrowing Pcs items (chairs…). Not for Ream / Set. --}}
                 @if($this->hasBorrowItems())
@@ -217,13 +195,16 @@
                 @endif
 
                 <div class="flex gap-3 pt-4">
+                    {{-- ✅ Disabled while sending, so a double click can't send it twice --}}
                     <button type="submit"
-                        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
-                        Submit Reservation
+                        wire:loading.attr="disabled" wire:target="submit"
+                        class="px-6 py-2 bg-[#123524] hover:bg-[#0B2418] text-white rounded-lg font-medium transition disabled:opacity-60 disabled:cursor-wait">
+                        <span wire:loading.remove wire:target="submit">Submit Reservation</span>
+                        <span wire:loading wire:target="submit">Submitting…</span>
                     </button>
                     <button type="button"
                         wire:click="cancel"
-                        class="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition">
+                        class="px-6 py-2 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-200 hover:bg-gray-50 dark:hover:bg-neutral-600 rounded-lg font-medium transition">
                         Cancel
                     </button>
                 </div>

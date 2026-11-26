@@ -3,6 +3,7 @@
 namespace App\Livewire\ProgramHead\RequestToAdmin;
 
 use App\Support\BookingDate;
+use App\Support\TimeSlots;
 use App\Models\Request as ResourceRequest;
 use App\Models\RequestItem;
 use App\Models\RequestType;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Auth;
 
 new #[Layout('layouts.coordinator')] class extends Component
 {
+    use \App\Traits\UsesTimeSlots; // 30-minute pickers + "already booked" list
+
     public ResourceRequest $requestModel;
 
     public $request_type_id = '';
@@ -99,9 +102,10 @@ new #[Layout('layouts.coordinator')] class extends Component
 
             if ($facilityItem) {
                 $this->facility_name = $facilityItem->item_name;
-                $this->start_time    = $facilityItem->start_time;
-                $this->end_time      = $facilityItem->end_time;
-                $this->request_date  = $facilityItem->request_date;
+                // ✅ "09:00:00" in the database → "09:00" for the pickers
+                $this->start_time    = TimeSlots::normalize($facilityItem->start_time) ?? '09:00';
+                $this->end_time      = TimeSlots::normalize($facilityItem->end_time) ?? '10:00';
+                $this->request_date  = $facilityItem->request_date ? \Carbon\Carbon::parse($facilityItem->request_date)->format('Y-m-d') : '';
             }
 
             $this->materials = $request->items
@@ -145,8 +149,9 @@ new #[Layout('layouts.coordinator')] class extends Component
 
         if ($this->request_type_id == RequestType::FACILITY) {
             $rules['facility_name'] = 'required|string|max:255';
-            $rules['start_time']    = 'required';
-            $rules['end_time']      = 'required|after:start_time';
+            // ✅ 30-minute steps, 7:00 AM – 8:00 PM (see App\Support\TimeSlots)
+            $rules['start_time']    = TimeSlots::rules()['start_time'];
+            $rules['end_time']      = TimeSlots::rules()['end_time'];
         }
 
         if ($this->request_type_id == RequestType::MATERIAL) {
@@ -170,6 +175,8 @@ new #[Layout('layouts.coordinator')] class extends Component
         'start_time.required'      => 'Please select start time',
         'end_time.required'        => 'Please select end time',
         'end_time.after'           => 'End time must be after start time',
+        'start_time.in'            => 'Please pick a start time from the list (every 30 minutes).',
+        'end_time.in'              => 'Please pick an end time from the list (every 30 minutes).',
         'materials.required'       => 'Please add at least one material',
         'materials.*.resource_id.required' => 'Please select a material',
         'materials.*.resource_id.exists'   => 'Selected material is invalid.',
@@ -357,12 +364,45 @@ new #[Layout('layouts.coordinator')] class extends Component
         }
     }
 
+    // ✅ The booked list leaves out this request itself
+    protected function timeSlotExceptRequestId(): ?int
+    {
+        return $this->requestModel->id;
+    }
+
+    public function updatedFacilityName(): void { $this->checkConflictLive(); }
+    public function updatedRequestDate(): void  { $this->checkConflictLive(); }
+    public function updatedEndTime(): void      { $this->checkConflictLive(); }
+
+    public function updatedStartTime(): void
+    {
+        $this->keepEndAfterStart();
+        $this->checkConflictLive();
+    }
+
+    protected function checkConflictLive(): void
+    {
+        $this->resetErrorBag('facility_name');
+
+        if ($this->request_type_id == RequestType::FACILITY && $this->facility_name && $this->request_date
+            && $this->start_time && $this->end_time
+            && TimeSlots::overlaps($this->start_time, $this->end_time, $this->dayBookings)) {
+            $this->addError('facility_name', "Sorry, {$this->facility_name} is already booked at that time. Please choose a different time or date.");
+        }
+    }
+
     public function update()
     {
         // ✅ Server-side guard — requires `program-head-requests.update`
         abort_unless(auth()->user()->can('program-head-requests.update'), 403);
 
         $this->validate();
+
+        // ✅ Was missing: don't let an edit move the request onto an approved booking
+        $this->checkConflictLive();
+        if ($this->getErrorBag()->has('facility_name')) {
+            return;
+        }
 
         $selectedMaterials = collect($this->materials)
             ->filter(fn ($m) => !empty($m['resource_id']))
@@ -461,6 +501,9 @@ new #[Layout('layouts.coordinator')] class extends Component
                 RequestItem::create(array_merge($itemData, ['request_id' => $this->requestModel->id]));
             }
         }
+
+        // ✅ Tell the Admins the pending request changed
+        \App\Support\AdminRequestNotice::updated($this->requestModel->fresh(), Auth::user());
 
         session()->flash('success', 'Request updated successfully!');
         return redirect()->route('coordinator.request-to-admin.view-request');

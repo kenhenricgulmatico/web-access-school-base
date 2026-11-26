@@ -250,6 +250,63 @@ class ForwardedRequests
     // =================================================================
     // ADMIN REJECTED → reject the student's request too
     // =================================================================
+    // =================================================================
+    // ✅ THE FACULTY MEMBER CANCELLED their own pending request
+    // =================================================================
+    /**
+     * Cancels the request, withdraws the Program Head's endorsed copy if the Admin hasn't
+     * decided yet (so the Admin can't approve a booking nobody needs), and tells the
+     * Program Head(s) — and the Admins when an endorsed copy was withdrawn.
+     * Returns a short note for the faculty member's message.
+     */
+    public static function onStudentCancelled(ResourceRequest $student, User $by): ?string
+    {
+        $kind = (int) $student->request_type_id === RequestType::FACILITY ? 'facility reservation' : 'material request';
+        $what = static::details($student->loadMissing('items'));
+
+        $withdrawn = DB::transaction(function () use ($student) {
+            $student->update(['status' => 'cancelled']);
+
+            $forward = ResourceRequest::where('forwarded_from_request_id', $student->id)
+                ->where('status', 'pending')
+                ->lockForUpdate()
+                ->first();
+
+            $forward?->update(['status' => 'cancelled']);
+
+            return $forward;
+        });
+
+        // The Program Head(s) of the department
+        foreach (User::role('program head')->where('department_id', $student->department_id)->get() as $programHead) {
+            Notification::create([
+                'user_id'    => $programHead->id,
+                'request_id' => $student->id,
+                'message'    => "{$by->name} cancelled their {$kind}: {$what}."
+                              . ($withdrawn ? ' Your endorsed request to the Admin was withdrawn too.' : ''),
+                'type'       => 'Gmail',
+                'status'     => 'pending',
+            ]);
+        }
+
+        if (! $withdrawn) {
+            return null;
+        }
+
+        // The Admins: the endorsed copy they were about to review is gone
+        foreach (User::role('admin')->get() as $admin) {
+            Notification::create([
+                'user_id'    => $admin->id,
+                'request_id' => $withdrawn->id,
+                'message'    => "{$by->name} cancelled their {$kind}, so the Program Head's endorsed request was withdrawn — no need to review it.",
+                'type'       => 'Gmail',
+                'status'     => 'pending',
+            ]);
+        }
+
+        return 'It had been endorsed to the Admin — that request was withdrawn too.';
+    }
+
     public static function onAdminRejected(ResourceRequest $forward, ?string $reason, User $admin): ?string
     {
         if (! $forward->forwarded_from_request_id) {

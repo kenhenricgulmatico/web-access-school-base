@@ -9,10 +9,22 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithPagination;
+use App\Models\RequestItem;
 
 new #[Layout('layouts.coordinator')] class extends Component
 {
+    use WithPagination;
+
+    // ✅ pending | approved | rejected
+    #[Url]
+    public string $tab = 'pending';
+
+    // ✅ Search by faculty name or item
+    public string $search = '';
+
     // ✅ Reject dialog state
     public ?int   $rejectingRequestId = null;
     public string $rejectReason       = '';
@@ -21,7 +33,14 @@ new #[Layout('layouts.coordinator')] class extends Component
     {
         // ✅ Program Head-only page — requires `requests.view-department`
         abort_unless(auth()->user()->can('requests.view-department'), 403);
+
+        if (! in_array($this->tab, ['pending', 'approved', 'rejected'], true)) {
+            $this->tab = 'pending';
+        }
     }
+
+    public function updatingTab(): void    { $this->resetPage(); $this->rejectingRequestId = null; }
+    public function updatingSearch(): void { $this->resetPage(); }
 
     protected function scopedQuery()
     {
@@ -32,14 +51,56 @@ new #[Layout('layouts.coordinator')] class extends Component
             });
     }
 
+    /** One tab of requests, narrowed by the search box. */
+    protected function tabQuery(string $tab)
+    {
+        $q = $this->scopedQuery()->where('status', $tab);
+
+        if (trim($this->search) !== '') {
+            $term = '%' . trim($this->search) . '%';
+            $q->where(fn ($w) => $w
+                ->whereHas('user', fn ($u) => $u->where('name', 'like', $term))
+                ->orWhereHas('items', fn ($i) => $i->where('item_name', 'like', $term)));
+        }
+
+        return $q;
+    }
+
+    #[Computed]
+    public function counts(): array
+    {
+        return [
+            'pending'  => $this->tabQuery('pending')->count(),
+            'approved' => $this->tabQuery('approved')->count(),
+            'rejected' => $this->tabQuery('rejected')->count(),
+        ];
+    }
+
     #[Computed]
     public function requests()
     {
-        return $this->scopedQuery()
-            ->with(['user.department', 'items'])
-            ->whereIn('status', ['pending', 'approved', 'rejected'])
-            ->latest()
-            ->get();
+        $q = $this->tabQuery($this->tab)->with(['user.department', 'items', 'approvals']);
+
+        // ✅ Pending: the soonest "date needed" first. Done tabs: most recent first.
+        $this->tab === 'pending'
+            ? $q->orderBy(RequestItem::selectRaw('MIN(request_date)')->whereColumn('request_items.request_id', 'requests.id'))
+            : $q->latest('updated_at');
+
+        return $q->paginate(10);
+    }
+
+    /** ✅ Earliest "date needed" of a request (Carbon or null). */
+    public function neededOn($request): ?\Carbon\Carbon
+    {
+        $date = $request->items->pluck('request_date')->filter()->min();
+
+        return $date ? \Carbon\Carbon::parse($date) : null;
+    }
+
+    /** ✅ Why it was rejected (latest rejection note), if any. */
+    public function rejectionReason($request): ?string
+    {
+        return $request->approvals->where('status', 'rejected')->sortByDesc('id')->first()?->remarks;
     }
 
     /** ✅ My department's stock (Resource Allocation): resource_id => quantity. */
@@ -162,7 +223,7 @@ new #[Layout('layouts.coordinator')] class extends Component
             )));
 
             session()->flash('message', 'Request approved. The items were taken from your department\'s Resource Allocation.');
-            unset($this->requests, $this->departmentStock);
+            unset($this->requests, $this->counts, $this->departmentStock);
         } catch (\RuntimeException $e) {
             session()->flash('error', $e->getMessage());
         }
@@ -183,7 +244,7 @@ new #[Layout('layouts.coordinator')] class extends Component
         [$ok, $message] = \App\Support\ForwardedRequests::forward($request, Auth::user());
 
         session()->flash($ok ? 'message' : 'error', $message);
-        unset($this->requests);
+        unset($this->requests, $this->counts);
     }
 
     public function openReject(int $id): void
@@ -265,6 +326,6 @@ new #[Layout('layouts.coordinator')] class extends Component
         session()->flash('message', 'Request rejected and requester notified.');
 
         $this->cancelReject();
-        unset($this->requests);
+        unset($this->requests, $this->counts);
     }
 };

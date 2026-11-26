@@ -11,10 +11,23 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithPagination;
+use App\Models\RequestItem;
+use App\Support\TimeSlots;
 
 new #[Layout('layouts.coordinator')] class extends Component
 {
+    use WithPagination;
+
+    // ✅ pending | approved | rejected
+    #[Url]
+    public string $tab = 'pending';
+
+    // ✅ Search by faculty name or room
+    public string $search = '';
+
     // ✅ NEW: Reject dialog state
     public ?int   $rejectingRequestId = null;
     public string $rejectReason       = '';
@@ -30,14 +43,111 @@ new #[Layout('layouts.coordinator')] class extends Component
             });
     }
 
+    public function mount(): void
+    {
+        if (! in_array($this->tab, ['pending', 'approved', 'rejected'], true)) {
+            $this->tab = 'pending';
+        }
+    }
+
+    public function updatingTab(): void    { $this->resetPage(); $this->rejectingRequestId = null; }
+    public function updatingSearch(): void { $this->resetPage(); }
+
+    /** One tab of reservations, narrowed by the search box. */
+    protected function tabQuery(string $tab)
+    {
+        $q = $this->scopedQuery()->where('status', $tab);
+
+        if (trim($this->search) !== '') {
+            $term = '%' . trim($this->search) . '%';
+            $q->where(fn ($w) => $w
+                ->whereHas('user', fn ($u) => $u->where('name', 'like', $term))
+                ->orWhereHas('items', fn ($i) => $i->whereNull('resource_id')->where('item_name', 'like', $term)));
+        }
+
+        return $q;
+    }
+
+    #[Computed]
+    public function counts(): array
+    {
+        return [
+            'pending'  => $this->tabQuery('pending')->count(),
+            'approved' => $this->tabQuery('approved')->count(),
+            'rejected' => $this->tabQuery('rejected')->count(),
+        ];
+    }
+
     #[Computed]
     public function reservations()
     {
-        return $this->scopedQuery()
-            ->with(['user.department', 'items'])
-            ->whereIn('status', ['pending', 'approved', 'rejected'])
-            ->latest()
-            ->get();
+        $q = $this->tabQuery($this->tab)->with(['user.department', 'items', 'approvals']);
+
+        // ✅ Pending: the soonest booking first. Done tabs: most recent first.
+        $this->tab === 'pending'
+            ? $q->orderBy(RequestItem::select('request_date')->whereColumn('request_items.request_id', 'requests.id')->whereNull('resource_id')->limit(1))
+            : $q->latest('updated_at');
+
+        return $q->paginate(10);
+    }
+
+    /** ✅ Why it was rejected (latest rejection note), if any. */
+    public function rejectionReason($request): ?string
+    {
+        return $request->approvals->where('status', 'rejected')->sortByDesc('id')->first()?->remarks;
+    }
+
+    /**
+     * ✅ Is the room free for this request?
+     *    ['booked' => [approved bookings that overlap], 'competing' => [other pending requests for the same slot]]
+     *    The request's own endorsed copy never counts.
+     */
+    public function clashes($request): array
+    {
+        $item = $request->items->firstWhere('resource_id', null);
+
+        if (! $item || ! $item->start_time || ! $item->end_time || ! $item->request_date) {
+            return ['booked' => [], 'competing' => []];
+        }
+
+        $date  = Carbon::parse($item->request_date)->toDateString();
+        $start = Carbon::parse($item->start_time)->format('H:i');
+        $end   = Carbon::parse($item->end_time)->format('H:i');
+
+        $booked = collect(TimeSlots::approvedBookings($item->item_name, $date, $request->id))
+            ->filter(fn ($b) => $start < $b['end'] && $end > $b['start'])
+            ->map(fn ($b) => "{$b['label']} ({$b['department']})")
+            ->values()
+            ->all();
+
+        $competing = RequestItem::whereNull('resource_id')
+            ->where('item_name', $item->item_name)
+            ->whereDate('request_date', $date)
+            ->where('start_time', '<', $item->end_time)
+            ->where('end_time', '>', $item->start_time)
+            ->where('request_id', '!=', $request->id)
+            ->whereHas('request', fn ($q) => $q
+                ->where('status', 'pending')
+                // endorsed copies are the same request as the faculty one — don't list them twice
+                ->whereNull('forwarded_from_request_id'))
+            ->with('request.user')
+            ->get()
+            ->map(fn ($i) => ($i->request?->user?->name ?? 'Someone') . ' (' . Carbon::parse($i->start_time)->format('g:i A') . '–' . Carbon::parse($i->end_time)->format('g:i A') . ')')
+            ->unique()
+            ->values()
+            ->all();
+
+        return ['booked' => $booked, 'competing' => $competing];
+    }
+
+    /** ✅ Program Head calendar, opened on this request's day with its room selected. */
+    public function calendarUrl($request): ?string
+    {
+        $item = $request->items->firstWhere('resource_id', null);
+
+        return $item && $item->request_date
+            ? route('coordinator.calendar', ['date' => Carbon::parse($item->request_date)->toDateString(), 'room' => $item->item_name])
+            : null;
     }
 
     // ============================================================
@@ -153,7 +263,7 @@ new #[Layout('layouts.coordinator')] class extends Component
         [$ok, $message] = \App\Support\ForwardedRequests::forward($request, Auth::user());
 
         session()->flash($ok ? 'message' : 'error', $message);
-        unset($this->reservations);
+        unset($this->reservations, $this->counts);
     }
 
     public function openReject(int $id): void

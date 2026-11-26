@@ -63,10 +63,15 @@ new #[Layout('layouts.admin')] class extends Component
         $facility = (int) RequestType::FACILITY;
         $days     = (int) ReturnTracking::RETURN_DAYS;
 
+        // ✅ Works on MySQL (the app) and SQLite (the tests)
+        $plusDays = DB::getDriverName() === 'sqlite'
+            ? "date(request_items.request_date, '+{$days} days')"
+            : "DATE_ADD(request_items.request_date, INTERVAL {$days} DAY)";
+
         return "COALESCE(request_items.due_back_at, CASE
                     WHEN (SELECT r.request_type_id FROM requests r WHERE r.id = request_items.request_id) = {$facility}
                     THEN request_items.request_date
-                    ELSE DATE_ADD(request_items.request_date, INTERVAL {$days} DAY)
+                    ELSE {$plusDays}
                 END)";
     }
 
@@ -633,6 +638,19 @@ new #[Layout('layouts.admin')] class extends Component
             session()->flash('error', $e->getMessage());
             $this->returningId = null;
             return;
+        }
+
+        // ✅ Tell the Program Head their return was received (with the condition)
+        $conditionText = RequestItem::CONDITIONS[$this->returnCondition] ?? ucfirst($this->returnCondition);
+        if ($borrowerId = $item->request?->user_id) {
+            Notification::create([
+                'user_id'    => $borrowerId,
+                'request_id' => $item->request_id,
+                'message'    => 'The Admin (' . Auth::user()->name . ") confirmed your return of {$item->quantity} pcs of \"{$item->item_name}\" — condition: {$conditionText}."
+                              . ($this->returnNotes ? " Note: {$this->returnNotes}" : ''),
+                'type'       => 'Return',
+                'status'     => 'pending',
+            ]);
         }
 
         session()->flash('message', $this->returnCondition === 'good'

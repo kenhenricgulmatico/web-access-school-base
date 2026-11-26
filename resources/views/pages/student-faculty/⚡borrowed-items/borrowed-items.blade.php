@@ -2,12 +2,31 @@
 <div class="max-w-5xl mx-auto px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
 
   {{-- Header --}}
-  <div class="mb-6">
+  <div class="mb-5">
     <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Borrowed Items</h2>
     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
       Items you borrowed that must be given back. When you return an item, click
       <strong>Return to Program Head</strong> — your Program Head will check and confirm it.
     </p>
+  </div>
+
+  {{-- ✅ Who to give the items back to --}}
+  @php $heads = $this->programHeads; @endphp
+  <div class="mb-4 flex items-start gap-3 px-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700">
+    <span class="shrink-0 inline-flex items-center justify-center size-9 rounded-full bg-[#123524]/10 text-[#123524] dark:bg-green-900/40 dark:text-green-300">
+      <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+    </span>
+    <div class="text-sm">
+      <p class="text-gray-500 dark:text-neutral-400">Return items to</p>
+      @forelse($heads as $head)
+        <p class="font-semibold text-gray-900 dark:text-white">
+          {{ $head->name }}
+          <span class="font-normal text-gray-500 dark:text-neutral-400">· Program Head{{ $head->department ? ', ' . $head->department->department_name : '' }}</span>
+        </p>
+      @empty
+        <p class="font-semibold text-amber-700 dark:text-amber-300">Your department has no Program Head yet — please ask the Admin.</p>
+      @endforelse
+    </div>
   </div>
 
   {{-- Flash --}}
@@ -18,10 +37,10 @@
     <div class="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800 dark:bg-red-950/30 dark:border-red-900 dark:text-red-300">{{ session('error') }}</div>
   @endif
 
-  {{-- ✅ Overdue warning --}}
+  {{-- Overdue warning --}}
   @if($this->counts['overdue'] > 0)
-    <div class="mb-4 flex items-center gap-2 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800 dark:bg-red-950/30 dark:border-red-900 dark:text-red-300">
-      <svg class="size-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <div class="mb-3 flex items-center gap-2 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800 dark:bg-red-950/30 dark:border-red-900 dark:text-red-300">
+      <svg class="size-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
       </svg>
       <span>
@@ -31,8 +50,21 @@
     </div>
   @endif
 
+  {{-- ✅ Due today / tomorrow — a heads-up before it becomes overdue --}}
+  @if($this->counts['due_soon'] > 0)
+    <div class="mb-3 flex items-center gap-2 px-4 py-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800 dark:bg-amber-950/30 dark:border-amber-900 dark:text-amber-300">
+      <svg class="size-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span>
+        <strong>{{ $this->counts['due_soon'] }} {{ \Illuminate\Support\Str::plural('item', $this->counts['due_soon']) }}</strong>
+        {{ $this->counts['due_soon'] === 1 ? 'is' : 'are' }} due today or tomorrow — return {{ $this->counts['due_soon'] === 1 ? 'it' : 'them' }} on time.
+      </span>
+    </div>
+  @endif
+
   {{-- Tabs --}}
-  <div class="inline-flex p-1 mb-4 bg-gray-100 dark:bg-neutral-800 rounded-xl gap-1" role="tablist" aria-label="Filter borrowed items">
+  <div class="inline-flex p-1 mt-1 mb-4 bg-gray-100 dark:bg-neutral-800 rounded-xl gap-1" role="tablist" aria-label="Filter borrowed items">
     @foreach(['outstanding' => 'Not returned', 'returned' => 'Returned'] as $key => $label)
       <button type="button" role="tab" wire:click="$set('filter', '{{ $key }}')" aria-selected="{{ $filter === $key ? 'true' : 'false' }}"
         class="min-h-10 px-4 rounded-lg text-sm font-semibold transition inline-flex items-center gap-2
@@ -46,8 +78,37 @@
     @endforeach
   </div>
 
-  {{-- Table --}}
-  <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl overflow-hidden">
+  @php $rows = $this->items; @endphp
+
+  {{-- ✅ Phone: one card per item, big buttons, no sideways scrolling --}}
+  <div class="sm:hidden space-y-3">
+    @forelse($rows as $item)
+      @php $info = $this->rowInfo($item); @endphp
+      <div wire:key="card-{{ $item->id }}" class="p-4 rounded-2xl bg-white dark:bg-neutral-800 border {{ $info['isOverdue'] ? 'border-red-300 dark:border-red-800' : 'border-gray-200 dark:border-neutral-700' }}">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="font-semibold text-gray-900 dark:text-neutral-100">{{ $item->item_name }}</p>
+            <p class="text-xs text-gray-500 dark:text-neutral-400">Qty {{ number_format($item->quantity) }} ·
+              <a href="{{ route('portal.view-material-reservation', $item->request_id) }}" wire:navigate class="hover:underline">View request</a>
+            </p>
+          </div>
+          <div class="text-right shrink-0">
+            <p class="text-[11px] text-gray-500 dark:text-neutral-400">Return by</p>
+            <p class="text-sm font-semibold text-gray-800 dark:text-neutral-200">{{ $item->due_back_at->format('M d, Y') }}</p>
+          </div>
+        </div>
+        <div class="mt-3">@include('partials.borrowed-item-status')</div>
+        <div class="mt-3">@include('partials.borrowed-item-actions')</div>
+      </div>
+    @empty
+      <div class="px-4 py-12 rounded-2xl bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 text-center text-sm text-gray-500">
+        @if($filter === 'returned') No returned items yet. @else You have no borrowed items to return. @endif
+      </div>
+    @endforelse
+  </div>
+
+  {{-- Tablet / desktop: table --}}
+  <div class="hidden sm:block bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl overflow-hidden">
     <div class="overflow-x-auto">
       <table class="min-w-full text-sm">
         <thead class="bg-gray-50 dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-400">
@@ -59,75 +120,25 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-neutral-700">
-          @forelse($this->items as $item)
-            @php
-              $label     = $this->statusLabel($item);
-              $isOverdue = $item->isOverdue() && ! $item->return_requested_at;
-              $reminder  = $isOverdue ? $this->reminder($item) : null;
-              $badge     = match (true) {
-                $item->returned_at && $item->return_condition === 'good' => 'bg-green-100 text-green-800',
-                (bool) $item->returned_at                                 => 'bg-orange-100 text-orange-800',
-                (bool) $item->return_requested_at                         => 'bg-blue-100 text-blue-800',
-                $isOverdue                                                => 'bg-red-100 text-red-800',
-                $item->due_back_at->isToday()                             => 'bg-amber-100 text-amber-800',
-                default                                                   => 'bg-gray-100 text-gray-700',
-              };
-            @endphp
+          @forelse($rows as $item)
+            @php $info = $this->rowInfo($item); @endphp
             <tr wire:key="borrowed-{{ $item->id }}" class="align-top">
               <td class="px-4 py-3">
                 <p class="font-semibold text-gray-900 dark:text-neutral-100">{{ $item->item_name }}</p>
-                <p class="text-xs text-gray-500">Qty {{ number_format($item->quantity) }} ·
+                <p class="text-xs text-gray-500 dark:text-neutral-400">Qty {{ number_format($item->quantity) }} ·
                   <a href="{{ route('portal.view-material-reservation', $item->request_id) }}" wire:navigate class="hover:underline">View request</a>
                 </p>
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-neutral-300">{{ $item->due_back_at->format('M d, Y') }}</td>
-              <td class="px-4 py-3">
-                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold {{ $badge }}">{{ $label }}</span>
-
-                @if($item->returned_at)
-                  <p class="text-xs text-gray-500 mt-1">
-                    {{ $item->returned_at->format('M d, Y') }}@if($item->receiver) · confirmed by {{ $item->receiver->name }}@endif
-                  </p>
-                  @if($item->return_notes)
-                    <p class="text-xs text-gray-500 italic">"{{ $item->return_notes }}"</p>
-                  @endif
-                @elseif($item->return_requested_at)
-                  <p class="text-xs text-gray-500 mt-1">Sent {{ \Carbon\Carbon::parse($item->return_requested_at)->format('M d, Y g:i A') }}</p>
-                @elseif($reminder)
-                  {{-- ✅ Message from the Program Head --}}
-                  <div class="mt-2 max-w-sm px-3 py-2 rounded-lg bg-red-50 border border-red-100 dark:bg-red-950/30 dark:border-red-900">
-                    <p class="flex items-center gap-1 text-[11px] font-semibold text-red-700 dark:text-red-300">
-                      <svg class="size-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
-                      </svg>
-                      Message from your Program Head · {{ $reminder->created_at->diffForHumans() }}
-                    </p>
-                    <p class="text-xs text-red-800 dark:text-red-200 mt-0.5 whitespace-normal">{{ $reminder->message }}</p>
-                  </div>
-                @endif
-              </td>
+              <td class="px-4 py-3">@include('partials.borrowed-item-status')</td>
               <td class="px-4 py-3 text-right whitespace-nowrap">
-                @if(! $item->returned_at && ! $item->return_requested_at)
-                  <button type="button" wire:click="requestReturn({{ $item->id }})"
-                    wire:confirm="Return {{ $item->item_name }} (x{{ $item->quantity }}) to your Program Head?"
-                    wire:loading.attr="disabled" wire:target="requestReturn({{ $item->id }})"
-                    class="min-h-10 px-3 rounded-lg bg-[#123524] text-white text-xs font-semibold hover:bg-[#0B2418] disabled:opacity-60 transition">
-                    Return to Program Head
-                  </button>
-                @elseif(! $item->returned_at)
-                  <button type="button" wire:click="cancelRequestReturn({{ $item->id }})"
-                    class="min-h-10 px-3 rounded-lg border border-gray-300 text-xs font-medium bg-white hover:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-200">
-                    Cancel return
-                  </button>
-                @endif
+                <div class="inline-flex flex-col items-end">@include('partials.borrowed-item-actions')</div>
               </td>
             </tr>
           @empty
             <tr>
               <td colspan="4" class="px-4 py-12 text-center text-sm text-gray-500">
-                @if($filter === 'returned') No returned items yet.
-                @else You have no borrowed items to return.
-                @endif
+                @if($filter === 'returned') No returned items yet. @else You have no borrowed items to return. @endif
               </td>
             </tr>
           @endforelse
@@ -136,6 +147,6 @@
     </div>
   </div>
 
-  <div class="mt-4">{{ $this->items->links() }}</div>
+  <div class="mt-4">{{ $rows->links() }}</div>
 </div>
 </div>

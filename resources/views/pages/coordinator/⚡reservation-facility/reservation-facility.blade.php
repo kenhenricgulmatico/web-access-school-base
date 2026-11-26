@@ -9,7 +9,7 @@
         <div class="flex items-center gap-2">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-neutral-100">Reservation Facilities</h2>
           <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-600 dark:bg-neutral-700 dark:text-neutral-300">
-            {{ $this->reservations->count() }}
+            {{ $this->counts['pending'] }} pending
           </span>
         </div>
         <p class="text-sm text-gray-500 dark:text-neutral-400 mt-0.5">Review and manage facility reservations from faculty</p>
@@ -45,10 +45,27 @@
       </div>
     @endif
 
+    {{-- ✅ Tabs + search --}}
+    <div class="px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 dark:border-neutral-700">
+      <div class="inline-flex flex-wrap p-1 bg-gray-100 dark:bg-neutral-900/60 rounded-xl gap-1" role="tablist" aria-label="Filter facility requests">
+        @foreach(['pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected'] as $key => $label)
+          <button type="button" role="tab" wire:click="$set('tab', '{{ $key }}')" aria-selected="{{ $tab === $key ? 'true' : 'false' }}"
+            class="min-h-9 px-3 rounded-lg text-sm font-semibold transition inline-flex items-center gap-2
+              {{ $tab === $key ? 'bg-white dark:bg-neutral-700 text-[#123524] dark:text-white shadow-sm' : 'text-gray-600 dark:text-neutral-400 hover:text-[#123524] dark:hover:text-white' }}">
+            {{ $label }}
+            <span class="text-xs px-1.5 py-0.5 rounded-full {{ $key === 'pending' && $this->counts['pending'] ? 'bg-amber-100 text-amber-800' : 'bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:text-neutral-200' }}">{{ $this->counts[$key] }}</span>
+          </button>
+        @endforeach
+      </div>
+      <label class="sr-only" for="fac-search">Search</label>
+      <input id="fac-search" type="search" wire:model.live.debounce.300ms="search" placeholder="Search faculty or room…"
+        class="w-full sm:w-64 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-800 dark:text-neutral-200 focus:ring-2 focus:ring-[#1C6B45]/30 focus:border-[#1C6B45] focus:outline-none">
+    </div>
+
     {{-- Table --}}
-    <div class="overflow-x-auto">
-      <table class="min-w-full">
-        <thead>
+    <div class="overflow-x-auto" wire:loading.class="opacity-60" wire:target="tab, search">
+      <table class="min-w-full block md:table">
+        <thead class="hidden md:table-header-group">
           <tr class="border-b border-gray-100 dark:border-neutral-700">
             <th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Requestor</th>
             <th class="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-400">Facility</th>
@@ -59,7 +76,7 @@
           </tr>
         </thead>
 
-        <tbody class="divide-y divide-gray-100 dark:divide-neutral-700">
+        <tbody class="block md:table-row-group divide-y divide-gray-100 dark:divide-neutral-700">
           @forelse($this->reservations as $reservation)
             @php
               $facilityItem = $reservation->items->firstWhere('resource_id', null);
@@ -77,12 +94,17 @@
                 $reservation->status === 'cancelled'  => ['Cancelled',         'bg-gray-100 text-gray-600 dark:bg-neutral-700 dark:text-neutral-300',     'bg-gray-400'],
                 default                               => [ucfirst($reservation->status), 'bg-gray-100 text-gray-600 dark:bg-neutral-700 dark:text-neutral-300', 'bg-gray-400'],
               };
+              $bookDay = $facilityItem?->request_date ? \Carbon\Carbon::parse($facilityItem->request_date) : null;
+              $urgent  = $isPending && $bookDay && $bookDay->lte(today()->addDay());
+              $clash   = $canAct ? $this->clashes($reservation) : ['booked' => [], 'competing' => []];
+              $reason  = $reservation->status === 'rejected' ? $this->rejectionReason($reservation) : null;
+              $calUrl  = $this->calendarUrl($reservation);
             @endphp
 
-            <tr wire:key="res-{{ $reservation->id }}" class="hover:bg-gray-50/70 dark:hover:bg-neutral-700/40 transition">
+            <tr wire:key="res-{{ $reservation->id }}" class="relative block md:table-row px-4 py-4 md:p-0 hover:bg-gray-50/70 dark:hover:bg-neutral-700/40 transition">
 
               {{-- Requestor --}}
-              <td class="px-6 py-4 align-top">
+              <td class="block md:table-cell pr-12 md:px-6 pb-2 md:py-4 align-top">
                 <div class="flex items-center gap-3">
                   <div class="shrink-0 size-9 rounded-full bg-[#123524] text-white flex items-center justify-center text-sm font-semibold">
                     {{ strtoupper(substr($reservation->user->name, 0, 1)) }}
@@ -95,7 +117,7 @@
               </td>
 
               {{-- Facility --}}
-              <td class="px-6 py-4 align-top">
+              <td class="block md:table-cell md:px-6 py-1 md:py-4 align-top">
                 <p class="text-sm font-medium text-gray-800 dark:text-neutral-200">{{ $facilityItem->item_name ?? '—' }}</p>
 
                 @if($pcsItems->isNotEmpty())
@@ -117,7 +139,7 @@
               </td>
 
               {{-- Schedule --}}
-              <td class="px-6 py-4 align-top whitespace-nowrap">
+              <td class="block md:table-cell md:px-6 py-1 md:py-4 align-top md:whitespace-nowrap">
                 @if($facilityItem && $facilityItem->request_date)
                   <p class="text-sm font-medium text-gray-800 dark:text-neutral-200">
                     {{ \Carbon\Carbon::parse($facilityItem->request_date)->format('M d, Y') }}
@@ -127,28 +149,59 @@
                       {{ \Carbon\Carbon::parse($facilityItem->start_time)->format('g:i A') }} – {{ \Carbon\Carbon::parse($facilityItem->end_time)->format('g:i A') }}
                     </p>
                   @endif
+                  @if($urgent)
+                    <span class="mt-1 inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                      {{ $bookDay->isToday() ? 'Today' : ($bookDay->isPast() ? 'Overdue' : 'Tomorrow') }}
+                    </span>
+                  @endif
+                  {{-- ✅ Open the calendar on this day with this room selected --}}
+                  @if($calUrl)
+                    <a href="{{ $calUrl }}" wire:navigate class="block mt-1 text-[11px] font-medium text-[#1C6B45] dark:text-green-300 hover:underline">See on calendar →</a>
+                  @endif
                 @else
                   <span class="text-gray-300">—</span>
                 @endif
               </td>
 
               {{-- Purpose --}}
-              <td class="px-6 py-4 align-top">
-                <p class="text-sm text-gray-600 dark:text-neutral-400 max-w-[14rem] truncate" title="{{ $reservation->purpose }}">
+              <td class="block md:table-cell md:px-6 py-1 md:py-4 align-top">
+                <p class="text-sm text-gray-600 dark:text-neutral-400 line-clamp-2 md:line-clamp-none md:max-w-[14rem] md:truncate" title="{{ $reservation->purpose }}">
                   {{ $reservation->purpose ?: '—' }}
                 </p>
               </td>
 
               {{-- Status --}}
-              <td class="px-6 py-4 align-top whitespace-nowrap">
+              <td class="block md:table-cell md:px-6 py-1 md:py-4 align-top md:whitespace-nowrap">
                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full {{ $statusClass }}">
                   <span class="size-1.5 rounded-full {{ $dotClass }}"></span>
                   {{ $statusText }}
                 </span>
+
+                {{-- ✅ Is the room free? (pending, not yet endorsed) --}}
+                @if($canAct && $facilityItem?->start_time)
+                  @if(empty($clash['booked']) && empty($clash['competing']))
+                    <p class="mt-1.5 text-xs font-medium text-green-700 dark:text-green-400 whitespace-normal">✓ Room is free at that time</p>
+                  @endif
+                  @if(! empty($clash['booked']))
+                    <p class="mt-1.5 max-w-xs text-xs text-red-700 dark:text-red-300 whitespace-normal">
+                      <span class="font-semibold">⚠ Already booked:</span> {{ implode(', ', $clash['booked']) }} — reject or ask for another time
+                    </p>
+                  @endif
+                  @if(! empty($clash['competing']))
+                    <p class="mt-1.5 max-w-xs text-xs text-amber-700 dark:text-amber-300 whitespace-normal">
+                      <span class="font-semibold">⚠ Also wanted by:</span> {{ implode(', ', $clash['competing']) }} — pick one
+                    </p>
+                  @endif
+                @endif
+
+                {{-- ✅ What the faculty member was told --}}
+                @if($reason)
+                  <p class="mt-1.5 max-w-xs text-xs text-red-700 dark:text-red-300 whitespace-normal"><span class="font-semibold">Reason:</span> {{ $reason }}</p>
+                @endif
               </td>
 
               {{-- ⋮ Actions --}}
-              <td class="px-6 py-4 align-top text-right">
+              <td class="absolute top-3 right-3 md:static md:table-cell md:px-6 md:py-4 align-top text-right">
                 <div x-data="{
                        open: false, placed: false, top: 0, left: 0,
                        toggle() {
@@ -237,8 +290,8 @@
             {{-- Inline reject form --}}
             @can('requests.reject')
               @if($rejectingRequestId === $reservation->id)
-                <tr wire:key="reject-{{ $reservation->id }}" class="bg-red-50/40 dark:bg-red-900/10">
-                  <td colspan="6" class="px-6 py-4">
+                <tr class="block md:table-row" wire:key="reject-{{ $reservation->id }}" class="bg-red-50/40 dark:bg-red-900/10">
+                  <td colspan="6" class="block md:table-cell px-4 md:px-6 py-4">
                     <div class="max-w-2xl bg-white dark:bg-neutral-800 border border-red-200 dark:border-red-900/50 rounded-xl p-4 space-y-3">
                       <div class="flex items-center gap-2">
                         <svg class="size-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -276,23 +329,25 @@
             @endcan
 
           @empty
-            <tr>
-              <td colspan="6" class="px-6 py-14 text-center">
-                <div class="flex flex-col items-center gap-2">
-                  <div class="size-12 rounded-full bg-gray-100 dark:bg-neutral-700 flex items-center justify-center">
-                    <svg class="size-6 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                  </div>
-                  <p class="text-sm font-medium text-gray-600 dark:text-neutral-400">No facility reservations yet</p>
-                  <p class="text-xs text-gray-400 dark:text-neutral-500">Reservations from faculty will appear here</p>
-                </div>
+            <tr class="block md:table-row">
+              <td colspan="6" class="block md:table-cell px-6 py-14 text-center">
+                <p class="text-sm text-gray-500 dark:text-neutral-400">
+                  @if(trim($search) !== '') Nothing matches "{{ $search }}".
+                  @elseif($tab === 'pending') No pending facility requests — you're all caught up.
+                  @elseif($tab === 'approved') No approved facility requests yet.
+                  @else No rejected facility requests.
+                  @endif
+                </p>
               </td>
             </tr>
           @endforelse
         </tbody>
       </table>
     </div>
+
+    @if($this->reservations->hasPages())
+      <div class="px-4 sm:px-6 py-3 border-t border-gray-100 dark:border-neutral-700">{{ $this->reservations->links() }}</div>
+    @endif
 
   </div>
 

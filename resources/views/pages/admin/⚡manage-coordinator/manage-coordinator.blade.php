@@ -103,6 +103,8 @@
                             Requester</th>
                         <th class="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">
                             Department</th>
+                        <th class="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">
+                            Needed on</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">
                             Type</th>
                         <th class="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">
@@ -142,6 +144,24 @@
                                 {{ $req->department->department_name ?? '—' }}
                             </td>
 
+                            {{-- ✅ Needed on (pending ones needed today / tomorrow are marked) --}}
+                            @php
+                                $needed = $this->neededOn($req);
+                                $urgent = $req->status === 'pending' && $needed && $needed->lte(today()->addDay());
+                            @endphp
+                            <td class="px-4 py-2.5 whitespace-nowrap">
+                                @if($needed)
+                                    <p class="text-xs font-medium {{ $urgent ? 'text-red-700 dark:text-red-300' : 'text-gray-800 dark:text-neutral-200' }}">{{ $needed->format('M d, Y') }}</p>
+                                    @if($urgent)
+                                        <span class="mt-0.5 inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                                            {{ $needed->isToday() ? 'Today' : ($needed->isPast() ? 'Overdue' : 'Tomorrow') }}
+                                        </span>
+                                    @endif
+                                @else
+                                    <span class="text-xs text-gray-300">—</span>
+                                @endif
+                            </td>
+
                             {{-- Type --}}
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full
@@ -172,6 +192,34 @@
                                     @endif
                                     {{ ucfirst($req->status) }}
                                 </span>
+
+                                {{-- ✅ Can it be approved? Main stock and room, at a glance (pending only) --}}
+                                @if($req->status === 'pending')
+                                    @php
+                                        $short = $this->shortItems($req);
+                                        $clash = $this->clashes($req);
+                                    @endphp
+                                    @if(! empty($clash))
+                                        <p class="mt-1.5 max-w-[16rem] text-[11px] text-red-700 dark:text-red-300 whitespace-normal">
+                                            <span class="font-semibold">⚠ Room already booked:</span> {{ implode(', ', $clash) }}
+                                        </p>
+                                    @endif
+                                    @if(! empty($short))
+                                        <p class="mt-1.5 max-w-[16rem] text-[11px] text-amber-700 dark:text-amber-300 whitespace-normal">
+                                            <span class="font-semibold">Not enough stock:</span> {{ implode(', ', $short) }}
+                                        </p>
+                                    @endif
+                                    @if(empty($clash) && empty($short))
+                                        <p class="mt-1.5 text-[11px] font-medium text-green-700 dark:text-green-400">
+                                            ✓ {{ $req->request_type_id == \App\Models\RequestType::FACILITY ? 'Room free' : 'In stock' }}{{ $req->request_type_id == \App\Models\RequestType::FACILITY && $req->items->whereNotNull('resource_id')->isNotEmpty() ? ' · items in stock' : '' }}
+                                        </p>
+                                    @endif
+                                @endif
+
+                                {{-- ✅ What the Program Head was told --}}
+                                @if($req->status === 'rejected' && ($reason = $this->rejectionReason($req)))
+                                    <p class="mt-1.5 max-w-[16rem] text-[11px] text-red-700 dark:text-red-300 whitespace-normal"><span class="font-semibold">Reason:</span> {{ $reason }}</p>
+                                @endif
                             </td>
 
                             {{-- Actions --}}
@@ -213,7 +261,7 @@
                         @can('program-head-requests.reject')
                             @if ($rejectingRequestId === $req->id)
                                 <tr class="bg-red-50/40 dark:bg-red-900/10">
-                                    <td colspan="5" class="px-6 py-4">
+                                    <td colspan="6" class="px-6 py-4">
                                         <div class="max-w-2xl bg-white dark:bg-neutral-800 border border-red-200 dark:border-red-900/50 rounded-lg p-4 space-y-3">
                                             <div class="flex items-center gap-2">
                                                 <svg class="size-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -255,7 +303,7 @@
 
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-14 text-center">
+                            <td colspan="6" class="px-6 py-14 text-center">
                                 <svg class="w-10 h-10 text-gray-300 dark:text-neutral-600 mx-auto mb-3" fill="none"
                                     stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                     <path stroke-linecap="round"

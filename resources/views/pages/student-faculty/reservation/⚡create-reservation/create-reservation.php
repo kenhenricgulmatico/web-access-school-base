@@ -3,6 +3,7 @@
 namespace App\Livewire\Portal;
 
 use App\Support\BookingDate;
+use App\Support\TimeSlots;
 use App\Models\Request as ResourceRequest;
 use App\Models\RequestItem;
 use App\Models\Resource;
@@ -34,8 +35,9 @@ new #[Layout('layouts.student-faculty')] class extends Component
         return $this->returnByRules() + [
             'facility_name'           => 'required|string|max:255',
             'used_date'               => BookingDate::rules(),
-            'start_time'              => 'required',
-            'end_time'                => 'required|after:start_time',
+            // ✅ 30-minute steps (see App\Support\TimeSlots)
+            'start_time'              => TimeSlots::rules()['start_time'],
+            'end_time'                => TimeSlots::rules()['end_time'],
             'purpose'                 => 'required|string|min:10|max:500',
             'materials.*.resource_id' => 'nullable|exists:resources,id',
             'materials.*.quantity'    => 'nullable|integer|min:1',
@@ -56,7 +58,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     protected function messages(): array
     {
         // ✅ Booking date: today up to ~6 months ahead (see App\Support\BookingDate)
-        return array_merge($this->messages, BookingDate::messages('used_date'), $this->returnByMessages());
+        return array_merge($this->messages, BookingDate::messages('used_date'), TimeSlots::messages(), $this->returnByMessages());
     }
 
     public function mount(): void
@@ -93,6 +95,30 @@ new #[Layout('layouts.student-faculty')] class extends Component
 
         // ✅ Only Pcs items (chairs…) — see borrowableResources()
         $this->availableResources = $this->borrowableResources();
+
+        // ✅ Opened from the calendar ("Book this room"): ?facility=Room 101&date=2026-12-05
+        //    Only a real, bookable facility and a date inside the booking window are used.
+        $facility = (string) request()->query('facility', '');
+        if ($facility !== '' && in_array($facility, $this->facilityOptions, true)) {
+            $this->facility_name = $facility;
+        }
+
+        $date = (string) request()->query('date', '');
+        if ($date !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)
+            && $date >= BookingDate::min() && $date <= BookingDate::max()) {
+            $this->used_date = $date;
+        }
+
+        // Start on the first free 30-minute slot of that day, if the default one is taken
+        if ($this->facility_name && $this->startIsTaken($this->start_time)) {
+            foreach (array_keys(TimeSlots::starts()) as $start) {
+                if (! $this->startIsTaken($start)) {
+                    $this->start_time = $start;
+                    $this->end_time   = TimeSlots::defaultEnd($start);
+                    break;
+                }
+            }
+        }
     }
 
     /**
@@ -182,6 +208,11 @@ new #[Layout('layouts.student-faculty')] class extends Component
 
     public function updatedStartTime(): void
     {
+        // ✅ Keep the end after the new start (default: 1 hour later)
+        if (! $this->end_time || $this->end_time <= $this->start_time) {
+            $this->end_time = TimeSlots::defaultEnd($this->start_time);
+        }
+
         $this->validateTimeRangeLive();
         $this->validateFacilityConflictLive();
     }
@@ -199,6 +230,26 @@ new #[Layout('layouts.student-faculty')] class extends Component
         if ($this->start_time && $this->end_time && $this->end_time <= $this->start_time) {
             $this->addError('end_time', 'End time must be after start time.');
         }
+    }
+
+    /** ✅ Approved bookings of the picked facility on the picked day (shown above the time pickers). */
+    public function getDayBookingsProperty(): array
+    {
+        return TimeSlots::approvedBookings($this->facility_name, $this->used_date);
+    }
+
+    /** True when the 30-minute slot starting at $start is already booked. */
+    public function startIsTaken(string $start): bool
+    {
+        $end = \Carbon\Carbon::createFromFormat('H:i', $start)->addMinutes(TimeSlots::STEP)->format('H:i');
+
+        return TimeSlots::overlaps($start, $end, $this->dayBookings);
+    }
+
+    /** True when ending at $end (from the picked start) would run into a booking. */
+    public function endIsTaken(string $end): bool
+    {
+        return $this->start_time && TimeSlots::overlaps($this->start_time, $end, $this->dayBookings);
     }
 
     protected function validateFacilityConflictLive(): void
@@ -264,6 +315,22 @@ new #[Layout('layouts.student-faculty')] class extends Component
         // ── Server-side block — cannot rely on live check alone ──
         if ($message = $this->facilityConflict()) {
             $this->addError('facility_name', $message);
+            return;
+        }
+
+        // ✅ Same reservation sent twice (double click, slow connection, back button)?
+        $alreadySent = RequestItem::whereNull('resource_id')
+            ->where('item_name', $this->facility_name)
+            ->whereDate('request_date', $this->used_date)
+            ->where('start_time', \Carbon\Carbon::parse($this->start_time)->format('H:i:s'))
+            ->where('end_time', \Carbon\Carbon::parse($this->end_time)->format('H:i:s'))
+            ->whereHas('request', fn ($q) => $q
+                ->where('user_id', Auth::id())
+                ->whereIn('status', ['pending', 'approved']))
+            ->exists();
+
+        if ($alreadySent) {
+            $this->addError('facility_name', 'You already sent a reservation for this facility at this date and time. Check "My Reservations".');
             return;
         }
 

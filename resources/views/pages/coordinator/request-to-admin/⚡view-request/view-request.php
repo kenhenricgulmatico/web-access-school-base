@@ -4,6 +4,7 @@ namespace App\Livewire\Coordinator\RequestToAdmin;
 
 use App\Models\RequestType;
 use App\Support\BookingDate;
+use App\Support\TimeSlots;
 use App\Models\Request as ResourceRequest;
 use App\Models\RequestItem;
 use App\Models\Resource;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Auth;
 
 new #[Layout('layouts.coordinator')] class extends Component
 {
+    use \App\Traits\UsesTimeSlots; // 30-minute pickers + "already booked" list
+
     public bool $showEditModal = false;
     public ?int $editingId = null;
     public $request_type_id = '';
@@ -38,8 +41,9 @@ new #[Layout('layouts.coordinator')] class extends Component
 
         if ($this->request_type_id == RequestType::FACILITY) {
             $rules['facility_name'] = 'required|string|max:255';
-            $rules['start_time']    = 'required';
-            $rules['end_time']      = 'required|after:start_time';
+            // ✅ 30-minute steps, 7:00 AM – 8:00 PM (see App\Support\TimeSlots)
+            $rules['start_time']    = TimeSlots::rules()['start_time'];
+            $rules['end_time']      = TimeSlots::rules()['end_time'];
         }
 
         if ($this->request_type_id == RequestType::MATERIAL) {
@@ -58,6 +62,8 @@ new #[Layout('layouts.coordinator')] class extends Component
         'start_time.required'      => 'Please select start time',
         'end_time.required'        => 'Please select end time',
         'end_time.after'           => 'End time must be after start time',
+        'start_time.in'            => 'Please pick a start time from the list (every 30 minutes).',
+        'end_time.in'              => 'Please pick an end time from the list (every 30 minutes).',
         'items.required'           => 'Please add at least one material',
         'items.*.resource_id.required' => 'Please select a material',
         'items.*.resource_id.exists'   => 'Selected material is invalid.',
@@ -152,6 +158,7 @@ new #[Layout('layouts.coordinator')] class extends Component
 
     public function updatedStartTime()
     {
+        $this->keepEndAfterStart();
         $this->validateFacilityConflictLive();
     }
 
@@ -163,6 +170,12 @@ new #[Layout('layouts.coordinator')] class extends Component
     public function updatedRequestDate()
     {
         $this->validateFacilityConflictLive();
+    }
+
+    // ✅ The booked list leaves out the request being edited
+    protected function timeSlotExceptRequestId(): ?int
+    {
+        return $this->editingId;
     }
 
     protected function validateFacilityConflictLive(): void
@@ -227,8 +240,9 @@ new #[Layout('layouts.coordinator')] class extends Component
 
             $this->facility_name = $facilityItem?->item_name ?? '';
             $this->request_date  = $facilityItem?->request_date ?? '';
-            $this->start_time    = $facilityItem?->start_time ?? '';
-            $this->end_time      = $facilityItem?->end_time ?? '';
+            // ✅ "09:00:00" in the database → "09:00" for the pickers
+            $this->start_time    = TimeSlots::normalize($facilityItem?->start_time) ?? '09:00';
+            $this->end_time      = TimeSlots::normalize($facilityItem?->end_time) ?? '10:00';
 
             $this->items = $request->items
                 ->whereNotNull('resource_id')
@@ -353,6 +367,9 @@ new #[Layout('layouts.coordinator')] class extends Component
         }
 
         $this->closeEdit();
+        // ✅ Tell the Admins the pending request changed
+        \App\Support\AdminRequestNotice::updated($request->fresh(), Auth::user());
+
         session()->flash('success', 'Request updated successfully.');
     }
 

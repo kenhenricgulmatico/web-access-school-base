@@ -26,10 +26,29 @@ new #[Layout('layouts.coordinator')] class extends Component
     public string $selectedDate = '';
     public string $activeTab    = 'facility'; // facility | material
     public string $department   = '';         // '' = all departments, otherwise a department id
+    public string $room         = '';         // ✅ '' = every room, otherwise one facility's bookings only
 
     public function mount(): void
     {
         $this->goToToday();
+
+        // ✅ Opened from Facility Requests ("See on calendar"): ?date=2026-12-05&room=Room 101
+        $date = (string) request()->query('date', '');
+        $day  = preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)
+            ? rescue(fn () => Carbon::createFromFormat('Y-m-d', $date), null, false)
+            : null;
+
+        if ($day && $day->format('Y-m-d') <= BookingDate::max()) {
+            [$this->year, $this->month] = [$day->year, $day->month];
+            $this->selectedDate = $day->format('Y-m-d');
+            $this->activeTab    = 'facility';
+        }
+
+        $room = (string) request()->query('room', '');
+        if ($room !== '' && in_array($room, $this->roomOptions, true)) {
+            $this->room      = $room;
+            $this->activeTab = 'facility';
+        }
     }
 
     // ============================================================
@@ -83,6 +102,12 @@ new #[Layout('layouts.coordinator')] class extends Component
             : now()->format('Y-m-d');
     }
 
+    /** Only a real facility name can be picked (anything else = all rooms). */
+    public function updatedRoom($value): void
+    {
+        $this->room = in_array($value, $this->roomOptions, true) ? $value : '';
+    }
+
     public function updatedActiveTab($value): void
     {
         $this->activeTab = in_array($value, ['facility', 'material'], true) ? $value : 'facility';
@@ -91,6 +116,17 @@ new #[Layout('layouts.coordinator')] class extends Component
     // ============================================================
     // DATA
     // ============================================================
+
+    /** ✅ Facilities that can be reserved (for the room filter). */
+    #[Computed]
+    public function roomOptions(): array
+    {
+        return \App\Models\Resource::whereHas('resourceType', fn ($q) => $q->where('type_name', \App\Models\ResourceType::FACILITY))
+            ->where('status', 'available')
+            ->orderBy('resource_name')
+            ->pluck('resource_name')
+            ->all();
+    }
 
     #[Computed]
     public function departments(): array
@@ -119,7 +155,10 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->where(function ($q) use ($myDept) {
                 $q->where(fn ($f) => $f
                         ->where('request_type_id', RequestType::FACILITY)
-                        ->when($this->department !== '', fn ($d) => $d->where('department_id', (int) $this->department)))
+                        ->when($this->department !== '', fn ($d) => $d->where('department_id', (int) $this->department))
+                        // ✅ Room filter: only this facility's bookings
+                        ->when($this->room !== '', fn ($r) => $r->whereHas('items', fn ($i) => $i
+                            ->whereNull('resource_id')->where('item_name', $this->room))))
                   ->orWhere(fn ($m) => $m
                         ->where('request_type_id', RequestType::MATERIAL)
                         ->where('department_id', $myDept ?? 0));

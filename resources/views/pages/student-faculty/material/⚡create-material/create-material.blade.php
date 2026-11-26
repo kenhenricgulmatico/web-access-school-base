@@ -26,17 +26,15 @@
                 @endif
 
                 <form wire:submit="submit" class="space-y-6">
-                    {{-- Purpose --}}
+                    {{-- ✅ Date needed (today up to ~6 months ahead) --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-                            Purpose <span class="text-red-500">*</span>
+                        <label for="request_date" class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                            Date Needed <span class="text-red-500">*</span>
                         </label>
-                        <textarea wire:model="purpose" rows="3"
-                            placeholder="State your purpose for requesting these materials..."
-                            class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
-                        @error('purpose')
-                            <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                        @enderror
+                        <input id="request_date" type="date" wire:model.live="request_date"
+                            min="{{ \App\Support\BookingDate::min() }}" max="{{ \App\Support\BookingDate::max() }}"
+                            class="w-full sm:w-64 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 focus:ring-2 focus:ring-[#1C6B45]/30 focus:border-[#1C6B45] focus:outline-none">
+                        @error('request_date') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     {{-- Dynamic Items --}}
@@ -46,7 +44,7 @@
                                 Materials <span class="text-red-500">*</span>
                             </label>
                             <button type="button" wire:click="addItem" @if(empty($availableResources)) disabled @endif
-                                class="px-3 py-1.5 text-xs sm:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                                class="px-3 py-1.5 text-xs sm:text-sm bg-[#123524] hover:bg-[#0B2418] text-white rounded-lg transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                                 + Add Item
                             </button>
                         </div>
@@ -63,7 +61,7 @@
                                     <label class="block sm:hidden text-xs text-gray-500 dark:text-neutral-400 mb-1">Material</label>
                                     <select wire:model.live="items.{{ $index }}.resource_id"
                                         wire:key="select-{{$index}}-{{count($rowOptions)}}"
-                                        class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                        class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 focus:ring-2 focus:ring-[#1C6B45]/30 focus:border-[#1C6B45] focus:outline-none">
                                         <option value="">Select material</option>
                                         @php
                                             $__opts    = collect($rowOptions);
@@ -94,9 +92,9 @@
                                         <label class="block sm:hidden text-xs text-gray-500 dark:text-neutral-400 mb-1">Quantity</label>
                                         <input type="number" wire:model.live="items.{{ $index }}.quantity"
                                             placeholder="Qty" min="1"
-                                            class="w-full px-3 py-2 text-sm rounded-lg border {{ $warning ? 'border-red-400' : 'border-gray-300 dark:border-neutral-600' }} bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                            class="w-full px-3 py-2 text-sm rounded-lg border {{ $warning ? 'border-red-400' : 'border-gray-300 dark:border-neutral-600' }} bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 focus:ring-2 focus:ring-[#1C6B45]/30 focus:border-[#1C6B45] focus:outline-none">
                                         @if($breakdown)
-                                            <p class="text-[10px] text-blue-600 font-medium mt-1">Requesting: {{ $breakdown }}</p>
+                                            <p class="text-[10px] text-[#1C6B45] dark:text-green-400 font-medium mt-1">Requesting: {{ $breakdown }}</p>
                                         @endif
                                         @if($warning)
                                             <p class="text-[10px] text-red-500 mt-1 font-medium">{{ $warning }}</p>
@@ -125,6 +123,11 @@
                             </div>
                         @endforeach
                     </div>
+
+                    @error('items') <p class="text-xs text-red-500 -mt-3">{{ $message }}</p> @enderror
+
+                    {{-- Purpose (after the items — same order as the reservation form) --}}
+                    @include('partials.purpose-field', ['placeholder' => 'What are these materials for? (at least 10 characters)'])
 
                     {{-- ✅ Return date — ONLY when borrowing Pcs items (chairs…). Not for Ream / Set. --}}
                     @if($this->hasBorrowItems())
@@ -158,12 +161,15 @@
                     {{-- Buttons --}}
                     <div class="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-gray-100 dark:border-neutral-700/50">
                         <button type="button" wire:click="cancel"
-                            class="w-full sm:w-auto px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition text-center">
+                            class="w-full sm:w-auto px-6 py-2.5 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-200 hover:bg-gray-50 dark:hover:bg-neutral-600 rounded-lg text-sm font-medium transition text-center">
                             Cancel
                         </button>
+                        {{-- ✅ Disabled while sending, so a double click can't send it twice --}}
                         <button type="submit" @if(empty($availableResources)) disabled @endif
-                            class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition text-center disabled:opacity-50 disabled:cursor-not-allowed">
-                            Submit Request
+                            wire:loading.attr="disabled" wire:target="submit"
+                            class="w-full sm:w-auto px-6 py-2.5 bg-[#123524] hover:bg-[#0B2418] text-white rounded-lg text-sm font-medium transition text-center disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span wire:loading.remove wire:target="submit">Submit Request</span>
+                            <span wire:loading wire:target="submit">Submitting…</span>
                         </button>
                     </div>
                 </form>

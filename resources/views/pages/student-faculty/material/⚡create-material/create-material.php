@@ -9,6 +9,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Support\BookingDate;
 
 new #[Layout('layouts.student-faculty')] class extends Component
 {
@@ -21,6 +22,9 @@ new #[Layout('layouts.student-faculty')] class extends Component
 
     // ✅ When the borrowed Pcs items will be returned (max 1 month)
     public $return_by = '';
+
+    // ✅ The day the materials are needed (today up to ~6 months ahead)
+    public $request_date = '';
 
     protected $rules = [
         'purpose' => 'required|string|min:10|max:500',
@@ -41,12 +45,12 @@ new #[Layout('layouts.student-faculty')] class extends Component
     // Livewire uses these methods (they add the return-date rule to $rules / $messages)
     protected function rules(): array
     {
-        return array_merge($this->rules, $this->returnByRules());
+        return array_merge($this->rules, ['request_date' => BookingDate::rules()], $this->returnByRules());
     }
 
     protected function messages(): array
     {
-        return array_merge($this->messages, $this->returnByMessages());
+        return array_merge($this->messages, BookingDate::messages('request_date'), $this->returnByMessages());
     }
 
     protected function formatQuantity(int $qtyInPcs, ?string $unit): string
@@ -58,6 +62,8 @@ new #[Layout('layouts.student-faculty')] class extends Component
 
     public function mount()
     {
+        $this->request_date = today()->toDateString();
+
         // ✅ Matches seeder: faculty/student get material-requests.create
         abort_unless(
             auth()->user()->can('material-requests.create'),
@@ -201,6 +207,25 @@ new #[Layout('layouts.student-faculty')] class extends Component
             }
         }
 
+        // ✅ The same request sent twice (double click, back button)?
+        $signature = fn ($rows) => collect($rows)
+            ->map(fn ($r) => (int) $r['resource_id'] . ':' . (int) $r['quantity'])
+            ->sort()->implode(',');
+        $mine = $signature($this->items);
+
+        $alreadySent = ResourceRequest::with('items')
+            ->where('user_id', $user->id)
+            ->where('request_type_id', RequestType::MATERIAL)
+            ->where('status', 'pending')
+            ->whereHas('items', fn ($q) => $q->whereDate('request_date', $this->request_date))
+            ->get()
+            ->contains(fn ($r) => $signature($r->items->map(fn ($i) => ['resource_id' => $i->resource_id, 'quantity' => $i->quantity])) === $mine);
+
+        if ($alreadySent) {
+            $this->addError('items', 'You already have a pending request for these same items on this date. Check "My Material Requests".');
+            return;
+        }
+
         $request = ResourceRequest::create([
             'user_id' => $user->id,
             'department_id' => $user->department_id,
@@ -218,7 +243,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
                 'resource_id' => $item['resource_id'],
                 'item_name' => $resource->resource_name,
                 'quantity' => $item['quantity'],
-                'request_date' => now()->toDateString(),
+                'request_date' => $this->request_date,
                 'start_time' => null,
                 'end_time' => null,
                 // ✅ Only Pcs items get the return date. Ream / Set: none.
@@ -226,11 +251,17 @@ new #[Layout('layouts.student-faculty')] class extends Component
             ]);
         }
 
-        $programHeads = User::role('program head')->get();
+        // ✅ Only the Program Head(s) of this faculty member's department — linked to the request
+        $programHeads = User::role('program head')
+            ->where('department_id', $user->department_id)
+            ->get();
+        $needed = \Carbon\Carbon::parse($this->request_date)->format('M d, Y');
+
         foreach ($programHeads as $programHead) {
             Notification::create([
                 'user_id' => $programHead->id,
-                'message' => "New material request from {$user->name}: {$request->items->count()} item(s).",
+                'request_id' => $request->id,
+                'message' => "New material request from {$user->name}: {$request->items()->count()} item(s), needed on {$needed}.",
                 'type' => 'Gmail',
                 'status' => 'pending',
             ]);
@@ -275,10 +306,12 @@ new #[Layout('layouts.student-faculty')] class extends Component
         return $ids && \App\Models\Resource::whereIn('id', $ids)->where('is_returnable', true)->exists();
     }
 
-    /** Earliest return date: today — the day the request is made (never before today). */
+    /** Earliest return date: the day the materials are needed (never before today). */
     public function returnByMin(): string
     {
-        $start = today();
+        $start = $this->request_date
+            ? (rescue(fn () => \Carbon\Carbon::parse($this->request_date), today(), false))
+            : today();
 
         return ($start->lt(today()) ? today() : $start)->format('Y-m-d');
     }

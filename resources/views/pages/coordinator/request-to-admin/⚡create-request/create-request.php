@@ -1,6 +1,7 @@
 <?php
 
 use App\Support\BookingDate;
+use App\Support\TimeSlots;
 use App\Models\Request as ResourceRequest;
 use App\Models\RequestItem;
 use App\Models\RequestType;
@@ -11,11 +12,15 @@ use App\Models\User;
 use App\Notifications\ProgramHeadRequestNotification;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 new #[Layout('layouts.coordinator')] class extends Component
 {
+    use \App\Traits\UsesTimeSlots; // 30-minute pickers + "already booked" list
+
     public $request_type_id = '';
     public $purpose = '';
     public $request_date = '';
@@ -33,8 +38,12 @@ new #[Layout('layouts.coordinator')] class extends Component
     // ✅ When the borrowed Pcs items will be returned (max 1 month)
     public $return_by = '';
 
-    // ✅ Student / faculty request this was forwarded from ("Forward to Admin")
+    // ✅ Faculty request this endorses ("Forward to Admin").
+    //    Locked: the browser can't change it, and on Submit the room, date, time,
+    //    items and purpose are copied again from that request (see applyEndorsedRequest).
+    #[Locked]
     public ?int $forwardedFromId = null;
+    #[Locked]
     public string $forwardedFromName = '';
 
     public function mount(): void
@@ -92,11 +101,7 @@ new #[Layout('layouts.coordinator')] class extends Component
      */
     protected function prefillFromStudentRequest(int $id): void
     {
-        $source = ResourceRequest::with(['user', 'items.resource'])
-            ->where('department_id', Auth::user()->department_id)
-            ->where('status', 'pending')
-            ->whereHas('user', fn ($u) => $u->whereDoesntHave('roles', fn ($r) => $r->where('name', 'program head')))
-            ->find($id);
+        $source = $this->findEndorsableRequest($id);
 
         if (! $source) {
             session()->flash('error', 'That request can no longer be forwarded (it may already be approved or rejected).');
@@ -108,11 +113,36 @@ new #[Layout('layouts.coordinator')] class extends Component
             return;
         }
 
+        $this->forwardedFromId   = $source->id;
+        $this->forwardedFromName = $source->user->name ?? 'a faculty member';
+
+        $this->applyEndorsedRequest($source, true);
+    }
+
+    /** A pending faculty request of this Program Head's department (or null). */
+    protected function findEndorsableRequest(int $id, bool $lock = false): ?ResourceRequest
+    {
+        return ResourceRequest::with(['user', 'items.resource'])
+            ->where('department_id', Auth::user()->department_id)
+            ->where('status', 'pending')
+            ->whereHas('user', fn ($u) => $u->whereDoesntHave('roles', fn ($r) => $r->where('name', 'program head')))
+            ->when($lock, fn ($q) => $q->lockForUpdate())
+            ->find($id);
+    }
+
+    /**
+     * ✅ Copy the faculty request into this form: type, room, date, time, items, purpose.
+     *    Used when the form opens AND again on Submit, so what reaches the Admin is
+     *    always exactly what the faculty member asked for.
+     */
+    protected function applyEndorsedRequest(ResourceRequest $source, bool $withReturnDate = false): void
+    {
         $facility  = $source->items->firstWhere('resource_id', null);
         $materials = $source->items->whereNotNull('resource_id');
 
-        $this->forwardedFromId   = $source->id;
-        $this->forwardedFromName = $source->user->name ?? 'a faculty member';
+        $this->facility_name = '';
+        $this->start_time    = '09:00';
+        $this->end_time      = '10:00';
         // ✅ The faculty member's own purpose, as they wrote it (no "For <name>:" in front)
         $this->purpose           = \Illuminate\Support\Str::limit((string) $source->purpose, 500, '');
 
@@ -121,8 +151,8 @@ new #[Layout('layouts.coordinator')] class extends Component
             $this->request_type_id = RequestType::FACILITY;
             $this->facility_name   = $facility->item_name;
             $this->request_date    = \Carbon\Carbon::parse($facility->request_date)->format('Y-m-d');
-            $this->start_time      = substr((string) $facility->start_time, 0, 5);
-            $this->end_time        = substr((string) $facility->end_time, 0, 5);
+            $this->start_time      = TimeSlots::normalize($facility->start_time) ?? '09:00';
+            $this->end_time        = TimeSlots::normalize($facility->end_time) ?? '10:00';
         } else {
             $this->request_type_id = RequestType::MATERIAL;
             $needed = $materials->min('request_date');
@@ -138,6 +168,10 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->map(fn ($rows, $rid) => ['resource_id' => (int) $rid, 'quantity' => (int) $rows->sum('quantity')])
             ->values()
             ->toArray();
+
+        if (! $withReturnDate) {
+            return; // on Submit: keep the return date the Program Head chose
+        }
 
         $notAtAdmin = $materials->reject(fn ($i) => $this->getMaterialResource($i->resource_id))->pluck('item_name')->unique();
         if ($notAtAdmin->isNotEmpty()) {
@@ -163,8 +197,9 @@ new #[Layout('layouts.coordinator')] class extends Component
 
         if ($this->request_type_id == RequestType::FACILITY) {
             $rules['facility_name'] = 'required|string|max:255';
-            $rules['start_time']    = 'required';
-            $rules['end_time']      = 'required|after:start_time';
+            // ✅ 30-minute steps, 7:00 AM – 8:00 PM (see App\Support\TimeSlots)
+            $rules['start_time']    = TimeSlots::rules()['start_time'];
+            $rules['end_time']      = TimeSlots::rules()['end_time'];
         }
 
         if ($this->request_type_id == RequestType::MATERIAL) {
@@ -189,6 +224,8 @@ new #[Layout('layouts.coordinator')] class extends Component
         'start_time.required'      => 'Please select start time',
         'end_time.required'        => 'Please select end time',
         'end_time.after'           => 'End time must be after start time',
+        'start_time.in'            => 'Please pick a start time from the list (every 30 minutes).',
+        'end_time.in'              => 'Please pick an end time from the list (every 30 minutes).',
         'materials.required'       => 'Please add at least one material',
         'materials.*.resource_id.required' => 'Please select a material',
         'materials.*.resource_id.exists'   => 'Selected material is invalid.',
@@ -344,7 +381,7 @@ new #[Layout('layouts.coordinator')] class extends Component
 
     public function updatedMaterials($value, $key)
     {
-        if (! str_ends_with($key, '.resource_id') || $value === '' || $value === null) {
+        if (! str_ends_with((string) $key, '.resource_id') || $value === '' || $value === null) {
             return;
         }
 
@@ -377,6 +414,7 @@ new #[Layout('layouts.coordinator')] class extends Component
 
     public function updatedStartTime()
     {
+        $this->keepEndAfterStart();
         $this->validateTimeRangeLive();
         $this->validateFacilityConflictLive();
     }
@@ -438,10 +476,72 @@ new #[Layout('layouts.coordinator')] class extends Component
         return null;
     }
 
+    /**
+     * ✅ A message when this Program Head already has the same request waiting / approved:
+     *    facility → same room, date and time; material → same items and quantities for the same date.
+     */
+    protected function duplicateOfMyRequest(): ?string
+    {
+        if ($this->request_type_id == RequestType::FACILITY) {
+            $exists = RequestItem::whereNull('resource_id')
+                ->where('item_name', $this->facility_name)
+                ->whereDate('request_date', $this->request_date)
+                ->where('start_time', \Carbon\Carbon::parse($this->start_time)->format('H:i:s'))
+                ->where('end_time', \Carbon\Carbon::parse($this->end_time)->format('H:i:s'))
+                ->whereHas('request', fn ($q) => $q->where('user_id', Auth::id())->whereIn('status', ['pending', 'approved']))
+                ->exists();
+
+            return $exists ? 'You already sent a request for this facility at this date and time. Check "Request to Admin".' : null;
+        }
+
+        $signature = fn ($rows) => collect($rows)
+            ->map(fn ($r) => (int) ($r['resource_id'] ?? $r->resource_id) . ':' . (int) ($r['quantity'] ?? $r->quantity))
+            ->sort()->implode(',');
+
+        $mine = $signature(collect($this->materials)->filter(fn ($m) => ! empty($m['resource_id'])));
+
+        $same = ResourceRequest::with('items')
+            ->where('user_id', Auth::id())
+            ->where('request_type_id', RequestType::MATERIAL)
+            ->where('status', 'pending')
+            ->whereNull('forwarded_from_request_id')
+            ->whereHas('items', fn ($q) => $q->whereDate('request_date', $this->request_date))
+            ->get()
+            ->contains(fn ($r) => $signature($r->items->whereNotNull('resource_id')) === $mine);
+
+        return $same ? 'You already have a pending request for these same items on this date. Check "Request to Admin".' : null;
+    }
+
+    /** ✅ Where the Admin will see this request (shown above the Submit button). */
+    public function destinationHint(): string
+    {
+        if ($this->forwardedFromId) {
+            return 'The Admin will see this under "Program Head Requests", marked as forwarded from ' . $this->forwardedFromName . '.';
+        }
+
+        if ($this->hasBorrowItems()) {
+            return 'Items counted in pieces (like chairs) go to the Admin\'s "Borrowed Items" page — the Admin approves them there and sets the return deadline.';
+        }
+
+        return 'The Admin will see this under "Program Head Requests".';
+    }
+
     public function submit()
     {
         // ✅ Server-side guard — creating a request to admin requires `program-head-requests.create`
         abort_unless(auth()->user()->can('program-head-requests.create'), 403);
+
+        // ✅ Endorsing: use the faculty request exactly as it is (ignore any change to the locked fields)
+        if ($this->forwardedFromId) {
+            $source = $this->findEndorsableRequest($this->forwardedFromId);
+
+            if (! $source) {
+                session()->flash('error', 'That request can no longer be forwarded (it may already be approved or rejected).');
+                return redirect()->route('coordinator.request-to-admin.view-request');
+            }
+
+            $this->applyEndorsedRequest($source);
+        }
 
         $this->validate();
 
@@ -457,6 +557,12 @@ new #[Layout('layouts.coordinator')] class extends Component
                 $this->addError('facility_name', $conflictMessage);
                 return;
             }
+        }
+
+        // ✅ The same request sent twice (double click, back button, two tabs)?
+        if (! $this->forwardedFromId && ($duplicate = $this->duplicateOfMyRequest())) {
+            $this->addError($this->request_type_id == RequestType::FACILITY ? 'facility_name' : 'materials', $duplicate);
+            return;
         }
 
         $selectedMaterials = collect($this->materials)
@@ -496,18 +602,40 @@ new #[Layout('layouts.coordinator')] class extends Component
             }
         }
 
-        $request = ResourceRequest::create([
-            'user_id'                          => $user->id,
-            'department_id'                    => $user->department_id,
-            'request_type_id'                  => $this->request_type_id,
-            'purpose'                          => $this->purpose,
-            'status'                           => 'pending',
-            'current_responsibility_center_id' => $user->responsibility_center_id ?? null,
-        ]);
+        try {
+            $request = DB::transaction(function () use ($user) {
+                // ✅ Endorsing: check AGAIN, under a lock, that nobody forwarded it meanwhile
+                //    (two tabs / a refresh used to create two copies at the Admin)
+                if ($this->forwardedFromId) {
+                    $source = $this->findEndorsableRequest($this->forwardedFromId, true);
 
-        // ✅ Remember which student / faculty request this was forwarded from
-        if ($this->forwardedFromId) {
-            $request->forceFill(['forwarded_from_request_id' => $this->forwardedFromId])->save();
+                    if (! $source) {
+                        throw new \RuntimeException('That request can no longer be forwarded (it may already be approved or rejected).');
+                    }
+                    if (\App\Support\ForwardedRequests::isWaitingForAdmin($source)) {
+                        throw new \RuntimeException('This request was already forwarded and is waiting for the Admin.');
+                    }
+                }
+
+                $request = ResourceRequest::create([
+                    'user_id'                          => $user->id,
+                    'department_id'                    => $user->department_id,
+                    'request_type_id'                  => $this->request_type_id,
+                    'purpose'                          => $this->purpose,
+                    'status'                           => 'pending',
+                    'current_responsibility_center_id' => $user->responsibility_center_id ?? null,
+                ]);
+
+                // ✅ Remember which student / faculty request this was forwarded from
+                if ($this->forwardedFromId) {
+                    $request->forceFill(['forwarded_from_request_id' => $this->forwardedFromId])->save();
+                }
+
+                return $request;
+            });
+        } catch (\RuntimeException $e) {
+            session()->flash('error', $e->getMessage());
+            return redirect()->route('coordinator.request-to-admin.view-request');
         }
 
         if ($this->request_type_id == RequestType::FACILITY) {
@@ -566,7 +694,8 @@ new #[Layout('layouts.coordinator')] class extends Component
 
         foreach ($admins as $admin) {
             Notification::create([
-                'user_id' => $admin->id,
+                'user_id'    => $admin->id,
+                'request_id' => $request->id, // ✅ the Admin's bell opens this request
                 'message' => $user->name . ' (Program Head) submitted a new ' . $typeName . '.',
                 'type'    => 'Gmail',
                 'status'  => 'pending',

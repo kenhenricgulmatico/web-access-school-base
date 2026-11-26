@@ -3,11 +3,11 @@
     <div class="flex flex-col">
         <div class="overflow-x-auto">
             <div class="min-w-full inline-block align-middle">
-                <div class="bg-white dark:bg-neutral-800 border rounded-xl shadow overflow-hidden">
+                <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
 
                     {{-- Header --}}
-                    <div class="px-6 py-4 flex justify-between items-center border-b">
-                        <div>
+                    <div class="px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-b border-gray-200 dark:border-neutral-700">
+                        <div class="min-w-0">
                             <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">My Requests to Admin</h2>
                             <p class="text-sm text-gray-600 dark:text-neutral-400">Track the status of your own requests sent to admin</p>
                         </div>
@@ -15,7 +15,7 @@
                         {{-- ✅ New Request — requires `program-head-requests.create` --}}
                         @can('program-head-requests.create')
                             <a href="{{ route('coordinator.request-to-admin.create-request') }}"
-                                class="inline-flex items-center gap-x-1.5 px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                                class="self-start sm:self-auto shrink-0 inline-flex items-center gap-x-1.5 px-4 py-2 text-sm font-medium bg-[#123524] text-white rounded-lg hover:bg-[#0B2418] transition">
                                 <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
                                 </svg>
@@ -37,8 +37,8 @@
                     @endif
 
                     {{-- Table --}}
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                        <thead class="bg-gray-50 dark:bg-neutral-800">
+                    <table class="min-w-full block md:table divide-y divide-gray-200 dark:divide-neutral-700">
+                        <thead class="hidden md:table-header-group bg-gray-50 dark:bg-neutral-800">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">#</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">Type</th>
@@ -47,14 +47,14 @@
                                 <th class="px-6 py-3 text-right text-xs font-semibold uppercase text-gray-500">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+                        <tbody class="block md:table-row-group divide-y divide-gray-200 dark:divide-neutral-700">
                             @forelse($this->requests as $index => $request)
-                                <tr class="hover:bg-gray-50 dark:hover:bg-neutral-700 transition align-top">
+                                <tr class="block md:table-row px-4 py-4 md:p-0 hover:bg-gray-50 dark:hover:bg-neutral-700 transition align-top">
 
-                                    <td class="px-6 py-4 text-sm text-gray-500">{{ $index + 1 }}</td>
+                                    <td class="hidden md:table-cell px-6 py-4 text-sm text-gray-500">{{ $index + 1 }}</td>
 
                                     {{-- Type --}}
-                                    <td class="px-6 py-4">
+                                    <td class="inline-block md:table-cell mr-2 md:mr-0 md:px-6 md:py-4">
                                         <span class="px-2 py-1 text-xs font-medium rounded-full
                                             @if($request->request_type_id == \App\Models\RequestType::FACILITY) bg-green-100 text-green-700
                                             @else bg-red-100 text-red-700 @endif">
@@ -63,12 +63,12 @@
                                     </td>
 
                                     {{-- Date --}}
-                                    <td class="px-6 py-4 text-sm text-gray-400">
+                                    <td class="inline-block md:table-cell mr-2 md:mr-0 md:px-6 md:py-4 text-sm text-gray-400">
                                         {{ $request->created_at->format('M d, Y') }}
                                     </td>
 
                                     {{-- Status --}}
-                                    <td class="px-6 py-4">
+                                    <td class="inline-block md:table-cell md:px-6 md:py-4">
                                         @if($request->status === 'pending')
                                             <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700">Pending</span>
                                         @elseif($request->status === 'admin_review')
@@ -83,8 +83,8 @@
                                     </td>
 
                                     {{-- Actions --}}
-                                    <td class="px-6 py-4 text-right whitespace-nowrap">
-                                        <div class="inline-flex items-center gap-1.5">
+                                    <td class="block md:table-cell pt-3 md:px-6 md:py-4 text-left md:text-right md:whitespace-nowrap">
+                                        <div class="flex md:inline-flex flex-wrap items-center gap-1.5">
 
                                             {{-- ✅ View — requires `program-head-requests.view` --}}
                                             @can('program-head-requests.view')
@@ -134,8 +134,8 @@
 
                                 </tr>
                             @empty
-                                <tr>
-                                    <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+                                <tr class="block md:table-row">
+                                    <td colspan="5" class="block md:table-cell px-6 py-10 text-center text-gray-500">
                                         You have not submitted any requests to admin yet.
                                     </td>
                                 </tr>
@@ -167,17 +167,6 @@
 
             <div class="px-6 py-5 space-y-5">
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-                        Purpose <span class="text-red-500">*</span>
-                    </label>
-                    <textarea wire:model="purpose" rows="3"
-                        placeholder="State your purpose..."
-                        class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 text-sm"></textarea>
-                    @error('purpose')
-                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
@@ -212,35 +201,25 @@
                         @enderror
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">Start Time</label>
-                            <input type="time" wire:model.live="start_time"
-                                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">End Time</label>
-                            <input type="time" wire:model.live="end_time"
-                                class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 text-sm">
-                            @error('end_time')
-                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
+                    @include('partials.reservation-day-bookings', ['date' => $request_date])
+
+                    @include('partials.reservation-time-pickers')
                 </div>
                 @endif
 
+
+                @include('partials.purpose-field', ['placeholder' => 'What is it for? (at least 10 characters)'])
             </div>
 
             <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-neutral-700">
                 <button wire:click="closeEdit"
-                    class="px-4 py-2 text-sm bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition">
+                    class="px-4 py-2 text-sm bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-200 hover:bg-gray-50 dark:hover:bg-neutral-600 rounded-lg transition">
                     Cancel
                 </button>
                 <button wire:click="saveEdit"
-                    wire:loading.attr="disabled"
+                    wire:loading.attr="disabled" wire:target="saveEdit"
                     wire:loading.class="opacity-50 cursor-not-allowed"
-                    class="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition">
+                    class="px-4 py-2 text-sm bg-[#123524] hover:bg-[#0B2418] text-white rounded-lg font-medium transition">
                     <span wire:loading.remove wire:target="saveEdit">Save Changes</span>
                     <span wire:loading wire:target="saveEdit">Saving...</span>
                 </button>
