@@ -26,7 +26,7 @@
                 <path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z"/>
                 <path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/>
             </svg>
-                Student
+                Account Approvals
             </a>
 
             <a href="{{ route('admin.roles') }}"

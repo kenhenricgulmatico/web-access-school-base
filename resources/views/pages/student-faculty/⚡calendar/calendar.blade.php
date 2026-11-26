@@ -20,7 +20,7 @@
     {{-- ===== Header ===== --}}
     <div class="flex flex-wrap items-end justify-between gap-4">
       <div class="flex flex-col gap-1.5">
-        <p class="text-xs font-semibold tracking-widest uppercase text-[#8A6A1F]">Student &amp; Faculty Portal</p>
+        <p class="text-xs font-semibold tracking-widest uppercase text-[#8A6A1F]">Faculty Portal</p>
         <h1 class="text-2xl sm:text-3xl font-extrabold text-[#123524]">Calendar</h1>
         <p class="text-sm text-[#4A564F]">Track your requests by date and see which facilities are already booked.</p>
       </div>

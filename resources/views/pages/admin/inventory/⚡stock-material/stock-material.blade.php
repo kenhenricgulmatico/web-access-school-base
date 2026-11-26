@@ -598,17 +598,23 @@
                                     <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">
                                         Type <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="text" wire:model="type_name"
-                                        placeholder="e.g. Paper Supplies, Writing Materials, Art Supplies"
-                                        class="{{ $input }}">
-                                    <div class="flex flex-wrap gap-2 mt-2">
-                                        @foreach (['Paper Supplies', 'Writing Materials', 'Art Supplies'] as $t)
-                                            <button type="button" @click="$wire.set('type_name', '{{ $t }}')"
-                                                class="px-2.5 py-1 text-xs font-medium rounded-full border border-gray-200 dark:border-neutral-600 text-gray-600 dark:text-neutral-300 hover:bg-green-50 hover:border-green-300 hover:text-green-700 dark:hover:bg-green-900/20 dark:hover:text-green-400 transition">
-                                                {{ $t }}
-                                            </button>
-                                        @endforeach
+                                    <div class="grid sm:grid-cols-2 gap-2">
+                                        <label class="flex items-start gap-2.5 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-neutral-700 has-[:checked]:border-green-500 has-[:checked]:bg-green-50 dark:has-[:checked]:bg-green-900/20">
+                                            <input type="radio" wire:model="type_name" value="Supplies" class="mt-0.5 size-4 text-green-600">
+                                            <span>
+                                                <span class="block text-sm font-semibold text-gray-800 dark:text-neutral-200">Supplies</span>
+                                                <span class="block text-xs text-gray-500 dark:text-neutral-400">Used up, never returned — bond paper, markers…</span>
+                                            </span>
+                                        </label>
+                                        <label class="flex items-start gap-2.5 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-neutral-700 has-[:checked]:border-green-500 has-[:checked]:bg-green-50 dark:has-[:checked]:bg-green-900/20">
+                                            <input type="radio" wire:model="type_name" value="Material" class="mt-0.5 size-4 text-green-600">
+                                            <span>
+                                                <span class="block text-sm font-semibold text-gray-800 dark:text-neutral-200">Material</span>
+                                                <span class="block text-xs text-gray-500 dark:text-neutral-400">Borrowed and must be returned — chairs, projectors…</span>
+                                            </span>
+                                        </label>
                                     </div>
+
                                     @error('type_name')
                                         <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                                     @enderror
@@ -659,14 +665,7 @@
                                     @enderror
                                 </div>
 
-                                {{-- Returnable --}}
-                                <label for="is_returnable" class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-neutral-700 cursor-pointer">
-                                    <input id="is_returnable" type="checkbox" wire:model="is_returnable" class="mt-0.5 size-4 rounded border-gray-300 text-teal-600">
-                                    <span>
-                                        <span class="block text-sm font-medium text-gray-700 dark:text-neutral-300">Must be returned</span>
-                                        <span class="block text-xs text-gray-500 dark:text-neutral-400">Turn on for items that are borrowed and given back (chairs, projectors). Leave off for supplies that are used up (bond paper, markers).</span>
-                                    </span>
-                                </label>
+                                
                             </div>
 
                             {{-- Footer --}}
@@ -759,8 +758,23 @@
                                     <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">
                                         Type <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="text" wire:model="edit_type_name" placeholder="e.g. Paper Supplies"
-                                        class="{{ $input }}">
+                                    <div class="grid sm:grid-cols-2 gap-2">
+                                        <label class="flex items-start gap-2.5 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-neutral-700 has-[:checked]:border-green-500 has-[:checked]:bg-green-50 dark:has-[:checked]:bg-green-900/20">
+                                            <input type="radio" wire:model="edit_type_name" value="Supplies" class="mt-0.5 size-4 text-green-600">
+                                            <span>
+                                                <span class="block text-sm font-semibold text-gray-800 dark:text-neutral-200">Supplies</span>
+                                                <span class="block text-xs text-gray-500 dark:text-neutral-400">Used up, never returned — bond paper, markers…</span>
+                                            </span>
+                                        </label>
+                                        <label class="flex items-start gap-2.5 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-neutral-700 has-[:checked]:border-green-500 has-[:checked]:bg-green-50 dark:has-[:checked]:bg-green-900/20">
+                                            <input type="radio" wire:model="edit_type_name" value="Material" class="mt-0.5 size-4 text-green-600">
+                                            <span>
+                                                <span class="block text-sm font-semibold text-gray-800 dark:text-neutral-200">Material</span>
+                                                <span class="block text-xs text-gray-500 dark:text-neutral-400">Borrowed and must be returned — chairs, projectors…</span>
+                                            </span>
+                                        </label>
+                                    </div>
+
                                     @error('edit_type_name')
                                         <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                                     @enderror
@@ -817,14 +831,7 @@
                                     @enderror
                                 </div>
 
-                                {{-- Returnable --}}
-                                <label for="edit_is_returnable" class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-neutral-700 cursor-pointer">
-                                    <input id="edit_is_returnable" type="checkbox" wire:model="edit_is_returnable" class="mt-0.5 size-4 rounded border-gray-300 text-teal-600">
-                                    <span>
-                                        <span class="block text-sm font-medium text-gray-700 dark:text-neutral-300">Must be returned</span>
-                                        <span class="block text-xs text-gray-500 dark:text-neutral-400">Turn on for items that are borrowed and given back (chairs, projectors). Leave off for supplies that are used up (bond paper, markers).</span>
-                                    </span>
-                                </label>
+                                
 
                                 {{-- Note --}}
                                 <div class="flex items-start gap-2.5 rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/20 px-3.5 py-3">

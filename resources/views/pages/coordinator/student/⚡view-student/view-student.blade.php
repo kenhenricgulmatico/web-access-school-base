@@ -4,7 +4,7 @@
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">Students & Faculty</h2>
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">Faculty</h2>
             <p class="text-sm text-gray-500 dark:text-neutral-400">{{ $this->departmentName }}</p>
         </div>
 
@@ -27,7 +27,6 @@
     {{-- Stats: simple text row --}}
     <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600 dark:text-neutral-400 border-b border-gray-200 dark:border-neutral-700 pb-4">
         <span><strong class="text-gray-800 dark:text-neutral-200">{{ $this->counts['total'] }}</strong> total</span>
-        <span><strong class="text-gray-800 dark:text-neutral-200">{{ $this->counts['student'] }}</strong> students</span>
         <span><strong class="text-gray-800 dark:text-neutral-200">{{ $this->counts['faculty'] }}</strong> faculty</span>
         @if($this->counts['pending'] > 0)
             <span class="text-yellow-700 dark:text-yellow-400">
@@ -56,7 +55,6 @@
         <select wire:model.live="roleFilter"
             class="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-1 focus:ring-[#1C6B45]">
             <option value="">All roles</option>
-            <option value="student">Student</option>
             <option value="faculty">Faculty</option>
         </select>
 
@@ -212,7 +210,6 @@
                     <label class="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1">Role</label>
                     <select wire:model="createRole"
                         class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-1 focus:ring-[#1C6B45]">
-                        <option value="student">Student</option>
                         <option value="faculty">Faculty</option>
                     </select>
                     @error('createRole') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
@@ -269,7 +266,6 @@
                     <label class="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1">Role</label>
                     <select wire:model="editRole"
                         class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-1 focus:ring-[#1C6B45]">
-                        <option value="student">Student</option>
                         <option value="faculty">Faculty</option>
                     </select>
                 </div>

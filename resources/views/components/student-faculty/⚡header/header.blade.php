@@ -154,11 +154,12 @@
                                                 <span class="text-xs font-medium px-1.5 py-0.5 rounded-md"
                                                     :class="notification.action_status === 'approved'
                                                         ? 'bg-[#1C6B45]/15 text-[#1C6B45] dark:bg-[#1C6B45]/25 dark:text-[#7FBF8E]'
-                                                        : (notification.action_status === 'rejected'
+                                                        : (notification.action_status === 'rejected' || notification.action_status === 'overdue'
                                                             ? 'bg-[#B8352A]/15 text-[#B8352A]'
                                                             : 'bg-[#D4A537]/15 text-[#B8862A]')"
                                                     x-text="notification.action_status === 'approved' ? 'Approved'
-                                                        : (notification.action_status === 'rejected' ? 'Rejected' : 'Info')">
+                                                        : (notification.action_status === 'rejected' ? 'Rejected'
+                                                        : (notification.action_status === 'overdue' ? 'Overdue' : 'Info'))">
                                                 </span>
                                             </div>
                                             <p class="text-sm font-medium text-gray-800 dark:text-gray-200 break-words line-clamp-2"

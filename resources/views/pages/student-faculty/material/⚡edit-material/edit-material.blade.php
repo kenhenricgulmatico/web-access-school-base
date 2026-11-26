@@ -67,20 +67,20 @@
                                         <option value="">Select material</option>
                                         @php
                                             $__opts    = collect($rowOptions);
-                                            $__borrow  = $__opts->filter(fn ($o) => ($o['unit'] ?? '') === 'Pcs');
-                                            $__supply  = $__opts->reject(fn ($o) => ($o['unit'] ?? '') === 'Pcs');
+                                            $__borrow  = $__opts->filter(fn ($o) => ! empty($o['is_returnable']));
+                                            $__supply  = $__opts->reject(fn ($o) => ! empty($o['is_returnable']));
                                         @endphp
                                         @if($__borrow->isNotEmpty())
-                                            <optgroup label="Borrow — must be returned (Pcs)">
+                                            <optgroup label="Material — must be returned">
                                                 @foreach($__borrow as $o)
-                                                    <option value="{{ $o['resource_id'] }}">{{ $o['resource_name'] }} — {{ $o['allocated_quantity'] }} Pcs available</option>
+                                                    <option value="{{ $o['resource_id'] }}">{{ $o['resource_name'] }}</option>
                                                 @endforeach
                                             </optgroup>
                                         @endif
                                         @if($__supply->isNotEmpty())
-                                            <optgroup label="Supplies — no need to return (Ream / Set)">
+                                            <optgroup label="Supplies — used up, no need to return">
                                                 @foreach($__supply as $o)
-                                                    <option value="{{ $o['resource_id'] }}">{{ $o['resource_name'] }} — {{ $o['allocated_quantity'] }} {{ ($o['unit'] ?? '') ?: 'Ream' }} available</option>
+                                                    <option value="{{ $o['resource_id'] }}">{{ $o['resource_name'] }} ({{ ($o['unit'] ?? '') ?: 'Ream' }})</option>
                                                 @endforeach
                                             </optgroup>
                                         @endif

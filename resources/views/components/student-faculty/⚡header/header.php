@@ -50,6 +50,7 @@ new class extends Component
         $message = strtolower($n->message);
 
         $actionStatus = match (true) {
+            $n->type === 'Overdue'             => 'overdue',   // ✅ Program Head reminder
             str_contains($message, 'rejected') => 'rejected',
             str_contains($message, 'approved') => 'approved',
             default                            => 'info',
@@ -115,6 +116,11 @@ new class extends Component
 
     private function resolveUrl(Notification $notification): string
     {
+        // ✅ Overdue reminder → open my Borrowed Items
+        if ($notification->type === 'Overdue') {
+            return route('portal.borrowed-items');
+        }
+
         $message = strtolower($notification->message);
 
         $isFacility = $notification->request

@@ -15,7 +15,7 @@ new #[Layout('layouts.admin')] class extends Component
 {
     use WithPagination;
 
-    protected array $excludedTypes = ['Facility'];
+    protected array $excludedTypes = [\App\Models\ResourceType::FACILITY];
 
     /**
      * ✅ Maximum stock allowed per unit.
@@ -52,7 +52,7 @@ new #[Layout('layouts.admin')] class extends Component
     public        $initial_quantity  = 0; // ✅ untyped (see above)
     public string $unit              = 'Ream';
     public string $material_supplier = '';
-    public bool   $is_returnable     = false; // must be given back (chairs, projectors…)
+    // ✅ "Must be returned" is decided by the type (Material = returned, Supplies = used up)
 
     // Edit Material Form
     public int    $edit_id            = 0;
@@ -61,7 +61,6 @@ new #[Layout('layouts.admin')] class extends Component
     public string $edit_type_name     = '';
     public string $edit_unit          = 'Ream';
     public string $edit_status        = 'available';
-    public bool   $edit_is_returnable = false;
 
     public function mount(): void
     {
@@ -178,7 +177,6 @@ new #[Layout('layouts.admin')] class extends Component
         $this->edit_type_name     = $resource->resourceType->type_name ?? '';
         $this->edit_unit          = $resource->unit ?? 'Ream';
         $this->edit_status        = $resource->status ?? 'available';
-        $this->edit_is_returnable = (bool) $resource->is_returnable;
 
         $this->showEditModal = true;
     }
@@ -194,7 +192,7 @@ new #[Layout('layouts.admin')] class extends Component
             'resource_name', 'description', 'type_name', 'initial_quantity',
             'unit', 'material_supplier',
             'edit_id', 'edit_resource_name', 'edit_description', 'edit_type_name',
-            'edit_unit', 'edit_status', 'is_returnable', 'edit_is_returnable',
+            'edit_unit', 'edit_status',
         ]);
         $this->arrival_date = now()->format('Y-m-d');
         $this->unit         = 'Ream';
@@ -265,7 +263,7 @@ new #[Layout('layouts.admin')] class extends Component
 
         $this->validate([
             'resource_name'     => 'required|string|max:255',
-            'type_name'         => 'required|string|max:255|not_in:' . implode(',', $this->excludedTypes),
+            'type_name'         => 'required|in:' . implode(',', \App\Models\ResourceType::STOCK_TYPES),
             'initial_quantity'  => 'required|integer|min:0' . ($limit !== null ? '|max:' . $limit : ''),
             'unit'              => 'required|string|max:50',
             'material_supplier' => 'nullable|string|max:255',
@@ -285,7 +283,6 @@ new #[Layout('layouts.admin')] class extends Component
                 'quantity_available' => $initialQty,
                 'unit'               => $this->unit,
                 'status'             => 'available',
-                'is_returnable'      => $this->is_returnable,
             ]);
 
             if ($initialQty > 0) {
@@ -318,7 +315,7 @@ new #[Layout('layouts.admin')] class extends Component
         $this->validate([
             'edit_resource_name' => 'required|string|max:255',
             'edit_description'   => 'nullable|string',
-            'edit_type_name'     => 'required|string|max:255|not_in:' . implode(',', $this->excludedTypes),
+            'edit_type_name'     => 'required|in:' . implode(',', \App\Models\ResourceType::STOCK_TYPES),
             'edit_unit'          => 'required|string|max:50',
             'edit_status'        => 'required|in:available,unavailable,maintenance',
         ]);
@@ -345,7 +342,6 @@ new #[Layout('layouts.admin')] class extends Component
                 'resource_type_id' => $resourceType->id,
                 'unit'             => $this->edit_unit,
                 'status'           => $this->edit_status,
-                'is_returnable'    => $this->edit_is_returnable,
             ]);
 
             $this->closeModal();

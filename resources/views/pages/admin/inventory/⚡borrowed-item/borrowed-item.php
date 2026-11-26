@@ -17,12 +17,13 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 /**
- * Admin: items counted in PIECES (unit = "Pcs", e.g. chairs) that Program Heads borrow.
+ * Admin: "Material" items (chairs, projectors…) that Program Heads borrow and return.
  *
  *  1. "To approve" tab — pending Program Head requests that contain Pcs items.
  *     The Admin sets a RETURN DEADLINE and clicks Accept (or Rejects with a reason).
  *  2. "Not returned" / "Overdue" tabs — borrowed pieces still out.
  *     Items the Program Head sent back ("Return to Admin") are listed first.
+ *     ✅ Overdue items: "Send reminder" messages the Program Head.
  *  3. "Mark returned" / "Confirm return" — Good condition goes back to the main stock;
  *     in every case the pieces leave the department's allocated stock.
  */
@@ -74,7 +75,7 @@ new #[Layout('layouts.admin')] class extends Component
     {
         return RequestItem::query()
             ->whereNotNull('request_items.resource_id')
-            ->whereHas('resource', fn ($r) => $r->where('unit', 'Pcs'))
+            ->whereHas('resource', fn ($r) => $r->where('is_returnable', true))
             ->whereHas('request', fn ($q) => $q
                 ->where('status', 'approved')
                 ->whereHas('user', fn ($u) => $u->role('program head')));
@@ -88,7 +89,7 @@ new #[Layout('layouts.admin')] class extends Component
             ->whereHas('user', fn ($u) => $u->role('program head'))
             ->whereHas('items', fn ($i) => $i
                 ->whereNotNull('resource_id')
-                ->whereHas('resource', fn ($r) => $r->where('unit', 'Pcs')));
+                ->whereHas('resource', fn ($r) => $r->where('is_returnable', true)));
     }
 
     #[Computed]
@@ -184,7 +185,7 @@ new #[Layout('layouts.admin')] class extends Component
     protected function suggestedDeadline(ResourceRequest $request): string
     {
         $chosen = $request->items
-            ->filter(fn ($i) => $i->resource?->unit === 'Pcs' && $i->due_back_at)
+            ->filter(fn ($i) => $i->resource?->is_returnable && $i->due_back_at)
             ->first()?->due_back_at;
 
         if ($chosen) {
@@ -261,7 +262,7 @@ new #[Layout('layouts.admin')] class extends Component
         }
 
         // --- Stock needed per resource (facilities are not stock) ---
-        $facilityTypeId = DB::table('resource_types')->where('type_name', 'Facility')->value('id');
+        $facilityTypeId = DB::table('resource_types')->where('type_name', \App\Models\ResourceType::FACILITY)->value('id');
 
         $needed = [];
         foreach ($request->items as $item) {
@@ -322,7 +323,7 @@ new #[Layout('layouts.admin')] class extends Component
                 // ✅ The return deadline goes on every Pcs item of this request
                 RequestItem::where('request_id', $fresh->id)
                     ->whereNotNull('resource_id')
-                    ->whereHas('resource', fn ($r) => $r->where('unit', 'Pcs'))
+                    ->whereHas('resource', fn ($r) => $r->where('is_returnable', true))
                     ->update(['due_back_at' => $deadline->toDateString()]);
 
                 RequestApproval::create([
@@ -350,7 +351,10 @@ new #[Layout('layouts.admin')] class extends Component
 
         unset($this->deadlines[$id], $this->pendingRequests, $this->counts, $this->items);
 
-        session()->flash('message', 'Request approved. Return deadline set to ' . $deadline->format('M d, Y') . '.');
+        // ✅ Endorsed from a student / faculty request → approve that one automatically too
+        $note = \App\Support\ForwardedRequests::onAdminApproved(ResourceRequest::find($id));
+
+        session()->flash('message', 'Request approved. Return deadline set to ' . $deadline->format('M d, Y') . '.' . ($note ? ' ' . $note : ''));
     }
 
     /** E-mail the Program Head, including the return deadline. */
@@ -371,7 +375,7 @@ new #[Layout('layouts.admin')] class extends Component
             ->implode(', ') ?: $request->purpose;
 
         $pcs = $request->items
-            ->filter(fn ($i) => $i->resource?->unit === 'Pcs')
+            ->filter(fn ($i) => $i->resource?->is_returnable)
             ->map(fn ($i) => "{$i->item_name} x{$i->quantity}")
             ->implode(', ');
 
@@ -462,10 +466,76 @@ new #[Layout('layouts.admin')] class extends Component
             link:         route('coordinator.request-to-admin.view-admin', $request->id),
         )));
 
+        // ✅ Endorsed from a student / faculty request → reject that one too
+        $note = \App\Support\ForwardedRequests::onAdminRejected($request->fresh(), $this->rejectReason ?: null, Auth::user());
+
         unset($this->deadlines[$request->id], $this->pendingRequests, $this->counts);
         $this->cancelReject();
 
-        session()->flash('message', 'Request rejected and the Program Head was notified.');
+        session()->flash('message', 'Request rejected and the Program Head was notified.' . ($note ? ' ' . $note : ''));
+    }
+
+    // ============================================================
+    // ✅ OVERDUE → SEND A REMINDER MESSAGE TO THE PROGRAM HEAD
+    // ============================================================
+
+    /** When the Admin last reminded the Program Head about this item (or null). */
+    public function lastReminder(RequestItem $item): ?Carbon
+    {
+        return Notification::where('type', 'Overdue')
+            ->where('request_id', $item->request_id)
+            ->where('message', 'like', "%{$item->item_name} ({$item->quantity} pcs)%")
+            ->latest()
+            ->first(['created_at'])
+            ?->created_at;
+    }
+
+    public function sendReminder(int $id): void
+    {
+        $due = $this->dueDateSql();
+
+        $item = $this->baseQuery()
+            ->select('request_items.*')
+            ->selectRaw("{$due} as due_date")
+            ->with('request.user')
+            ->whereNull('returned_at')
+            ->whereRaw("{$due} < ?", [today()->toDateString()])
+            ->find($id);
+
+        if (! $item) {
+            session()->flash('error', 'This item is no longer overdue.');
+            return;
+        }
+
+        if ($this->lastReminder($item)?->isToday()) {
+            session()->flash('error', 'You already sent a reminder for this item today.');
+            return;
+        }
+
+        $programHead = $item->request->user;
+        if (! $programHead) {
+            session()->flash('error', 'The Program Head of this request could not be found.');
+            return;
+        }
+
+        $dueDate = Carbon::parse($item->due_date);
+        $days    = (int) $dueDate->diffInDays(today());
+        $dayText = $days . ' ' . str('day')->plural($days);
+
+        // Shows in the Program Head's notification bell
+        Notification::create([
+            'user_id'    => $programHead->id,
+            'request_id' => $item->request_id,
+            'message'    => "You have not returned the {$item->item_name} ({$item->quantity} pcs) yet. "
+                          . "It was due on {$dueDate->format('M d, Y')} and is now overdue by {$dayText}. "
+                          . 'Please return the material to the Admin as soon as possible.',
+            'type'       => 'Overdue',
+            'status'     => 'pending',
+        ]);
+
+        unset($this->items);
+
+        session()->flash('message', "Reminder sent to {$programHead->name} for {$item->item_name} ({$item->quantity} pcs).");
     }
 
     // ============================================================
@@ -473,6 +543,14 @@ new #[Layout('layouts.admin')] class extends Component
     // ============================================================
     public function openReturn(int $id): void
     {
+        // ✅ The Admin confirms a return only after the Program Head clicked "Return to Admin"
+        $item = $this->baseQuery()->whereNull('returned_at')->find($id);
+
+        if (! $item || ! $item->return_requested_at) {
+            session()->flash('error', 'The Program Head has not returned this item yet. You can confirm it once they click "Return to Admin".');
+            return;
+        }
+
         $this->returningId     = $id;
         $this->returnCondition = 'good';
         $this->returnNotes     = '';
@@ -499,6 +577,11 @@ new #[Layout('layouts.admin')] class extends Component
 
                 if ($item->returned_at) {
                     throw new \RuntimeException('This item was already marked as returned.');
+                }
+
+                // ✅ Only after the Program Head sent it back (and so the faculty member returned it first)
+                if (! $item->return_requested_at) {
+                    throw new \RuntimeException('The Program Head has not returned this item yet.');
                 }
 
                 $item->update([

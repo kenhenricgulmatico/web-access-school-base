@@ -6,7 +6,7 @@
         <div>
             <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Audit Logs</h2>
             <p class="text-sm text-gray-500 mt-0.5">
-                Activity logs for students and faculty in
+                Activity logs for faculty in
                 <span class="font-medium text-[#123524]">
                     {{ Auth::user()->department->department_name ?? 'your department' }}
                 </span>
@@ -100,7 +100,6 @@
                 <select wire:model.live="roleFilter"
                     class="py-2 px-3 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#123524] w-full sm:w-auto">
                     <option value="">All roles</option>
-                    <option value="student">Student</option>
                     <option value="faculty">Faculty</option>
                 </select>
 
@@ -236,7 +235,7 @@
                                     <p class="text-xs text-gray-400 text-center max-w-sm">
                                         {{ $search || $actionFilter || $roleFilter
                                             ? 'Try adjusting your filters.'
-                                            : 'No activity recorded yet. Logs appear when students or faculty log in, log out, or submit requests.' }}
+                                            : 'No activity recorded yet. Logs appear when faculty log in, log out, or submit requests.' }}
                                     </p>
                                 </div>
                             </td>

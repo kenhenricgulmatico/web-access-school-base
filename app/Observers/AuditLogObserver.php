@@ -29,7 +29,8 @@ class AuditLogObserver
         if ($model instanceof AuditLog) return;
 
         AuditLog::create([
-            'user_id'    => Auth::id() ?? ($model instanceof User ? $model->getKey() : null), // ✅ if registering, use the new user's own id
+            // ✅ if registering, use the new user's own id (never a user that was just deleted)
+            'user_id'    => Auth::id() ?? ($model instanceof User && $action !== 'deleted' ? $model->getKey() : null),
             'action'     => $action,
             'table_name' => $model->getTable(),
             'record'     => $model->toArray(),

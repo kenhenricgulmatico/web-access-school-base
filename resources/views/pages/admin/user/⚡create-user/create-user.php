@@ -49,7 +49,7 @@ new #[Layout('layouts.admin')] class extends Component
             'email'           => 'required|email|unique:users,email|ends_with:@csav.edu.ph',
             'password'        => 'required|string|min:6|confirmed',
             'department_id'   => 'required|exists:departments,id',
-            'role'            => 'required|in:program head,faculty,student',
+            'role'            => 'required|in:program head,faculty',
         ];
     }
 

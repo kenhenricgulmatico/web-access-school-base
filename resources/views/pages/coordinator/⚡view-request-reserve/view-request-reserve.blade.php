@@ -132,29 +132,16 @@
 
     </div>
 
-    {{-- ✅ Department does not have enough → send the missing items to the Admin --}}
-    @if($requestModel->status === 'pending')
-      @php $__shortage = \App\Support\DepartmentStock::shortage($requestModel); @endphp
-      @if($__shortage->isNotEmpty())
-      <div class="px-6 py-4 bg-indigo-50 dark:bg-indigo-950/30 border-t border-indigo-100 dark:border-indigo-900 flex flex-col sm:flex-row sm:items-center gap-3">
-        <div class="flex-1 text-sm text-indigo-900 dark:text-indigo-200">
-          <p class="font-semibold">Your department does not have enough for this request.</p>
-          <p class="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">
-            {{ $__shortage->map(fn ($r) => "{$r->item_name}: has {$r->in_department}, needs {$r->requested} {$r->unit}")->implode(' · ') }}
-          </p>
-        </div>
-        @can('program-head-requests.create')
-          <a href="{{ route('coordinator.request-to-admin.create-request', ['from' => $requestModel->id]) }}" wire:navigate
-             class="shrink-0 px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-center">
-            Forward to Admin
-          </a>
-        @endcan
+    {{-- ✅ Forwarded → waiting for the Admin --}}
+    @if($requestModel->status === 'pending' && \App\Support\ForwardedRequests::isWaitingForAdmin($requestModel))
+      <div class="px-6 py-4 bg-indigo-50 dark:bg-indigo-950/30 border-t border-indigo-100 dark:border-indigo-900 text-sm text-indigo-900 dark:text-indigo-200">
+        <p class="font-semibold">Forwarded to the Admin — waiting for approval.</p>
+        <p class="text-xs mt-0.5">When the Admin approves your Request to Admin, this request is approved automatically.</p>
       </div>
-      @endif
     @endif
 
     {{-- Actions --}}
-    @if($requestModel->status === 'pending')
+    @if($requestModel->status === 'pending' && ! \App\Support\ForwardedRequests::isWaitingForAdmin($requestModel))
     <div class="px-6 py-4 bg-gray-50 dark:bg-neutral-900/40 border-t border-gray-100 dark:border-neutral-700 space-y-3">
       <div>
         <label for="rejectReason" class="block text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">
@@ -170,11 +157,14 @@
               class="px-4 py-2 text-sm font-medium bg-white dark:bg-neutral-800 text-red-600 border border-red-200 dark:border-red-900 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition">
         Reject
       </button>
-      <button wire:click="accept"
-              wire:confirm="Accept this request?"
-              class="px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-        Accept
-      </button>
+      @can('program-head-requests.create')
+        <button type="button" wire:click="forwardToAdmin"
+                                  wire:confirm="Forward this request to the Admin?"
+                                  wire:loading.attr="disabled" wire:target="forwardToAdmin"
+                                  class="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition disabled:opacity-60">
+                            Forward to Admin
+                          </button>
+      @endcan
       </div>
     </div>
     @endif

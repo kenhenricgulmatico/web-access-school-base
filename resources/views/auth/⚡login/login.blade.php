@@ -34,7 +34,7 @@
 
                     <div>
                         <p class="text-sm text-white/75 max-w-xs">
-                            Reserve facilities, request materials, and track approvals — one system for every student, faculty member, and coordinator on campus.
+                            Reserve facilities, request materials, and track approvals — one system for every faculty member and program head on campus.
                         </p>
                     </div>
                 </div>

@@ -14,7 +14,7 @@ new #[Layout('layouts::admin')] class extends Component
 
     /**
      * Same "safe default" groups the Edit Role page falls back to
-     * for roles that aren't admin / program head / faculty / student.
+     * for roles that aren't admin / program head / faculty.
      */
     private const DEFAULT_GROUPS = [
         'program-head-requests',

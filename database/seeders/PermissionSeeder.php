@@ -20,7 +20,7 @@ class PermissionSeeder extends Seeder
         $adminRole       = Role::firstOrCreate(['name' => 'admin',        'guard_name' => 'web']);
         $programHeadRole = Role::firstOrCreate(['name' => 'program head', 'guard_name' => 'web']);
         $facultyRole     = Role::firstOrCreate(['name' => 'faculty',      'guard_name' => 'web']);
-        $studentRole     = Role::firstOrCreate(['name' => 'student',      'guard_name' => 'web']);
+        // ✅ No "student" role anymore — only admin, program head and faculty
 
         // ─────────────────────────────────────────────────────────────
         // 2. PERMISSIONS
@@ -172,7 +172,6 @@ class PermissionSeeder extends Seeder
         ];
 
         $facultyRole->syncPermissions($portalPermissions);
-        $studentRole->syncPermissions($portalPermissions);
 
         // ─────────────────────────────────────────────────────────────
         // 4. ORPHAN CHECK

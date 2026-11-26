@@ -11,16 +11,14 @@ class ResourceSeeder extends Seeder
     public function run(): void
     {
         $materials = [
-            // Paper Supplies (Ream)
-            ['name' => 'Bond Paper A4',    'type' => 'Paper Supplies',  'unit' => 'Ream'],
-            ['name' => 'Bond Paper Short', 'type' => 'Paper Supplies',  'unit' => 'Ream'],
-            ['name' => 'Bond Paper Legal', 'type' => 'Paper Supplies',  'unit' => 'Ream'],
+            // Supplies — used up, never returned
+            ['name' => 'Bond Paper A4',    'type' => ResourceType::SUPPLIES, 'unit' => 'Ream'],
+            ['name' => 'Bond Paper Short', 'type' => ResourceType::SUPPLIES, 'unit' => 'Ream'],
+            ['name' => 'Bond Paper Legal', 'type' => ResourceType::SUPPLIES, 'unit' => 'Ream'],
+            ['name' => 'Marker',           'type' => ResourceType::SUPPLIES, 'unit' => 'Set'],
 
-            // Writing Materials (Set)
-            ['name' => 'Marker',           'type' => 'Writing Materials', 'unit' => 'Set'],
-
-            // Furniture (Pcs)
-            ['name' => 'Chair',            'type' => 'Furniture',       'unit' => 'Pcs', 'returnable' => true],
+            // Material — borrowed and returned
+            ['name' => 'Chair',            'type' => ResourceType::MATERIAL, 'unit' => 'Pcs'],
         ];
 
         foreach ($materials as $material) {
@@ -28,6 +26,7 @@ class ResourceSeeder extends Seeder
                 'type_name' => $material['type'],
             ]);
 
+            // "is_returnable" is set automatically from the type (see Resource::booted)
             Resource::firstOrCreate(
                 [
                     'resource_name'    => $material['name'],
@@ -38,7 +37,6 @@ class ResourceSeeder extends Seeder
                     'quantity_available' => 0,
                     'unit'               => $material['unit'],
                     'status'             => 'available',
-                    'is_returnable'      => $material['returnable'] ?? false,
                 ]
             );
         }

@@ -29,7 +29,7 @@ new #[Layout('layouts.admin')] class extends Component
         // Facilities are tagged under a shared "Facility" resource type so
         // Student/Faculty and Program Head pickers pull from the same list.
         $facilityType = ResourceType::firstOrCreate(
-            ['type_name' => 'Facility']
+            ['type_name' => \App\Models\ResourceType::FACILITY]
         );
 
         Resource::create([

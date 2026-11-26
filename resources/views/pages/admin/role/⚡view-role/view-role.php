@@ -18,7 +18,7 @@ new #[Layout('layouts.admin')] class extends Component
     /**
      * Core role names that require typed confirmation to delete.
      */
-    public const CORE_ROLES = ['admin', 'program head', 'faculty', 'student'];
+    public const CORE_ROLES = ['admin', 'program head', 'faculty'];
 
     /**
      * Default permission groups used when restoring missing core roles.
@@ -52,13 +52,6 @@ new #[Layout('layouts.admin')] class extends Component
             'audit.view-own-department', 'reports.view-department',
         ],
         'faculty' => [
-            'facility-requests.view', 'facility-requests.create',
-            'facility-requests.update', 'facility-requests.cancel',
-            'material-requests.view', 'material-requests.create',
-            'material-requests.update', 'material-requests.cancel',
-            'facility-schedule.view', 'stock-materials.view', 'reports.view-own',
-        ],
-        'student' => [
             'facility-requests.view', 'facility-requests.create',
             'facility-requests.update', 'facility-requests.cancel',
             'material-requests.view', 'material-requests.create',

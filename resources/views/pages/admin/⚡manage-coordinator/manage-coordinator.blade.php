@@ -126,6 +126,13 @@
                                             {{ $req->user->name }}</p>
                                         <p class="text-[11px] text-gray-400 dark:text-neutral-500 leading-tight">
                                             {{ $req->user->email }}</p>
+                                        {{-- ✅ Forwarded from a student / faculty request --}}
+                                        @if($req->forwarded_from_request_id)
+                                            @php $__from = \App\Models\Request::with('user')->find($req->forwarded_from_request_id); @endphp
+                                            <span class="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+                                                Forwarded · {{ $__from?->user?->name ?? 'faculty' }}
+                                            </span>
+                                        @endif
                                     </div>
                                 </div>
                             </td>

@@ -64,14 +64,6 @@ new #[Layout('layouts.coordinator')] class extends Component
     }
 
     #[Computed]
-    public function totalStudents()
-    {
-        return User::role('student')
-            ->where('department_id', Auth::user()->department_id)
-            ->count();
-    }
-
-    #[Computed]
     public function totalFaculty()
     {
         return User::role('faculty')
@@ -100,7 +92,7 @@ new #[Layout('layouts.coordinator')] class extends Component
         return User::query()
             ->where('department_id', Auth::user()->department_id)
             ->where(function ($q) {
-                $q->role('student')->orWhere(fn($q2) => $q2->role('faculty'));
+                $q->role('faculty');
             })
             ->withCount([
                 'requests as facility_count' => fn($q) => $q->where('request_type_id', RequestType::FACILITY),
@@ -114,28 +106,6 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->filter(fn($user) => $user->total_count > 0)
             ->sortByDesc('total_count')
             ->values();
-    }
-
-    #[Computed]
-    public function studentFacilityRequests()
-    {
-        return ResourceRequest::where('request_type_id', RequestType::FACILITY)
-            ->whereHas('user', function ($q) {
-                $this->deptFilter($q);
-                $q->role('student');
-            })
-            ->count();
-    }
-
-    #[Computed]
-    public function studentMaterialRequests()
-    {
-        return ResourceRequest::where('request_type_id', RequestType::MATERIAL)
-            ->whereHas('user', function ($q) {
-                $this->deptFilter($q);
-                $q->role('student');
-            })
-            ->count();
     }
 
     #[Computed]

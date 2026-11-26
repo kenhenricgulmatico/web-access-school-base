@@ -255,7 +255,7 @@
                             <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </span>
                         <div>
-                            <p class="text-sm font-semibold text-amber-900 dark:text-amber-200">You are borrowing Pcs items that must be returned</p>
+                            <p class="text-sm font-semibold text-amber-900 dark:text-amber-200">You are borrowing Material items that must be returned</p>
                             <p class="text-xs text-amber-800/80 dark:text-amber-300/80">
                                 Items counted in pieces (like chairs) go back to the Admin. You can keep them for
                                 <strong>1 month at most</strong> — until {{ \Carbon\Carbon::parse($this->returnByMax())->format('M d, Y') }}.

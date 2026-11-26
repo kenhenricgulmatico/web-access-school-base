@@ -33,12 +33,6 @@ new #[Layout('layouts.admin')] class extends Component
             'facility-requests',
             'material-requests',
         ],
-
-        // ✅ STUDENT — same
-        'student' => [
-            'facility-requests',
-            'material-requests',
-        ],
     ];
 
     private const ROLE_HIDDEN_PERMISSIONS = [
@@ -60,9 +54,6 @@ new #[Layout('layouts.admin')] class extends Component
 
         // ✅ Faculty — nothing hidden now; all 5 actions per group are controllable
         'faculty' => [],
-
-        // ✅ Student — same
-        'student' => [],
     ];
 
     private const DEFAULT_GROUPS = [

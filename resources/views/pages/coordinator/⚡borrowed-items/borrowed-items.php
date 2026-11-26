@@ -9,22 +9,25 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 /**
  * Program Head: borrowed items.
  *
- *  "Students & Faculty" — returnable items the department's students and faculty
- *                          borrowed. The Program Head marks them returned.
- *  "My borrowed items"  — Pcs items the Program Head borrowed FROM THE ADMIN.
- *                          The Program Head clicks "Return to Admin";
- *                          the Admin confirms it on the admin Borrowed Items page.
+ *  "Faculty"           — Material items the department's faculty borrowed. The Program Head confirms
+ *                         their return. ✅ If an item came from the Admin (endorsed request), the same row
+ *                         then shows "Return to Admin".
+ *  "My borrowed items" — Material items the Program Head borrowed FROM THE ADMIN for themselves.
+ *                         The Program Head clicks "Return to Admin"; the Admin confirms it.
  */
 new #[Layout('layouts.coordinator')] class extends Component
 {
     use WithPagination;
 
+    // ✅ #[Url] so the Admin's "Overdue" reminder can open ?view=mine directly
+    #[Url]
     public string $view   = 'students';    // students | mine
     public string $filter = 'outstanding'; // outstanding | overdue | returned
     public string $search = '';
@@ -79,9 +82,12 @@ new #[Layout('layouts.coordinator')] class extends Component
         $q = $this->baseQuery()->with(['request.user', 'receiver']);
 
         match ($this->filter) {
-            'overdue'  => $q->whereNull('returned_at')->whereDate('due_back_at', '<', today())->orderBy('due_back_at'),
+            // ✅ Items the student/faculty already sent back are listed first
+            'overdue'  => $q->whereNull('returned_at')->whereDate('due_back_at', '<', today())
+                            ->orderByRaw('return_requested_at IS NULL')->orderBy('due_back_at'),
             'returned' => $q->whereNotNull('returned_at')->latest('returned_at'),
-            default    => $q->whereNull('returned_at')->orderBy('due_back_at'),
+            default    => $q->whereNull('returned_at')
+                            ->orderByRaw('return_requested_at IS NULL')->orderBy('due_back_at'),
         };
 
         if ($this->search !== '') {
@@ -97,6 +103,15 @@ new #[Layout('layouts.coordinator')] class extends Component
     public function openReturn(int $id): void
     {
         abort_unless(auth()->user()->can('requests.approve'), 403);
+
+        // ✅ Only after the faculty member clicked "Return to Program Head"
+        $item = $this->baseQuery()->whereNull('returned_at')->with('request.user')->find($id);
+
+        if (! $item || ! $item->return_requested_at) {
+            $who = $item?->request?->user?->name ?? 'The faculty member';
+            session()->flash('error', "{$who} has not returned this item yet. You can confirm it once they click \"Return to Program Head\".");
+            return;
+        }
 
         $this->returningId     = $id;
         $this->returnCondition = 'good';
@@ -120,6 +135,12 @@ new #[Layout('layouts.coordinator')] class extends Component
 
         $item = $this->baseQuery()->findOrFail($this->returningId);
 
+        if (! $item->returned_at && ! $item->return_requested_at) {
+            session()->flash('error', 'The faculty member has not returned this item yet.');
+            $this->returningId = null;
+            return;
+        }
+
         try {
             ReturnTracking::markReturned($item, $this->returnCondition, $this->returnNotes, Auth::user());
         } catch (\RuntimeException $e) {
@@ -128,12 +149,101 @@ new #[Layout('layouts.coordinator')] class extends Component
             return;
         }
 
-        session()->flash('message', $this->returnCondition === 'good'
-            ? "\"{$item->item_name}\" marked as returned and added back to your department's stock."
-            : "\"{$item->item_name}\" marked as returned ({$this->returnCondition}). It was not added back to stock.");
+        // ✅ Item came from the Admin (endorsed request) → send it straight back to the Admin, no second click
+        $adminItem = ReturnTracking::adminItemFor($item);
+
+        if ($adminItem && ! $adminItem->returned_at && ! $adminItem->return_requested_at) {
+            $condition = RequestItem::CONDITIONS[$this->returnCondition] ?? ucfirst($this->returnCondition);
+            $this->sendToAdmin($adminItem, "Returned by {$item->request?->user?->name} in {$condition} condition"
+                . ($this->returnNotes ? " — {$this->returnNotes}" : '') . '.');
+
+            session()->flash('message', "\"{$item->item_name}\" returned by the faculty member and sent back to the Admin. The Admin will confirm it when they receive it.");
+        } else {
+            session()->flash('message', $this->returnCondition === 'good'
+                ? "\"{$item->item_name}\" marked as returned and added back to your department's stock."
+                : "\"{$item->item_name}\" marked as returned ({$this->returnCondition}). It was not added back to stock.");
+        }
 
         $this->returningId = null;
-        unset($this->items, $this->counts);
+        unset($this->items, $this->counts, $this->readyForAdminCount, $this->myItems, $this->myOverdueCount);
+    }
+
+    /** Mark a borrowed-from-Admin item as "on its way back" and tell every Admin. */
+    protected function sendToAdmin(RequestItem $adminItem, ?string $note = null): void
+    {
+        $adminItem->forceFill(['return_requested_at' => now()])->save();
+
+        $who = Auth::user()->name;
+        foreach (User::role('admin')->get() as $admin) {
+            Notification::create([
+                'user_id'    => $admin->id,
+                'request_id' => $adminItem->request_id,
+                'message'    => "{$who} (Program Head) is returning {$adminItem->quantity} pcs of \"{$adminItem->item_name}\". Please check and confirm it in Borrowed Items."
+                              . ($note ? " {$note}" : ''),
+                'type'       => 'Gmail',
+                'status'     => 'pending',
+            ]);
+        }
+    }
+
+    // ============================================================
+    // ✅ OVERDUE → SEND A REMINDER MESSAGE TO THE STUDENT / FACULTY
+    // ============================================================
+
+    /** When I last reminded the borrower about this item (or null). */
+    public function studentReminder(RequestItem $item): ?Carbon
+    {
+        return Notification::where('type', 'Overdue')
+            ->where('request_id', $item->request_id)
+            ->where('message', 'like', "%{$item->item_name} (x{$item->quantity})%")
+            ->latest()
+            ->first(['created_at'])
+            ?->created_at;
+    }
+
+    public function sendReminder(int $id): void
+    {
+        abort_unless(auth()->user()->can('requests.approve'), 403);
+
+        $item = $this->baseQuery()
+            ->with('request.user')
+            ->whereNull('returned_at')
+            ->whereDate('due_back_at', '<', today())
+            ->find($id);
+
+        if (! $item) {
+            session()->flash('error', 'This item is no longer overdue.');
+            return;
+        }
+
+        if ($this->studentReminder($item)?->isToday()) {
+            session()->flash('error', 'You already sent a reminder for this item today.');
+            return;
+        }
+
+        $borrower = $item->request->user;
+        if (! $borrower) {
+            session()->flash('error', 'The borrower of this item could not be found.');
+            return;
+        }
+
+        $days    = (int) $item->due_back_at->diffInDays(today());
+        $dayText = $days . ' ' . str('day')->plural($days);
+
+        // Shows in the student / faculty notification bell
+        Notification::create([
+            'user_id'    => $borrower->id,
+            'request_id' => $item->request_id,
+            'message'    => "You have not returned the {$item->item_name} (x{$item->quantity}) yet. "
+                          . "It was due on {$item->due_back_at->format('M d, Y')} and is now overdue by {$dayText}. "
+                          . 'Please return it to your Program Head as soon as possible.',
+            'type'       => 'Overdue',
+            'status'     => 'pending',
+        ]);
+
+        unset($this->items);
+
+        session()->flash('message', "Reminder sent to {$borrower->name} for {$item->item_name} (x{$item->quantity}).");
     }
 
     // ============================================================
@@ -153,15 +263,38 @@ new #[Layout('layouts.coordinator')] class extends Component
                 END)";
     }
 
-    /** Pcs items from MY approved requests to the Admin. */
-    protected function myItemsQuery()
+    /** ALL Material items from my approved requests to the Admin (incl. ones endorsed for faculty). */
+    protected function ownItemsQuery()
     {
         return RequestItem::query()
             ->whereNotNull('request_items.resource_id')
-            ->whereHas('resource', fn ($r) => $r->where('unit', 'Pcs'))
+            ->whereHas('resource', fn ($r) => $r->where('is_returnable', true))
             ->whereHas('request', fn ($q) => $q
                 ->where('user_id', Auth::id())
                 ->where('status', 'approved'));
+    }
+
+    /**
+     * "My borrowed items" tab: only what I borrowed FOR MYSELF.
+     * ✅ Items endorsed for a faculty member are handled in the Faculty tab instead.
+     */
+    protected function myItemsQuery()
+    {
+        return $this->ownItemsQuery()
+            ->whereHas('request', fn ($q) => $q->whereNull('forwarded_from_request_id'));
+    }
+
+    /** ✅ Faculty gave these back to me, and they came from the Admin → ready for "Return to Admin". */
+    #[Computed]
+    public function readyForAdminCount(): int
+    {
+        return (clone $this->ownItemsQuery())
+            ->whereNull('returned_at')
+            ->whereNull('return_requested_at')
+            ->whereHas('request', fn ($q) => $q->whereNotNull('forwarded_from_request_id'))
+            ->get()
+            ->filter(fn ($i) => ReturnTracking::facultyItemFor($i)?->returned_at !== null)
+            ->count();
     }
 
     #[Computed]
@@ -174,6 +307,28 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->orderByRaw('returned_at IS NOT NULL')   // not returned first
             ->orderBy('due_date')
             ->paginate(15);
+    }
+
+    /** ✅ My overdue items the Admin is still waiting for (not returned, not sent back yet). */
+    #[Computed]
+    public function myOverdueCount(): int
+    {
+        return (clone $this->myItemsQuery())
+            ->whereNull('returned_at')
+            ->whereNull('return_requested_at')
+            ->whereRaw($this->dueDateSql() . ' < ?', [today()->toDateString()])
+            ->count();
+    }
+
+    /** ✅ The Admin's latest "Overdue" reminder about this item (or null). */
+    public function adminReminder(RequestItem $item): ?Notification
+    {
+        return Notification::where('user_id', Auth::id())
+            ->where('type', 'Overdue')
+            ->where('request_id', $item->request_id)
+            ->where('message', 'like', "%{$item->item_name} ({$item->quantity} pcs)%")
+            ->latest()
+            ->first();
     }
 
     /** "Due in 2 days", "Overdue by 3 days", "Waiting for Admin to confirm", "Returned (Good)". */
@@ -199,7 +354,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     /** Program Head says: "I'm returning these to the Admin." */
     public function requestReturn(int $id): void
     {
-        $item = $this->myItemsQuery()
+        $item = $this->ownItemsQuery()
             ->whereNull('returned_at')
             ->findOrFail($id);
 
@@ -208,34 +363,29 @@ new #[Layout('layouts.coordinator')] class extends Component
             return;
         }
 
-        $item->forceFill(['return_requested_at' => now()])->save();
-
-        // Tell every Admin
-        $who = Auth::user()->name;
-        foreach (User::role('admin')->get() as $admin) {
-            Notification::create([
-                'user_id'    => $admin->id,
-                'request_id' => $item->request_id,
-                'message'    => "{$who} (Program Head) is returning {$item->quantity} pcs of \"{$item->item_name}\". Please check and mark it returned in Borrowed Items.",
-                'type'       => 'Gmail',
-                'status'     => 'pending',
-            ]);
+        // ✅ Borrowed for a faculty member → they must return it to you first
+        if (ReturnTracking::stillWithFaculty($item)) {
+            $faculty = ReturnTracking::facultyItemFor($item)?->request?->user?->name ?? 'The faculty member';
+            session()->flash('error', "{$faculty} still has the {$item->item_name}. Confirm their return in the Faculty tab first, then return it to the Admin.");
+            return;
         }
 
+        $this->sendToAdmin($item);
+
         session()->flash('message', "Return sent for \"{$item->item_name}\" ({$item->quantity} pcs). The Admin will confirm it when the items are received.");
-        unset($this->myItems, $this->counts);
+        unset($this->myItems, $this->items, $this->counts, $this->myOverdueCount, $this->readyForAdminCount);
     }
 
     /** Undo a return that was sent by mistake (only before the Admin confirms). */
     public function cancelRequestReturn(int $id): void
     {
-        $item = $this->myItemsQuery()
+        $item = $this->ownItemsQuery()
             ->whereNull('returned_at')
             ->findOrFail($id);
 
         $item->forceFill(['return_requested_at' => null])->save();
 
         session()->flash('message', "Return for \"{$item->item_name}\" was cancelled.");
-        unset($this->myItems, $this->counts);
+        unset($this->myItems, $this->items, $this->counts, $this->myOverdueCount, $this->readyForAdminCount);
     }
 };

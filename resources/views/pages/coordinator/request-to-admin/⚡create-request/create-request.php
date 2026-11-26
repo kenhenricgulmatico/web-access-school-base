@@ -42,7 +42,7 @@ new #[Layout('layouts.coordinator')] class extends Component
         // ✅ Server-side guard — creating a request to admin requires `program-head-requests.create`
         abort_unless(auth()->user()->can('program-head-requests.create'), 403);
 
-        $facilityType = ResourceType::where('type_name', 'Facility')->first();
+        $facilityType = ResourceType::where('type_name', \App\Models\ResourceType::FACILITY)->first();
 
         if ($facilityType) {
             $this->facilityOptions = Resource::where('resource_type_id', $facilityType->id)
@@ -52,7 +52,7 @@ new #[Layout('layouts.coordinator')] class extends Component
                 ->toArray();
         } else {
             $this->facilityOptions = Resource::whereHas('resourceType', fn($q) =>
-                $q->where('type_name', 'like', '%facility%')
+                $q->where('type_name', 'like', '%facilit%')
             )
             ->where('status', 'available')
             ->orderBy('resource_name')
@@ -64,8 +64,8 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->where('quantity_available', '>', 0)
             ->where(function ($q) {
                 $q->whereHas('resourceType', function ($q2) {
-                    $q2->where('type_name', '!=', 'Facility')
-                       ->where('type_name', 'not like', '%facility%');
+                    $q2->where('type_name', '!=', \App\Models\ResourceType::FACILITY)
+                       ->where('type_name', 'not like', '%facilit%');
                 })->orWhereDoesntHave('resourceType');
             })
             ->orderBy('resource_name')
@@ -86,8 +86,9 @@ new #[Layout('layouts.coordinator')] class extends Component
     }
 
     /**
-     * Pre-fill this form from a pending student / faculty request of the same department:
-     * only the items (and quantities) the department is still missing.
+     * ✅ "Forward to Admin": pre-fill this form with a pending student / faculty request
+     *    of the same department (facility + materials, quantities, return date).
+     *    When the Admin approves this request, the student's request is approved automatically.
      */
     protected function prefillFromStudentRequest(int $id): void
     {
@@ -102,24 +103,45 @@ new #[Layout('layouts.coordinator')] class extends Component
             return;
         }
 
-        $missing = \App\Support\DepartmentStock::shortage($source)
-            ->filter(fn ($row) => $this->getMaterialResource($row->resource_id)); // the Admin must have it
-
-        if ($missing->isEmpty()) {
-            session()->flash('error', 'Your department already has enough for this request — you can accept it directly.');
+        if (\App\Support\ForwardedRequests::isWaitingForAdmin($source)) {
+            session()->flash('error', 'This request was already forwarded and is waiting for the Admin.');
             return;
         }
 
+        $facility  = $source->items->firstWhere('resource_id', null);
+        $materials = $source->items->whereNotNull('resource_id');
+
         $this->forwardedFromId   = $source->id;
         $this->forwardedFromName = $source->user->name ?? 'a student';
+        $this->purpose           = \Illuminate\Support\Str::limit("For {$this->forwardedFromName}: {$source->purpose}", 500, '');
 
-        $this->request_type_id = RequestType::MATERIAL;
-        $this->request_date    = today()->format('Y-m-d');
-        $this->purpose         = \Illuminate\Support\Str::limit("For {$this->forwardedFromName}'s request #{$source->id}: {$source->purpose}", 500, '');
-        $this->materials       = $missing
-            ->map(fn ($row) => ['resource_id' => $row->resource_id, 'quantity' => $row->missing])
+        if ($facility) {
+            // Facility reservation → forward the same facility, date and time
+            $this->request_type_id = RequestType::FACILITY;
+            $this->facility_name   = $facility->item_name;
+            $this->request_date    = \Carbon\Carbon::parse($facility->request_date)->format('Y-m-d');
+            $this->start_time      = substr((string) $facility->start_time, 0, 5);
+            $this->end_time        = substr((string) $facility->end_time, 0, 5);
+        } else {
+            $this->request_type_id = RequestType::MATERIAL;
+            $needed = $materials->min('request_date');
+            $this->request_date = ($needed && \Carbon\Carbon::parse($needed)->gte(today()))
+                ? \Carbon\Carbon::parse($needed)->format('Y-m-d')
+                : today()->format('Y-m-d');
+        }
+
+        // Every material, with the quantity the student asked for (only what the Admin has)
+        $this->materials = $materials
+            ->groupBy('resource_id')
+            ->filter(fn ($rows, $rid) => $this->getMaterialResource($rid))
+            ->map(fn ($rows, $rid) => ['resource_id' => (int) $rid, 'quantity' => (int) $rows->sum('quantity')])
             ->values()
             ->toArray();
+
+        $notAtAdmin = $materials->reject(fn ($i) => $this->getMaterialResource($i->resource_id))->pluck('item_name')->unique();
+        if ($notAtAdmin->isNotEmpty()) {
+            session()->flash('error', 'The Admin has none left of: ' . $notAtAdmin->implode(', ') . '. Those items were left out.');
+        }
 
         // Use the student's return date when it fits the Program Head's 1-month limit
         $studentReturn = $source->items->whereNotNull('due_back_at')->first()?->due_back_at?->format('Y-m-d');
@@ -204,20 +226,20 @@ new #[Layout('layouts.coordinator')] class extends Component
     }
 
     // ============================================================
-    // ✅ RETURN DEADLINE — ONLY for items counted in pieces (Pcs)
+    // ✅ RETURN DEADLINE — ONLY for "Material" items (they must be returned)
     //    Ream and Set items are used up, so they never get a return date.
     // ============================================================
 
     /** Longest a Program Head may keep borrowed Pcs items: 1 month after the day they need them. */
     public const MAX_BORROW_MONTHS = 1;
 
-    /** True when at least one selected material has unit "Pcs" (it must be returned). */
+    /** True when at least one selected material is a Material (it must be returned). */
     public function hasBorrowItems(): bool
     {
         return collect($this->materials)
             ->pluck('resource_id')
             ->filter()
-            ->contains(fn ($id) => ($this->getMaterialResource($id)?->unit) === 'Pcs');
+            ->contains(fn ($id) => ($this->getMaterialResource($id)?->is_returnable) === true);
     }
 
     /** Earliest return date: the day the items are needed (never before today). */
@@ -482,6 +504,11 @@ new #[Layout('layouts.coordinator')] class extends Component
             'current_responsibility_center_id' => $user->responsibility_center_id ?? null,
         ]);
 
+        // ✅ Remember which student / faculty request this was forwarded from
+        if ($this->forwardedFromId) {
+            $request->forceFill(['forwarded_from_request_id' => $this->forwardedFromId])->save();
+        }
+
         if ($this->request_type_id == RequestType::FACILITY) {
             RequestItem::create([
                 'request_id'   => $request->id,
@@ -506,7 +533,7 @@ new #[Layout('layouts.coordinator')] class extends Component
                 'start_time'   => $this->request_type_id == RequestType::FACILITY ? $this->start_time : null,
                 'end_time'     => $this->request_type_id == RequestType::FACILITY ? $this->end_time : null,
                 // ✅ Only Pcs items get the return date (the Admin can still adjust it). Ream / Set: none.
-                'due_back_at'  => $resource->unit === 'Pcs' && $this->return_by ? $this->return_by : null,
+                'due_back_at'  => $resource->is_returnable && $this->return_by ? $this->return_by : null,
             ]);
         }
 
@@ -559,7 +586,7 @@ new #[Layout('layouts.coordinator')] class extends Component
                 Notification::create([
                     'user_id'    => $source->user_id,
                     'request_id' => $source->id,
-                    'message'    => "{$user->name} (Program Head) asked the Admin for the items in your request. It will be approved once they arrive.",
+                    'message'    => "{$user->name} (Program Head) forwarded your request to the Admin. It will be approved automatically once the Admin approves it.",
                     'type'       => 'Gmail',
                     'status'     => 'pending',
                 ]);

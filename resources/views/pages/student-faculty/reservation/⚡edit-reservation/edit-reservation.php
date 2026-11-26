@@ -102,7 +102,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
         $saved = $materialItems->whereNotNull('due_back_at')->first()?->due_back_at;
         $this->return_by = $saved ? $saved->format('Y-m-d') : '';
 
-        $facilityType = ResourceType::where('type_name', 'Facility')->first();
+        $facilityType = ResourceType::where('type_name', \App\Models\ResourceType::FACILITY)->first();
 
         if ($facilityType) {
             $this->facilityOptions = Resource::where('resource_type_id', $facilityType->id)
@@ -112,7 +112,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
                 ->toArray();
         } else {
             $this->facilityOptions = Resource::whereHas('resourceType', fn($q) =>
-                $q->where('type_name', 'like', '%facility%')
+                $q->where('type_name', 'like', '%facilit%')
                   ->orWhere('type_name', 'like', '%Facility%')
             )
             ->where('status', 'available')
@@ -152,14 +152,15 @@ new #[Layout('layouts.student-faculty')] class extends Component
                      ->where('resource_all_locations.department_id', '=', $departmentId);
             })
             ->where('resources.status', 'available')
-            ->where('resource_types.type_name', 'not like', '%facility%')
+            ->where('resource_types.type_name', 'not like', '%facilit%')
             ->orderBy('resources.resource_name')
             ->select(
                 'resources.id',
                 'resources.resource_name',
                 'resources.unit',
-                // Pcs: department + Admin  |  Ream / Set: department only
-                \Illuminate\Support\Facades\DB::raw("CASE WHEN resources.unit = 'Pcs'
+                'resources.is_returnable',
+                // Material: department + Admin  |  Supplies: department only
+                \Illuminate\Support\Facades\DB::raw("CASE WHEN resources.is_returnable = 1
                       THEN COALESCE(resource_all_locations.allocated_quantity, 0) + resources.quantity_available
                       ELSE COALESCE(resource_all_locations.allocated_quantity, 0)
                  END as quantity_available")
@@ -245,7 +246,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
             }
 
             if ((int) $material['quantity'] > (int) $choice->quantity_available) {
-                $this->addError("materials.$i.quantity", "Only {$choice->quantity_available} {$choice->resource_name} available.");
+                $this->addError("materials.$i.quantity", "Not enough {$choice->resource_name} in stock for this quantity. Please request less.");
                 return;
             }
         }
@@ -276,7 +277,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
                         'start_time'   => $this->start_time,
                         'end_time'     => $this->end_time,
                         // ✅ Only Pcs items get the return date. Ream / Set: none.
-                        'due_back_at'  => ($resource->unit === 'Pcs' && $this->return_by) ? $this->return_by : null,
+                        'due_back_at'  => ($resource->is_returnable && $this->return_by) ? $this->return_by : null,
                     ]);
                     $keptItemIds[] = $item->id;
                 }
@@ -290,7 +291,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
                     'start_time'   => $this->start_time,
                     'end_time'     => $this->end_time,
                     // ✅ Only Pcs items get the return date. Ream / Set: none.
-                    'due_back_at'  => ($resource->unit === 'Pcs' && $this->return_by) ? $this->return_by : null,
+                    'due_back_at'  => ($resource->is_returnable && $this->return_by) ? $this->return_by : null,
                 ]);
                 $keptItemIds[] = $newItem->id;
             }
@@ -330,7 +331,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     /** Longest a borrower may keep Pcs items: 1 month. */
     public const MAX_BORROW_MONTHS = 1;
 
-    /** True when at least one selected item has unit "Pcs" (it must be returned). */
+    /** True when at least one selected item is a Material (it must be returned). */
     public function hasBorrowItems(): bool
     {
         $ids = collect($this->materials)
@@ -340,7 +341,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
             ->values()
             ->all();
 
-        return $ids && \App\Models\Resource::whereIn('id', $ids)->where('unit', 'Pcs')->exists();
+        return $ids && \App\Models\Resource::whereIn('id', $ids)->where('is_returnable', true)->exists();
     }
 
     /** Earliest return date: the reservation day (never before today). */

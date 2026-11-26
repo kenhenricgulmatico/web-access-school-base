@@ -27,6 +27,20 @@ class Resource extends Model
         'is_returnable' => 'boolean',
     ];
 
+    /**
+     * ✅ "Must be returned" always follows the type:
+     *    Material = returned (chairs, projectors), Supplies / Facilities = not.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Resource $resource) {
+            if ($resource->isDirty('resource_type_id') || ! $resource->exists) {
+                $type = ResourceType::find($resource->resource_type_id);
+                $resource->is_returnable = (bool) $type?->isReturnable();
+            }
+        });
+    }
+
     public function allocations(): HasMany
     {
         return $this->hasMany(ResourceAllLocation::class);

@@ -41,10 +41,10 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
         </ul>
       </div>
 
-      {{-- Student Management --}}
+      {{-- Faculty Management --}}
       <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
         <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">
-          Student Management
+          Faculty Management
         </span>
         <ul class="flex flex-col gap-y-1">
           <li>
@@ -57,7 +57,7 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
               <svg class="shrink-0 size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/>
               </svg>
-              <span class="truncate">View Students</span>
+              <span class="truncate">View Faculty</span>
             </a>
           </li>
         </ul>

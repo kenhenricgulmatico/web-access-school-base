@@ -100,9 +100,9 @@ new #[Layout('layouts.admin')] class extends Component
     }
 
     #[Computed]
-    public function totalStudents()
+    public function totalFaculty()
     {
-        return User::role('student')->count();
+        return User::role('faculty')->count();
     }
 
     #[Computed]

@@ -6,6 +6,7 @@ namespace App\Livewire\Admin;
 use App\Models\RequestType;
 use App\Models\Request as ResourceRequest;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -69,8 +70,8 @@ new #[Layout('layouts.admin')] class extends Component
             return '';
         }
 
-        $today = \Carbon\Carbon::today();
-        $day   = \Carbon\Carbon::parse($date)->startOfDay();
+        $today = Carbon::today();
+        $day   = Carbon::parse($date)->startOfDay();
         $diff  = (int) $today->diffInDays($day, false); // + future, - past
         $abs   = abs($diff);
 
@@ -97,7 +98,7 @@ new #[Layout('layouts.admin')] class extends Component
     #[Computed]
     public function calendarDays()
     {
-        $start       = \Carbon\Carbon::create($this->year, $this->month, 1);
+        $start       = Carbon::create($this->year, $this->month, 1);
         $startDay    = $start->dayOfWeek;
         $daysInMonth = $start->daysInMonth;
 
@@ -116,15 +117,12 @@ new #[Layout('layouts.admin')] class extends Component
 
     /**
      * Which days of the shown month have approved facility / material requests.
-     * ONE query for the whole month (it used to be 2 queries per day ≈ 62 per page load).
-     *
      * ✅ Admin calendar shows ONLY requests made by Program Heads.
-     *    Student / Faculty bookings are handled by the Program Head, not the Admin.
      */
     #[Computed]
     public function daysWithEvents(): array
     {
-        $start = \Carbon\Carbon::create($this->year, $this->month, 1)->startOfMonth();
+        $start = Carbon::create($this->year, $this->month, 1)->startOfMonth();
         $end   = $start->copy()->endOfMonth();
 
         $userMorphType = (new User)->getMorphClass();
@@ -134,7 +132,6 @@ new #[Layout('layouts.admin')] class extends Component
             ->where('r.status', 'approved')
             ->whereIn('r.request_type_id', [RequestType::FACILITY, RequestType::MATERIAL])
             ->whereBetween('ri.request_date', [$start->toDateString(), $end->toDateString()])
-            // ✅ Only Program Head requests
             ->whereExists(function ($sub) use ($userMorphType) {
                 $sub->select(DB::raw(1))
                     ->from('model_has_roles as mhr')
@@ -150,7 +147,7 @@ new #[Layout('layouts.admin')] class extends Component
         $days = [];
 
         foreach ($rows as $row) {
-            $key = \Carbon\Carbon::parse($row->request_date)->format('Y-m-d');
+            $key = Carbon::parse($row->request_date)->format('Y-m-d');
             $days[$key] ??= ['reservation' => false, 'material' => false];
 
             if ((int) $row->request_type_id === RequestType::FACILITY) {
@@ -196,34 +193,44 @@ new #[Layout('layouts.admin')] class extends Component
         ];
     }
 
-    // ===== SCHEDULE DISABLED =====
-    // private function getDayCode(int $dayOfWeek): string
-    // {
-    //     return match ($dayOfWeek) {
-    //         0 => 'SUN',
-    //         1 => 'MON',
-    //         2 => 'TUE',
-    //         3 => 'WED',
-    //         4 => 'THU',
-    //         5 => 'FRI',
-    //         6 => 'SAT',
-    //         default => '',
-    //     };
-    // }
+    /**
+     * ✅ Rooms reserved on the selected day.
+     *    [ ['room' => 'Room 101', 'slots' => [ [start, end, department, user, purpose], ... ]], ... ]
+     */
+    #[Computed]
+    public function roomSummary(): array
+    {
+        $reservations = $this->selectedDateEvents['reservations'] ?? collect();
+        $rooms = [];
 
-    // private function expandDayCode(string $code): array
-    // {
-    //     return match ($code) {
-    //         'MW'  => ['MON', 'WED'],
-    //         'TTH' => ['TUE', 'THU'],
-    //         'F'   => ['FRI'],
-    //         'SAT' => ['SAT'],
-    //         'M'   => ['MON'],
-    //         'T'   => ['TUE'],
-    //         'W'   => ['WED'],
-    //         'TH'  => ['THU'],
-    //         default => [],
-    //     };
-    // }
-    // ===== END SCHEDULE DISABLED =====
-};
+        foreach ($reservations as $reservation) {
+            // Room item for the selected day (the one with a time slot)
+            $dayItems = $reservation->items->filter(fn ($i) =>
+                $i->request_date && Carbon::parse($i->request_date)->toDateString() === $this->selectedDate
+            );
+            $pool = $dayItems->isNotEmpty() ? $dayItems : $reservation->items;
+            $item = $pool->first(fn ($i) => $i->start_time && $i->end_time) ?? $pool->first();
+
+            $name = $item->item_name ?? 'Unknown Room';
+
+            $rooms[$name]['room']    = $name;
+            $rooms[$name]['slots'][] = [
+                'start'      => $item?->start_time ? Carbon::parse($item->start_time)->format('g:i A') : null,
+                'end'        => $item?->end_time   ? Carbon::parse($item->end_time)->format('g:i A')   : null,
+                'sort'       => $item?->start_time ? Carbon::parse($item->start_time)->format('H:i')   : '99:99',
+                'department' => $reservation->user->department->department_name ?? 'N/A',
+                'user'       => $reservation->user->name ?? 'N/A',
+                'purpose'    => $reservation->purpose,
+            ];
+        }
+
+        foreach ($rooms as &$room) {
+            usort($room['slots'], fn ($a, $b) => strcmp($a['sort'], $b['sort']));
+        }
+        unset($room);
+
+        uksort($rooms, 'strnatcasecmp');
+
+        return array_values($rooms);
+    }
+}; 

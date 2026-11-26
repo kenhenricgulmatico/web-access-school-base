@@ -10,12 +10,12 @@
         </div>
         <div class="min-w-0">
             <h1 class="text-xl sm:text-2xl font-bold text-[#123524] dark:text-neutral-200 truncate" style="font-family: 'Fraunces', serif;">Program Head Dashboard</h1>
-            <p class="text-xs sm:text-sm text-gray-500 dark:text-neutral-400 truncate">Overview of all faculty and student requests</p>
+            <p class="text-xs sm:text-sm text-gray-500 dark:text-neutral-400 truncate">Overview of all faculty requests</p>
         </div>
     </div>
 
     {{-- Stats Cards --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
 
         {{-- Total Requests --}}
         <div class="relative overflow-hidden flex flex-col bg-white border border-[#E4E1D8] shadow-sm rounded-2xl p-4 sm:p-6 dark:bg-[#16281F] dark:border-[#2A4B3A]">
@@ -48,22 +48,6 @@
             <div class="absolute bottom-0 left-0 right-0 h-1 bg-[#D4A537] rounded-b-2xl"></div>
         </div>
 
-        {{-- Total Students --}}
-        <div class="relative overflow-hidden flex flex-col bg-white border border-[#E4E1D8] shadow-sm rounded-2xl p-4 sm:p-6 dark:bg-[#16281F] dark:border-[#2A4B3A]">
-            <div class="flex items-center justify-between mb-2 sm:mb-4">
-                <p class="text-xs sm:text-sm font-medium text-gray-500 dark:text-neutral-400">Total Students</p>
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#B8352A]/8 dark:bg-[#B8352A]/20 flex items-center justify-center shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-mortarboard size-5.5 text-red-400 dark:text-red-400" viewBox="0 0 16 16">
-                    <path d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.686-.275a.5.5 0 0 0 .025-.917zM8 8.46 1.758 5.965 8 3.052l6.242 2.913z"/>
-                    <path d="M4.176 9.032a.5.5 0 0 0-.656.327l-.5 1.7a.5.5 0 0 0 .294.605l4.5 1.8a.5.5 0 0 0 .372 0l4.5-1.8a.5.5 0 0 0 .294-.605l-.5-1.7a.5.5 0 0 0-.656-.327L8 10.466zm-.068 1.873.22-.748 3.496 1.311a.5.5 0 0 0 .352 0l3.496-1.311.22.748L8 12.46z"/>
-                    </svg>
-                </div>
-            </div>
-            <h3 class="text-2xl sm:text-4xl font-bold text-[#123524] dark:text-neutral-200">{{ $this->totalStudents }}</h3>
-            <p class="text-xs text-gray-400 mt-1">Registered students</p>
-            <div class="absolute bottom-0 left-0 right-0 h-1 bg-[#B8352A] rounded-b-2xl"></div>
-        </div>
-
         {{-- Total Faculty --}}
         <div class="relative overflow-hidden flex flex-col bg-white border border-[#E4E1D8] shadow-sm rounded-2xl p-4 sm:p-6 dark:bg-[#16281F] dark:border-[#2A4B3A]">
             <div class="flex items-center justify-between mb-2 sm:mb-4">
@@ -91,8 +75,7 @@
             </div>
             <div class="flex flex-wrap gap-3 sm:gap-4 mb-4">
                 <div class="inline-flex rounded-full border border-[#E4E1D8] dark:border-[#2A4B3A] p-0.5 text-xs font-medium" id="lineFilters">
-                    <button type="button" data-filter="student" class="px-3 py-1 rounded-full bg-[#123524] text-white">Students</button>
-                    <button type="button" data-filter="faculty" class="px-3 py-1 rounded-full text-gray-500 dark:text-neutral-400">Faculty</button>
+                    <button type="button" data-filter="faculty" class="px-3 py-1 rounded-full bg-[#123524] text-white">Faculty</button>
                 </div>
             </div>
             <div class="relative w-full h-[200px]">
@@ -101,7 +84,7 @@
         </div>
     </div>
 
-    {{-- Student & Faculty Request History --}}
+    {{-- Faculty Request History --}}
     <div class="bg-white border border-[#E4E1D8] rounded-2xl shadow-sm overflow-hidden dark:bg-[#16281F] dark:border-[#2A4B3A]">
         <div class="px-4 sm:px-6 py-4 border-b border-[#E4E1D8] dark:border-[#2A4B3A]">
             <h2 class="text-base sm:text-lg font-semibold text-[#123524] dark:text-neutral-200" style="font-family: 'Fraunces', serif;">
@@ -145,7 +128,7 @@
                             </td>
                             <td class="px-6 py-4">
                                 <span class="px-2.5 py-1 text-xs font-medium rounded-full whitespace-nowrap
-                                    {{ $user->hasRole('student') ? 'bg-[#B8352A]/8 text-[#B8352A]' : 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-300' }}">
+                                    {{ 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-300' }}">
                                     {{ ucfirst($user->getRoleNames()->first() ?? 'N/A') }}
                                 </span>
                             </td>
@@ -176,9 +159,8 @@
 {{-- Chart.js --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Pre-computed data for the filter toggle (Students / Faculty)
+    // Pre-computed data for the filter toggle (Faculty)
     const requestData = {
-        student: [{{ $this->studentFacilityRequests }}, {{ $this->studentMaterialRequests }}],
         faculty: [{{ $this->facultyFacilityRequests }}, {{ $this->facultyMaterialRequests }}],
     };
 
@@ -189,7 +171,7 @@
             labels: ['Facility Reservation', 'Material Request'],
             datasets: [{
                 label: 'Total',
-                data: requestData.student,
+                data: requestData.faculty,
                 backgroundColor: [
                     'rgba(18, 53, 36, 0.85)',
                     'rgba(212, 165, 55, 0.85)',
@@ -213,7 +195,7 @@
         }
     });
 
-    // Filter button handling (Students / Faculty)
+    // Filter button handling (Faculty)
     const filterButtons = document.querySelectorAll('#lineFilters button');
     filterButtons.forEach(btn => {
         btn.addEventListener('click', () => {

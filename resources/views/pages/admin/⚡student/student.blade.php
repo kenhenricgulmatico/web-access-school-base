@@ -26,7 +26,7 @@
                 <path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z"/>
                 <path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/>
             </svg>
-            Students
+            Account Approvals
         </a>
 
         <a href="{{ route('admin.roles') }}"
@@ -71,7 +71,7 @@
         <div class="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-neutral-700 flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:justify-between lg:items-center">
             <div>
                 <h2 class="text-lg sm:text-xl font-semibold text-gray-800 dark:text-neutral-200">User Management</h2>
-                <p class="text-xs sm:text-sm text-gray-500 dark:text-neutral-400">Approve or reject student, faculty, and coordinator accounts</p>
+                <p class="text-xs sm:text-sm text-gray-500 dark:text-neutral-400">Approve or reject faculty and program head accounts</p>
             </div>
 
             {{-- Filters --}}
@@ -93,7 +93,6 @@
                     <select wire:model.live="roleFilter"
                         class="flex-1 sm:flex-none px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-green-500">
                         <option value="all">All Roles</option>
-                        <option value="student">Student</option>
                         <option value="faculty">Faculty</option>
                         <option value="program head">Program Head</option>
                     </select>
@@ -273,7 +272,7 @@
                                     <p class="text-xs text-gray-400 dark:text-neutral-500">
                                         {{ $search || $roleFilter !== 'all' || $statusFilter !== 'all'
                                             ? 'Try adjusting your search or filters.'
-                                            : 'No students or faculty have registered yet.' }}
+                                            : 'No faculty or program heads have registered yet.' }}
                                     </p>
                                 </div>
                             </td>

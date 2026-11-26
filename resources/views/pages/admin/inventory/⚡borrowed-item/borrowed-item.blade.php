@@ -5,8 +5,9 @@
   <div class="mb-6">
     <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Borrowed Items</h2>
     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-      Items counted in <strong>pieces (Pcs)</strong> that Program Heads borrow — like chairs.
-      Accept a request with a <strong>return deadline</strong>, then mark the items returned.
+      <strong>Material</strong> items that Program Heads borrow and must return — like chairs and projectors. (Supplies such as bond paper are used up and not listed here.)
+      Accept a request with a <strong>return deadline</strong>. When the Program Head clicks <strong>Return to Admin</strong>, check the items and confirm the return.
+      If an item is <strong>overdue</strong>, send the Program Head a reminder.
     </p>
   </div>
 
@@ -80,7 +81,7 @@
                 <ul class="space-y-1">
                   @foreach($req->items as $ri)
                     <li class="flex items-center gap-2">
-                      @if($ri->resource?->unit === 'Pcs')
+                      @if($ri->resource?->is_returnable)
                         <span class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">BORROW</span>
                       @endif
                       <span class="font-semibold text-gray-900 dark:text-neutral-100">{{ $ri->item_name }}</span>
@@ -92,6 +93,7 @@
                     </li>
                   @endforeach
                 </ul>
+
                 @if($req->purpose)
                   <p class="text-xs text-gray-400 italic mt-0.5">"{{ \Illuminate\Support\Str::limit($req->purpose, 60) }}"</p>
                 @endif
@@ -171,9 +173,14 @@
         <tbody class="divide-y divide-gray-100 dark:divide-neutral-700">
           @forelse($this->items as $item)
             @php
-              $dueDate = \Carbon\Carbon::parse($item->due_date);
-              $label   = $this->statusLabel($item);
-              $badge   = match (true) {
+              $dueDate      = \Carbon\Carbon::parse($item->due_date);
+              $label        = $this->statusLabel($item);
+              $isOverdue    = ! $item->returned_at && $dueDate->lt(today());
+              $lastReminder = $isOverdue ? $this->lastReminder($item) : null;
+              // ✅ Borrowed for a faculty member: who has it right now?
+              $facultyItem  = ($item->returned_at || $item->return_requested_at) ? null : \App\Support\ReturnTracking::facultyItemFor($item);
+              $withFaculty  = $facultyItem && $facultyItem->request?->status === 'approved' && ! $facultyItem->returned_at;
+              $badge        = match (true) {
                 $item->returned_at && $item->return_condition === 'good' => 'bg-green-100 text-green-800',
                 (bool) $item->returned_at                                 => 'bg-orange-100 text-orange-800',
                 (bool) $item->return_requested_at                         => 'bg-blue-100 text-blue-800',
@@ -185,7 +192,7 @@
             <tr wire:key="item-{{ $item->id }}">
               <td class="px-4 py-3">
                 <p class="font-semibold text-gray-900 dark:text-neutral-100">{{ $item->item_name }}</p>
-                <p class="text-xs text-gray-500">{{ number_format($item->quantity) }} pcs · Request #{{ $item->request_id }}</p>
+                <p class="text-xs text-gray-500">{{ number_format($item->quantity) }} pcs · Request</p>
               </td>
               <td class="px-4 py-3 text-gray-700 dark:text-neutral-300">
                 {{ $item->request->user->name ?? '—' }}
@@ -208,14 +215,55 @@
                   <p class="text-xs font-medium text-blue-700 dark:text-blue-300 mt-1">
                     Program Head returned it {{ \Carbon\Carbon::parse($item->return_requested_at)->format('M d, g:i A') }} — please check and confirm
                   </p>
+                @else
+                  {{-- ✅ Where the item is right now --}}
+                  <p class="text-xs text-gray-500 mt-1">
+                    @if($withFaculty)
+                      With {{ $facultyItem->request?->user?->name ?? 'a faculty member' }} (faculty) — the Program Head returns it after they get it back
+                    @else
+                      With the Program Head — waiting for "Return to Admin"
+                    @endif
+                  </p>
+                  @if($isOverdue && $lastReminder)
+                    {{-- ✅ Reminder already sent --}}
+                    <p class="text-xs text-gray-500">
+                      Reminder sent {{ $lastReminder->isToday() ? 'today, ' . $lastReminder->format('g:i A') : $lastReminder->format('M d, g:i A') }}
+                    </p>
+                  @endif
                 @endif
               </td>
-              <td class="px-4 py-3 text-right">
+              <td class="px-4 py-3 text-right whitespace-nowrap">
                 @if(! $item->returned_at)
-                  <button type="button" wire:click="openReturn({{ $item->id }})"
-                    class="min-h-10 px-3 rounded-lg bg-[#123524] text-white text-xs font-semibold hover:bg-[#0B2418] transition">
-                    {{ $item->return_requested_at ? 'Confirm return' : 'Mark returned' }}
-                  </button>
+                  @if($item->return_requested_at)
+                    {{-- ✅ Program Head returned it → the Admin checks and confirms --}}
+                    <button type="button" wire:click="openReturn({{ $item->id }})"
+                      class="min-h-10 px-3 rounded-lg bg-[#123524] text-white text-xs font-semibold hover:bg-[#0B2418] transition">
+                      Confirm return
+                    </button>
+                  @elseif($isOverdue)
+                    {{-- ✅ Overdue: message the Program Head instead of "Mark returned" --}}
+                    @if($lastReminder?->isToday())
+                      <span class="inline-flex items-center gap-1.5 min-h-10 px-3 rounded-lg bg-gray-100 text-gray-500 text-xs font-semibold dark:bg-neutral-700 dark:text-neutral-300">
+                        <svg class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        Reminded today
+                      </span>
+                    @else
+                      <button type="button" wire:click="sendReminder({{ $item->id }})"
+                        wire:confirm="Send a reminder to {{ $item->request->user->name ?? 'the Program Head' }} to return {{ $item->quantity }} pcs of {{ $item->item_name }}?"
+                        wire:loading.attr="disabled" wire:target="sendReminder({{ $item->id }})"
+                        class="inline-flex items-center gap-1.5 min-h-10 px-3 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 disabled:opacity-60 transition">
+                        <svg class="size-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
+                        </svg>
+                        {{ $lastReminder ? 'Remind again' : 'Send reminder' }}
+                      </button>
+                    @endif
+                  @else
+                    {{-- Not returned yet and not overdue: nothing to do until the Program Head returns it --}}
+                    <span class="inline-flex items-center min-h-10 px-3 rounded-lg bg-gray-100 text-gray-500 text-xs font-semibold dark:bg-neutral-700 dark:text-neutral-300">
+                      Not returned yet
+                    </span>
+                  @endif
                 @endif
               </td>
             </tr>

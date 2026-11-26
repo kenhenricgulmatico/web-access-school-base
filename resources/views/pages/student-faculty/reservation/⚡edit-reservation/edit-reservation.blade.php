@@ -115,20 +115,20 @@
                                         <option value="">Select material</option>
                                         @php
                                             $__opts    = collect($availableResources);
-                                            $__borrow  = $__opts->filter(fn ($o) => ($o->unit ?? null) === 'Pcs');
-                                            $__supply  = $__opts->reject(fn ($o) => ($o->unit ?? null) === 'Pcs');
+                                            $__borrow  = $__opts->filter(fn ($o) => ! empty($o->is_returnable));
+                                            $__supply  = $__opts->reject(fn ($o) => ! empty($o->is_returnable));
                                         @endphp
                                         @if($__borrow->isNotEmpty())
-                                            <optgroup label="Borrow — must be returned (Pcs)">
+                                            <optgroup label="Material — must be returned">
                                                 @foreach($__borrow as $o)
-                                                    <option value="{{ $o->id }}">{{ $o->resource_name }} — {{ $o->quantity_available }} Pcs available</option>
+                                                    <option value="{{ $o->id }}">{{ $o->resource_name }}</option>
                                                 @endforeach
                                             </optgroup>
                                         @endif
                                         @if($__supply->isNotEmpty())
-                                            <optgroup label="Supplies — no need to return (Ream / Set)">
+                                            <optgroup label="Supplies — used up, no need to return">
                                                 @foreach($__supply as $o)
-                                                    <option value="{{ $o->id }}">{{ $o->resource_name }} — {{ $o->quantity_available }} {{ ($o->unit ?? null) ?: 'Ream' }} available</option>
+                                                    <option value="{{ $o->id }}">{{ $o->resource_name }} ({{ ($o->unit ?? null) ?: 'Ream' }})</option>
                                                 @endforeach
                                             </optgroup>
                                         @endif
@@ -154,7 +154,7 @@
                                         <p class="text-[10px] text-blue-600 font-medium mt-1">Requesting: {{ $__qty }} {{ $__unit }}</p>
                                     @endif
                                     @if($__over)
-                                        <p class="text-[10px] text-red-500 mt-1 font-medium">Exceeds available stock ({{ $__pick->quantity_available }} {{ $__unit }})</p>
+                                        <p class="text-[10px] text-red-500 mt-1 font-medium">More than what is in stock — please request less</p>
                                     @endif
                                     @error('materials.' . $index . '.quantity') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                                 </div>

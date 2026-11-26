@@ -240,7 +240,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
             ->orderBy('start_time')
             ->get(['item_name', 'start_time', 'end_time']);
 
-        $facilityNames = Resource::whereHas('resourceType', fn ($q) => $q->where('type_name', 'like', '%facility%'))
+        $facilityNames = Resource::whereHas('resourceType', fn ($q) => $q->where('type_name', 'like', '%facilit%'))
             ->orderBy('resource_name')
             ->pluck('resource_name');
 

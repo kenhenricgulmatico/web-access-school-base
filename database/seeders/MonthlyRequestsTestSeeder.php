@@ -43,7 +43,7 @@ class MonthlyRequestsTestSeeder extends Seeder
         // ─────────────────────────────────────────────────────────────
         // 0b. Ensure we have at least one resource type + resource
         // ─────────────────────────────────────────────────────────────
-        $resourceType = ResourceType::firstOrCreate(['type_name' => 'Paper Supplies']);
+        $resourceType = ResourceType::firstOrCreate(['type_name' => ResourceType::SUPPLIES]);
 
         $paper = Resource::firstOrCreate(
             ['resource_name' => 'Bond Paper A4', 'resource_type_id' => $resourceType->id],
@@ -55,7 +55,7 @@ class MonthlyRequestsTestSeeder extends Seeder
             ]
         );
 
-        $markerType = ResourceType::firstOrCreate(['type_name' => 'Writing Materials']);
+        $markerType = ResourceType::firstOrCreate(['type_name' => ResourceType::SUPPLIES]);
         $marker = Resource::firstOrCreate(
             ['resource_name' => 'Marker', 'resource_type_id' => $markerType->id],
             [
@@ -74,7 +74,7 @@ class MonthlyRequestsTestSeeder extends Seeder
 
         // ─────────────────────────────────────────────────────────────
         // 1. Ensure we have users in each department — create program
-        //    heads + students + faculty on the fly if missing.
+        //    heads + faculty on the fly if missing.
         // ─────────────────────────────────────────────────────────────
         $departments = Department::all();
 
@@ -117,23 +117,8 @@ class MonthlyRequestsTestSeeder extends Seeder
                 $faculty->assignRole('faculty');
             }
 
-            // Student
-            $student = User::role('student')
-                ->where('department_id', $dept->id)
-                ->first();
-
-            if (! $student) {
-                $student = User::create([
-                    'name'          => 'Student ' . $dept->department_name,
-                    'email'         => 'student.' . strtolower(str_replace(' ', '.', $dept->department_name)) . '@csav.edu.ph',
-                    'password'      => Hash::make('password'),
-                    'status'        => 'approved',
-                    'department_id' => $dept->id,
-                ]);
-                $student->assignRole('student');
-            }
-
-            $othersByDept[$dept->id] = [$faculty->id, $student->id];
+            // ✅ No student role anymore — faculty are the requesters
+            $othersByDept[$dept->id] = [$faculty->id];
         }
 
         // ─────────────────────────────────────────────────────────────

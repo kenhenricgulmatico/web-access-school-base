@@ -76,7 +76,7 @@ new #[Layout('layouts.coordinator')] class extends Component
         // ✅ FIXED — new permission name
         abort_unless(auth()->user()->can('program-head-requests.view'), 403);
 
-        $facilityType = ResourceType::where('type_name', 'Facility')->first();
+        $facilityType = ResourceType::where('type_name', \App\Models\ResourceType::FACILITY)->first();
 
         $this->facilityOptions = $facilityType
             ? Resource::where('resource_type_id', $facilityType->id)
@@ -90,8 +90,8 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->where('quantity_available', '>', 0)
             ->where(function ($q) {
                 $q->whereHas('resourceType', function ($q2) {
-                    $q2->where('type_name', '!=', 'Facility')
-                       ->where('type_name', 'not like', '%facility%');
+                    $q2->where('type_name', '!=', \App\Models\ResourceType::FACILITY)
+                       ->where('type_name', 'not like', '%facilit%');
                 })->orWhereDoesntHave('resourceType');
             })
             ->orderBy('resource_name')

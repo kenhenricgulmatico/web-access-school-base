@@ -10,7 +10,7 @@
                             Create User
                         </h2>
                         <p class="text-sm text-gray-500 dark:text-neutral-400 mt-1">
-                            Add a program head, faculty, or student account
+                            Add a program head or faculty account
                         </p>
                     </div>
 

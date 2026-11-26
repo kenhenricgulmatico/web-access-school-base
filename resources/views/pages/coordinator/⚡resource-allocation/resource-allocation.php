@@ -36,7 +36,7 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->join('resource_types as rt', 'rt.id', '=', 'r.resource_type_id')
             ->where('ral.department_id', Auth::user()->department_id)
             ->where('ral.allocated_quantity', '>', 0)
-            ->where('rt.type_name', '!=', 'Facility')
+            ->where('rt.type_name', '!=', \App\Models\ResourceType::FACILITY)
             ->select('r.resource_name', 'ral.allocated_quantity', 'r.unit')
             ->orderByDesc('ral.allocated_quantity')
             ->limit(6)
@@ -54,7 +54,7 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->join('resources as r', 'r.id', '=', 'ral.resource_id')
             ->join('resource_types as rt', 'rt.id', '=', 'r.resource_type_id')
             ->where('ral.department_id', Auth::user()->department_id)
-            ->where('rt.type_name', '!=', 'Facility')
+            ->where('rt.type_name', '!=', \App\Models\ResourceType::FACILITY)
             ->sum('ral.allocated_quantity');
     }
 
@@ -65,23 +65,23 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->join('resources as r', 'r.id', '=', 'ral.resource_id')
             ->join('resource_types as rt', 'rt.id', '=', 'r.resource_type_id')
             ->where('ral.department_id', Auth::user()->department_id)
-            ->where('rt.type_name', '!=', 'Facility')
+            ->where('rt.type_name', '!=', \App\Models\ResourceType::FACILITY)
             ->count();
     }
 
     // ── Material logs: one row per material item (materials only) ──
-    // Only student / faculty whose OWN department matches the program head's.
+    // Only faculty whose OWN department matches the program head's.
     #[Computed]
     public function materialLogs()
     {
         $departmentId = Auth::user()->department_id;
 
-        // Requester's role (student / faculty)
+        // Requester's role (faculty)
         $roleSub = DB::table('model_has_roles as mhr')
             ->join('roles as rl', 'rl.id', '=', 'mhr.role_id')
             ->whereColumn('mhr.model_id', 'u.id')
             ->where('mhr.model_type', \App\Models\User::class)
-            ->whereIn('rl.name', ['student', 'faculty'])
+            ->whereIn('rl.name', ['faculty'])
             ->select('rl.name')
             ->limit(1);
 
@@ -95,14 +95,14 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->where('req.user_id', '!=', Auth::id())                         // not my own requests
             ->whereIn('req.request_type_id', [RequestType::FACILITY, RequestType::MATERIAL])
             ->whereIn('req.status', ['approved', 'rejected'])
-            // only student / faculty requesters (excludes program heads)
+            // only faculty requesters (excludes program heads)
             ->whereExists(function ($q) {
                 $q->select(DB::raw(1))
                   ->from('model_has_roles as mhr2')
                   ->join('roles as rl2', 'rl2.id', '=', 'mhr2.role_id')
                   ->whereColumn('mhr2.model_id', 'u.id')
                   ->where('mhr2.model_type', \App\Models\User::class)
-                  ->whereIn('rl2.name', ['student', 'faculty']);
+                  ->whereIn('rl2.name', ['faculty']);
             })
             ->select(
                 'ri.id as item_id',

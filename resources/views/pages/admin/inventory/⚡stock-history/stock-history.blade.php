@@ -5,7 +5,7 @@
     <div class="flex items-center justify-between flex-wrap gap-4">
         <div>
             <h2 class="text-2xl font-bold text-gray-800 dark:text-neutral-200">Stock History</h2>
-            <p class="text-sm text-gray-500 dark:text-neutral-400">Complete log of restocks and materials released via admin-approved requests</p>
+            <p class="text-sm text-gray-500 dark:text-neutral-400">Complete log of restocks, materials released via admin-approved requests, and returned borrowed items</p>
         </div>
         <a href="{{ route('admin.inventory-stock-material') }}"
             class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:bg-green-700 disabled:opacity-50 disabled:pointer-events-none">
@@ -55,7 +55,6 @@
             <p class="mt-1 text-xs text-gray-500 dark:text-neutral-500">Units restocked</p>
         </div>
 
-
         {{-- Today --}}
         <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5 dark:bg-neutral-800 dark:border-neutral-700">
             <div class="flex items-center gap-x-2 mb-3">
@@ -85,8 +84,8 @@
                     {{-- Table Header --}}
                     <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-gray-200 dark:border-neutral-700">
                         <div>
-                            <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">Restock &amp; Approval Logs</h2>
-                            <p class="text-sm text-gray-600 dark:text-neutral-400">Full history of material restocking and admin-approved material requests</p>
+                            <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">Restock, Approval &amp; Return Logs</h2>
+                            <p class="text-sm text-gray-600 dark:text-neutral-400">Full history of restocking, admin-approved material requests, and returned borrowed items</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
 
@@ -136,7 +135,7 @@
                                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">Date</span>
                                 </th>
                                 <th class="px-6 py-3 text-start">
-                                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">Restocked / Requested By</span>
+                                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">By</span>
                                 </th>
                                 <th class="px-6 py-3 text-start">
                                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">Remarks</span>
@@ -145,7 +144,12 @@
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
                             @forelse($this->histories as $stock)
-                                <tr class="bg-white hover:bg-gray-50 dark:bg-neutral-800 dark:hover:bg-neutral-700">
+                                @php
+                                    $isRestock = $stock->entry_type === 'restock';
+                                    $isReturn  = $stock->entry_type === 'return';
+                                    $isPlus    = $isRestock || $isReturn;   // ✅ restocks and returns ADD to stock
+                                @endphp
+                                <tr wire:key="{{ $stock->entry_type }}-{{ $stock->id }}" class="bg-white hover:bg-gray-50 dark:bg-neutral-800 dark:hover:bg-neutral-700">
 
                                     {{-- Material --}}
                                     <td class="px-6 py-4 whitespace-nowrap">
@@ -168,12 +172,19 @@
 
                                     {{-- Type --}}
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        @if($stock->entry_type === 'restock')
+                                        @if($isRestock)
                                             <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900 dark:text-blue-400">
                                                 <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                                                 </svg>
                                                 Stock In
+                                            </span>
+                                        @elseif($isReturn)
+                                            <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-900 dark:text-teal-300">
+                                                <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/>
+                                                </svg>
+                                                Returned
                                             </span>
                                         @else
                                             <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-green-100 text-green-800 rounded-full dark:bg-green-900 dark:text-green-400">
@@ -187,12 +198,12 @@
 
                                     {{-- Qty --}}
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        @if($stock->entry_type === 'restock')
+                                        @if($isPlus)
                                             <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-green-100 text-green-800 rounded-full dark:bg-green-900 dark:text-green-400">
                                                 <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
                                                 </svg>
-                                                +{{ number_format($stock->quantity_added) }}
+                                                {{ number_format($stock->quantity_added) }}
                                             </span>
                                         @else
                                             <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-900 dark:text-red-400">
@@ -222,7 +233,7 @@
                                     {{-- Supplier / Department --}}
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="text-sm text-gray-600 dark:text-neutral-400">
-                                            {{ $stock->entry_type === 'restock' ? ($stock->supplier ?? '—') : $stock->department_name }}
+                                            {{ $isRestock ? ($stock->supplier ?? '—') : ($stock->department_name ?? '—') }}
                                         </span>
                                     </td>
 
@@ -238,7 +249,7 @@
                                         @endif
                                     </td>
 
-                                    {{-- Restocked / Requested By --}}
+                                    {{-- By --}}
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center gap-x-2">
                                             <div class="size-6 rounded-full bg-green-700 text-white flex items-center justify-center text-[10px] font-bold">
@@ -247,7 +258,7 @@
                                             <span class="text-sm text-gray-800 dark:text-neutral-200">
                                                 {{ $stock->actor_name ?? 'N/A' }}
                                                 <span class="text-xs text-gray-400 dark:text-neutral-500">
-                                                    ({{ $stock->entry_type === 'restock' ? 'Restocked' : 'Requested' }})
+                                                    ({{ $isRestock ? 'Restocked' : ($isReturn ? 'Received' : 'Requested') }})
                                                 </span>
                                             </span>
                                         </div>
@@ -269,7 +280,7 @@
                                                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
                                             </svg>
                                             <p class="text-sm text-gray-500 dark:text-neutral-400 font-medium">No stock history found</p>
-                                            <p class="text-xs text-gray-400 dark:text-neutral-500">Add stock or approve a material request to see history here</p>
+                                            <p class="text-xs text-gray-400 dark:text-neutral-500">Add stock, approve a material request, or confirm a return to see history here</p>
                                         </div>
                                     </td>
                                 </tr>

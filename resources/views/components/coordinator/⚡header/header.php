@@ -47,6 +47,38 @@ new class extends Component
 
     private function formatNotification(Notification $n): array
     {
+        // ✅ Admin reminder: borrowed material not returned yet
+        if ($n->type === 'Overdue') {
+            return [
+                'id'            => $n->id,
+                'type'          => 'Overdue',
+                'is_facility'   => false,
+                'requester'     => 'Admin — Please return borrowed items',
+                'department'    => $n->request->department->department_name ?? '—',
+                'purpose'       => $n->message,
+                'status'        => $n->status,
+                'action_status' => 'overdue',
+                'request_id'    => $n->request_id,
+                'time_ago'      => $n->created_at->diffForHumans(),
+            ];
+        }
+
+        // ✅ A student / faculty clicked "Return to Program Head"
+        if ($n->type === 'Return') {
+            return [
+                'id'            => $n->id,
+                'type'          => 'Return',
+                'is_facility'   => false,
+                'requester'     => $n->request->user->name ?? 'Student',
+                'department'    => $n->request->department->department_name ?? '—',
+                'purpose'       => $n->message,
+                'status'        => $n->status,
+                'action_status' => 'info',
+                'request_id'    => $n->request_id,
+                'time_ago'      => $n->created_at->diffForHumans(),
+            ];
+        }
+
         $message = strtolower($n->message);
 
         $actionStatus = match (true) {
@@ -117,6 +149,19 @@ new class extends Component
 
     private function resolveUrl(Notification $notification): string
     {
+        // ✅ Overdue reminder → open "My borrowed items"
+        if ($notification->type === 'Overdue') {
+            // Borrowed for a faculty member (endorsed) → it lives in the Faculty tab
+            return $notification->request?->forwarded_from_request_id
+                ? route('coordinator.borrowed-items')
+                : route('coordinator.borrowed-items', ['view' => 'mine']);
+        }
+
+        // ✅ Student / faculty return → Students & Faculty tab
+        if ($notification->type === 'Return') {
+            return route('coordinator.borrowed-items');
+        }
+
         $message = strtolower($notification->message);
         $isDecision = str_contains($message, 'approved') || str_contains($message, 'rejected');
 

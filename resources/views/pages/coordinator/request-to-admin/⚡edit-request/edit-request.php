@@ -56,7 +56,7 @@ new #[Layout('layouts.coordinator')] class extends Component
         $this->request_type_id = $request->request_type_id;
         $this->purpose = $request->purpose;
 
-        $facilityType = ResourceType::where('type_name', 'Facility')->first();
+        $facilityType = ResourceType::where('type_name', \App\Models\ResourceType::FACILITY)->first();
 
         if ($facilityType) {
             $this->facilityOptions = Resource::where('resource_type_id', $facilityType->id)
@@ -66,7 +66,7 @@ new #[Layout('layouts.coordinator')] class extends Component
                 ->toArray();
         } else {
             $this->facilityOptions = Resource::whereHas('resourceType', fn($q) =>
-                $q->where('type_name', 'like', '%facility%')
+                $q->where('type_name', 'like', '%facilit%')
                   ->orWhere('type_name', 'like', '%Facility%')
             )
             ->where('status', 'available')
@@ -79,8 +79,8 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->where('quantity_available', '>', 0)
             ->where(function ($q) {
                 $q->whereHas('resourceType', function ($q2) {
-                    $q2->where('type_name', '!=', 'Facility')
-                       ->where('type_name', 'not like', '%facility%');
+                    $q2->where('type_name', '!=', \App\Models\ResourceType::FACILITY)
+                       ->where('type_name', 'not like', '%facilit%');
                 })->orWhereDoesntHave('resourceType');
             })
             ->orderBy('resource_name')
@@ -192,20 +192,20 @@ new #[Layout('layouts.coordinator')] class extends Component
     }
 
     // ============================================================
-    // ✅ RETURN DEADLINE — ONLY for items counted in pieces (Pcs)
+    // ✅ RETURN DEADLINE — ONLY for "Material" items (they must be returned)
     //    Ream and Set items are used up, so they never get a return date.
     // ============================================================
 
     /** Longest a Program Head may keep borrowed Pcs items: 1 month after the day they need them. */
     public const MAX_BORROW_MONTHS = 1;
 
-    /** True when at least one selected material has unit "Pcs" (it must be returned). */
+    /** True when at least one selected material is a Material (it must be returned). */
     public function hasBorrowItems(): bool
     {
         return collect($this->materials)
             ->pluck('resource_id')
             ->filter()
-            ->contains(fn ($id) => ($this->getMaterialResource($id)?->unit) === 'Pcs');
+            ->contains(fn ($id) => ($this->getMaterialResource($id)?->is_returnable) === true);
     }
 
     /** Earliest return date: the day the items are needed (never before today). */
@@ -452,7 +452,7 @@ new #[Layout('layouts.coordinator')] class extends Component
                 'start_time'   => $this->request_type_id == RequestType::FACILITY ? $this->start_time : null,
                 'end_time'     => $this->request_type_id == RequestType::FACILITY ? $this->end_time : null,
                 // ✅ Only Pcs items get the return date (the Admin can still adjust it). Ream / Set: none.
-                'due_back_at'  => $resource->unit === 'Pcs' && $this->return_by ? $this->return_by : null,
+                'due_back_at'  => $resource->is_returnable && $this->return_by ? $this->return_by : null,
             ];
 
             if (!empty($material['id'])) {

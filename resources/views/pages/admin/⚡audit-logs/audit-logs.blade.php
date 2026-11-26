@@ -5,7 +5,7 @@
         <div class="mb-6">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Audit Logs</h2>
             <p class="text-sm text-gray-500 dark:text-neutral-400 mt-1">
-                Track student, faculty, and program head activity
+                Track faculty and program head activity
             </p>
         </div>
 
@@ -46,7 +46,6 @@
                        bg-white dark:bg-neutral-800 text-gray-800 dark:text-neutral-200
                        focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition">
                 <option value="all">All Roles</option>
-                <option value="student">Student</option>
                 <option value="faculty">Faculty</option>
                 <option value="program head">Program Head</option>
             </select>

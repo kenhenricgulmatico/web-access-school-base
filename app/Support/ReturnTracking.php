@@ -11,8 +11,11 @@ use Illuminate\Support\Facades\DB;
 /**
  * Return deadlines for borrowed items (chairs, projectors…).
  *
- * Only items whose resource is marked "returnable" by the admin are tracked;
- * supplies such as bond paper are used up and never get a return date.
+ * Only items whose stock type is "Material" (chairs, projectors…) are tracked;
+ * "Supplies" such as bond paper and markers are used up and never get a return date.
+ *
+ * ✅ Return chain for an item the Program Head borrowed FOR a faculty member (endorsed request):
+ *    Faculty "Return to Program Head" → Program Head confirms → Program Head "Return to Admin" → Admin confirms.
  */
 class ReturnTracking
 {
@@ -20,7 +23,58 @@ class ReturnTracking
     public const RETURN_DAYS = 3;
 
     /**
-     * Give every returnable item of an approved request its "return by" date.
+     * For a Program Head's borrowed item that was endorsed from a faculty request:
+     * the faculty member's matching item (same resource). Null when the Program Head borrowed it for themselves.
+     */
+    public static function facultyItemFor(RequestItem $programHeadItem): ?RequestItem
+    {
+        $programHeadItem->loadMissing('request');
+
+        $facultyRequestId = $programHeadItem->request?->forwarded_from_request_id;
+
+        if (! $facultyRequestId || ! $programHeadItem->resource_id) {
+            return null;
+        }
+
+        return RequestItem::with('request.user')
+            ->where('request_id', $facultyRequestId)
+            ->where('resource_id', $programHeadItem->resource_id)
+            ->first();
+    }
+
+    /**
+     * The other way round: for a faculty member's item, the Program Head's matching item borrowed
+     * FROM THE ADMIN for it (endorsed request, approved). Null when the department gave it from its own stock.
+     */
+    public static function adminItemFor(RequestItem $facultyItem): ?RequestItem
+    {
+        if (! $facultyItem->resource_id) {
+            return null;
+        }
+
+        return RequestItem::query()
+            ->where('resource_id', $facultyItem->resource_id)
+            ->whereHas('request', fn ($q) => $q
+                ->where('forwarded_from_request_id', $facultyItem->request_id)
+                ->where('status', 'approved'))
+            ->latest('id')
+            ->first();
+    }
+
+    /** True while the faculty member still has the item, so the Program Head cannot return it to the Admin yet. */
+    public static function stillWithFaculty(RequestItem $programHeadItem): bool
+    {
+        $facultyItem = static::facultyItemFor($programHeadItem);
+
+        return $facultyItem !== null
+            && $facultyItem->request?->status === 'approved'
+            && $facultyItem->returned_at === null;
+    }
+
+    /**
+     * Give every borrowed item of an approved request its "return by" date.
+     * ✅ Only "Material" items (chairs, projectors…) must be returned —
+     *    "Supplies" like bond paper or markers are used up, not given back.
      *  - With a facility reservation: return on the reservation day.
      *  - Material request only:       request date + RETURN_DAYS.
      */

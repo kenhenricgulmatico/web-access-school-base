@@ -27,7 +27,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     public string $createName      = '';
     public string $createEmail     = '';
     public string $createPassword  = '';
-    public string $createRole      = 'student';
+    public string $createRole      = 'faculty';
 
     // Edit modal
     public bool   $showEditModal = false;
@@ -65,7 +65,7 @@ new #[Layout('layouts.coordinator')] class extends Component
         return User::with('roles', 'department')
             ->where('department_id', $this->departmentId)
             ->whereHas('roles', fn($q) =>
-                $q->whereIn('name', ['student', 'faculty'])
+                $q->whereIn('name', ['faculty'])
             )
             ->when($this->search, fn($q) =>
                 $q->where(fn($q) =>
@@ -92,10 +92,9 @@ new #[Layout('layouts.coordinator')] class extends Component
                   ->where('model_has_roles.model_type', User::class);
             })
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-            ->whereIn('roles.name', ['student', 'faculty'])
+            ->whereIn('roles.name', ['faculty'])
             ->selectRaw("
                 COUNT(DISTINCT users.id) as total,
-                COUNT(DISTINCT CASE WHEN roles.name = 'student' THEN users.id END) as student,
                 COUNT(DISTINCT CASE WHEN roles.name = 'faculty' THEN users.id END) as faculty,
                 COUNT(DISTINCT CASE WHEN users.status = 'approved' THEN users.id END) as approved,
                 COUNT(DISTINCT CASE WHEN users.status = 'pending' THEN users.id END) as pending
@@ -104,7 +103,6 @@ new #[Layout('layouts.coordinator')] class extends Component
 
         return [
             'total'    => (int) $row->total,
-            'student'  => (int) $row->student,
             'faculty'  => (int) $row->faculty,
             'approved' => (int) $row->approved,
             'pending'  => (int) $row->pending,
@@ -118,7 +116,7 @@ new #[Layout('layouts.coordinator')] class extends Component
         abort_unless(auth()->user()->can('members.create'), 403);
 
         $this->reset(['createName', 'createEmail', 'createPassword']);
-        $this->createRole      = 'student';
+        $this->createRole      = 'faculty';
         $this->showCreateModal = true;
     }
 
@@ -131,7 +129,7 @@ new #[Layout('layouts.coordinator')] class extends Component
             'createName'     => 'required|string|max:255',
             'createEmail'    => 'required|email|unique:users,email|ends_with:@csav.edu.ph',
             'createPassword' => 'required|string|min:6',
-            'createRole'     => 'required|in:student,faculty',
+            'createRole'     => 'required|in:faculty',
         ]);
 
         $plainPassword = $this->createPassword;
@@ -201,7 +199,7 @@ new #[Layout('layouts.coordinator')] class extends Component
         $this->editName      = $user->name;
         $this->editEmail     = $user->email;
         $this->editStatus    = $user->status;
-        $this->editRole      = $user->roles->first()?->name ?? 'student';
+        $this->editRole      = $user->roles->first()?->name ?? 'faculty';
         $this->showEditModal = true;
     }
 
@@ -214,7 +212,7 @@ new #[Layout('layouts.coordinator')] class extends Component
             'editName'   => 'required|string|max:255',
             'editEmail'  => 'required|email|ends_with:@csav.edu.ph|unique:users,email,' . $this->editingId,
             'editStatus' => 'required|in:pending,approved,rejected',
-            'editRole'   => 'required|in:student,faculty',
+            'editRole'   => 'required|in:faculty',
         ]);
 
         $user = User::findOrFail($this->editingId);

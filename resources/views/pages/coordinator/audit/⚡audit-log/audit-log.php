@@ -29,7 +29,7 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->whereHas('user', fn($q) =>
                 $q->where('department_id', $departmentId)
                   ->whereHas('roles', fn($r) =>
-                      $r->whereIn('name', ['student', 'faculty'])
+                      $r->whereIn('name', ['faculty'])
                   )
             );
     }
@@ -75,16 +75,6 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->where('action', 'login')
             ->whereDate('created_at', today())
             ->count();
-    }
-
-    #[Computed]
-    public function studentLogs(): int
-    {
-        $departmentId = Auth::user()->department_id;
-        return AuditLog::whereHas('user', fn($q) =>
-            $q->where('department_id', $departmentId)
-              ->whereHas('roles', fn($r) => $r->where('name', 'student'))
-        )->count();
     }
 
     #[Computed]

@@ -28,7 +28,7 @@ new #[Layout('layouts.coordinator')] class extends Component
         return ResourceRequest::where('request_type_id', RequestType::MATERIAL)
             ->where('department_id', Auth::user()->department_id)
             ->whereHas('user', function ($query) {
-                $query->role(['student', 'faculty']);
+                $query->role(['faculty']);
             });
     }
 
@@ -40,6 +40,40 @@ new #[Layout('layouts.coordinator')] class extends Component
             ->whereIn('status', ['pending', 'approved', 'rejected'])
             ->latest()
             ->get();
+    }
+
+    /** ✅ My department's stock (Resource Allocation): resource_id => quantity. */
+    #[Computed]
+    public function departmentStock(): array
+    {
+        return DB::table('resource_all_locations')
+            ->where('department_id', Auth::user()->department_id)
+            ->pluck('allocated_quantity', 'resource_id')
+            ->map(fn ($q) => (int) $q)
+            ->all();
+    }
+
+    /**
+     * Items my department does NOT have enough of for this request (empty = I can accept it).
+     * e.g. ["Bond Paper A4 (need 40, have 20)"]
+     */
+    public function shortItems($request): array
+    {
+        $needed = [];
+        foreach ($request->items->whereNotNull('resource_id') as $item) {
+            $needed[$item->resource_id] = ($needed[$item->resource_id] ?? ['name' => $item->item_name, 'qty' => 0]);
+            $needed[$item->resource_id]['qty'] += (int) $item->quantity;
+        }
+
+        $short = [];
+        foreach ($needed as $resourceId => $n) {
+            $have = $this->departmentStock[$resourceId] ?? 0;
+            if ($have < $n['qty']) {
+                $short[] = "{$n['name']} (need {$n['qty']}, have {$have})";
+            }
+        }
+
+        return $short;
     }
 
     // ============================================================
@@ -127,8 +161,8 @@ new #[Layout('layouts.coordinator')] class extends Component
                 requestId:    $request->id,
             )));
 
-            session()->flash('message', 'Request approved. Department allocation updated.');
-            unset($this->requests);
+            session()->flash('message', 'Request approved. The items were taken from your department\'s Resource Allocation.');
+            unset($this->requests, $this->departmentStock);
         } catch (\RuntimeException $e) {
             session()->flash('error', $e->getMessage());
         }
@@ -137,6 +171,21 @@ new #[Layout('layouts.coordinator')] class extends Component
     // ============================================================
     // ✅ REJECT WITH REASON
     // ============================================================
+    // ============================================================
+    // ✅ FORWARD TO ADMIN (one click — no form)
+    // ============================================================
+    public function forwardToAdmin(int $id): void
+    {
+        abort_unless(auth()->user()->can('program-head-requests.create'), 403);
+
+        $request = $this->scopedQuery()->with(['user', 'items.resource'])->findOrFail($id);
+
+        [$ok, $message] = \App\Support\ForwardedRequests::forward($request, Auth::user());
+
+        session()->flash($ok ? 'message' : 'error', $message);
+        unset($this->requests);
+    }
+
     public function openReject(int $id): void
     {
         // ✅ Server-side guard — requires `requests.reject`

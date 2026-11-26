@@ -25,18 +25,24 @@ new #[Layout('layouts.admin')] class extends Component
     /**
      * Requests from Program Head accounts only land here for Admin's review.
      *
-     * ✅ Only Ream / Set items (and facility-only requests) are shown here.
-     *    Any request that borrows a Pcs item (chairs…) is handled on the
-     *    Borrowed Items page instead, where the Admin sets a return deadline.
+     * ✅ Shown here:
+     *    - Ream / Set items and facility-only requests, and
+     *    - every request the Program Head FORWARDED from a student / faculty request
+     *      (even with Pcs items — they keep the return date the student chose).
+     *    The Program Head's own Pcs borrowing (chairs…) is handled on Borrowed Items,
+     *    where the Admin sets a return deadline.
      */
     protected function incomingRequestsQuery()
     {
         return ResourceRequest::whereHas('user', function ($query) {
                 $query->role(['program head']);
             })
-            ->whereDoesntHave('items', function ($item) {
-                $item->whereNotNull('resource_id')
-                     ->whereHas('resource', fn ($r) => $r->where('unit', 'Pcs'));
+            ->where(function ($q) {
+                $q->whereNotNull('forwarded_from_request_id')
+                  ->orWhereDoesntHave('items', function ($item) {
+                      $item->whereNotNull('resource_id')
+                           ->whereHas('resource', fn ($r) => $r->where('is_returnable', true));
+                  });
             });
     }
 
@@ -140,7 +146,7 @@ new #[Layout('layouts.admin')] class extends Component
         }
 
         $facilityTypeId = DB::table('resource_types')
-            ->where('type_name', 'Facility')
+            ->where('type_name', \App\Models\ResourceType::FACILITY)
             ->value('id');
 
         $needed = [];
@@ -226,7 +232,10 @@ new #[Layout('layouts.admin')] class extends Component
         // ✅ E-mail the Program Head who made the request
         $this->emailRequester($request->id, 'approved');
 
-        session()->flash('message', 'Request approved. Inventory updated.');
+        // ✅ Forwarded from a student / faculty request → approve that one automatically
+        $note = \App\Support\ForwardedRequests::onAdminApproved($request->fresh());
+
+        session()->flash('message', 'Request approved. Inventory updated.' . ($note ? ' ' . $note : ''));
     }
 
     // ============================================================
@@ -298,7 +307,10 @@ new #[Layout('layouts.admin')] class extends Component
         // ✅ E-mail the Program Head who made the request
         $this->emailRequester($request->id, 'rejected', $this->rejectReason ?: null);
 
-        session()->flash('message', 'Request rejected and requester notified.');
+        // ✅ Forwarded from a student / faculty request → reject that one too
+        $note = \App\Support\ForwardedRequests::onAdminRejected($request->fresh(), $this->rejectReason ?: null, Auth::user());
+
+        session()->flash('message', 'Request rejected and requester notified.' . ($note ? ' ' . $note : ''));
 
         $this->cancelReject();
     }

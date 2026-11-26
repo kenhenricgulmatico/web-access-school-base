@@ -53,7 +53,7 @@
 
         <div class="mt-6 pt-6 border-t border-gray-100 dark:border-neutral-700">
             <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 dark:text-neutral-500 mb-1">Purpose</p>
-            <p class="text-sm text-gray-700 dark:text-neutral-300">{{ $reservation->purpose }}</p>
+            <p class="text-sm text-gray-700 dark:text-neutral-300">{{ preg_replace("/^For (.+?)'s request #\d+: /", 'For $1: ', (string) $reservation->purpose) }}</p>
         </div>
     </div>
 
@@ -72,7 +72,7 @@
                     <tr>
                         <td class="px-6 py-3 text-sm text-gray-700 dark:text-neutral-300">{{ $row['item']->item_name }}</td>
                         @php
-                            $isFacility = !$row['resource'] || optional($row['resource']->resourceType)->type_name === 'Facility';
+                            $isFacility = !$row['resource'] || optional($row['resource']->resourceType)->type_name === \App\Models\ResourceType::FACILITY;
                         @endphp
                         <td class="px-6 py-3 text-sm text-gray-700 dark:text-neutral-300">{{ $isFacility ? '' : $row['item']->quantity }}</td>
                         <td class="px-6 py-3 text-sm text-gray-500 dark:text-neutral-400 whitespace-nowrap">

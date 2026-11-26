@@ -20,10 +20,10 @@
             <div class="absolute bottom-0 left-0 right-0 h-1 bg-blue-500 rounded-b-2xl"></div>
         </div>
 
-        {{-- Total Students --}}
+        {{-- Total Faculty --}}
         <div class="relative overflow-hidden flex flex-col bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 shadow-sm rounded-2xl p-6">
             <div class="flex items-center justify-between mb-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-neutral-400">Total Students</p>
+                <p class="text-sm font-medium text-gray-500 dark:text-neutral-400">Total Faculty</p>
                 <div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="size-5 text-purple-500 dark:text-purple-400" viewBox="0 0 16 16">
                     <path d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.686-.275a.5.5 0 0 0 .025-.917zM8 8.46 1.758 5.965 8 3.052l6.242 2.913z"/>
@@ -31,7 +31,7 @@
                     </svg>
                 </div>
             </div>
-            <h3 class="text-4xl font-bold text-gray-800 dark:text-white">{{ $this->totalStudents }}</h3>
+            <h3 class="text-4xl font-bold text-gray-800 dark:text-white">{{ $this->totalFaculty }}</h3>
             <p class="text-xs text-gray-400 dark:text-neutral-500 mt-1">Registered users</p>
             <div class="absolute bottom-0 left-0 right-0 h-1 bg-purple-500 rounded-b-2xl"></div>
         </div>

@@ -141,6 +141,21 @@ new #[Layout('layouts.coordinator')] class extends Component
     // ============================================================
     // ✅ REJECT WITH REASON
     // ============================================================
+    // ============================================================
+    // ✅ FORWARD TO ADMIN (one click — no form)
+    // ============================================================
+    public function forwardToAdmin(int $id): void
+    {
+        abort_unless(auth()->user()->can('program-head-requests.create'), 403);
+
+        $request = $this->scopedQuery()->with(['user', 'items.resource'])->findOrFail($id);
+
+        [$ok, $message] = \App\Support\ForwardedRequests::forward($request, Auth::user());
+
+        session()->flash($ok ? 'message' : 'error', $message);
+        unset($this->reservations);
+    }
+
     public function openReject(int $id): void
     {
         $this->rejectingRequestId = $id;

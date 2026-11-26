@@ -80,7 +80,7 @@
                             ksort($grouped);
 
                             $groupTitles = [
-                                'members'               => 'View Students',
+                                'members'               => 'View Faculty',
                                 'requests'              => 'Reservation & Request',
                                 'facility-requests'     => 'Facility',
                                 'material-requests'     => 'Material',

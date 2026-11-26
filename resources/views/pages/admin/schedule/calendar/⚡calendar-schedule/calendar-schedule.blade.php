@@ -26,7 +26,7 @@
             </button>
           </div>
 
-          {{-- Request Type Tabs (facility & material only) --}}
+          {{-- Request Type Tabs --}}
           <div class="flex gap-1.5 sm:gap-2 px-3 sm:px-4 pt-3 sm:pt-4">
             <button wire:click="$set('activeTab', 'reservation')"
               class="flex-1 py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold rounded-full transition
@@ -75,7 +75,6 @@
                           : 'text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700') }}">
                     {{ $day }}
                   </button>
-                  {{-- Event dots --}}
                   @if($events)
                     <div class="flex gap-0.5 mt-0.5 sm:mt-1">
                       @if($events['reservation'] ?? false)
@@ -131,14 +130,13 @@
               </div>
             </div>
 
-            {{-- ✅ Relative day label: Today / Tomorrow / Yesterday / In 3 days / 2 days ago --}}
             @php
               $relLabel = $this->relativeDayLabel($selectedDate);
               $relClass = match (true) {
-                $relLabel === 'Today'                    => 'bg-teal-500 text-white',
+                $relLabel === 'Today'             => 'bg-teal-500 text-white',
                 $relLabel === 'Tomorrow',
-                str_starts_with($relLabel, 'In ')        => 'bg-blue-50 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800',
-                default                                  => 'bg-gray-100 text-gray-600 ring-1 ring-gray-200 dark:bg-neutral-700 dark:text-neutral-300 dark:ring-neutral-600',
+                str_starts_with($relLabel, 'In ') => 'bg-blue-50 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800',
+                default                           => 'bg-gray-100 text-gray-600 ring-1 ring-gray-200 dark:bg-neutral-700 dark:text-neutral-300 dark:ring-neutral-600',
               };
             @endphp
             <div class="flex items-center gap-2 shrink-0">
@@ -165,86 +163,106 @@
               $materials    = $events['materials'] ?? collect();
             @endphp
 
-            {{-- Facility Reservations --}}
+            {{-- ✅ FACILITY: room list — click a room to see who reserved it + print --}}
             @if($activeTab === 'reservation')
-              @forelse($reservations as $reservation)
-                @php
-                  $facilityItem = $reservation->items->first(fn($i) => $i->start_time && $i->end_time)
-                    ?? $reservation->items->first();
-                  $materialItems = $reservation->items->reject(
-                    fn($i) => $facilityItem && $i->id === $facilityItem->id
-                  );
-                @endphp
+              @php
+                $rooms     = $this->roomSummary;
+                $dateLabel = $selectedDate ? \Carbon\Carbon::parse($selectedDate)->format('l, F j, Y') : '';
+              @endphp
 
-                <div class="flex gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-gray-100 dark:border-neutral-700 hover:border-green-200 dark:hover:border-green-800 hover:bg-green-50/40 dark:hover:bg-green-900/10 transition">
+              @if(count($rooms) > 0)
+                <div x-data="{ open: null }" wire:key="rooms-{{ $selectedDate }}" class="space-y-1.5 sm:space-y-2">
+                  @foreach($rooms as $i => $room)
+                    @php
+                      $roomDeptCounts = collect($room['slots'])->countBy('department')->sortKeys();
+                    @endphp
 
-                  <div class="w-1 rounded-full bg-green-400 dark:bg-green-500 shrink-0"></div>
+                    <div x-data="{ dept: 'all', room: @js($room) }"
+                      class="rounded-xl border border-gray-100 dark:border-neutral-700 overflow-hidden">
 
-                  <div class="flex-1 min-w-0">
-                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-2">
-                      <div class="flex-1 min-w-0">
-                        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1 sm:mb-1.5">
-                          <span class="inline-flex items-center py-0.5 px-2 sm:px-2.5 text-[8px] sm:text-[10px] font-bold bg-green-100 text-green-700 rounded-full dark:bg-green-900 dark:text-green-300">
-                            FACILITY
-                          </span>
-                          <span class="inline-flex items-center py-0.5 px-2 sm:px-2.5 text-[8px] sm:text-[10px] font-medium bg-gray-100 text-gray-600 rounded-full dark:bg-neutral-700 dark:text-neutral-300">
-                            {{ $reservation->user->department->department_name ?? 'N/A' }}
+                      {{-- Room row --}}
+                      <button type="button"
+                        @click="open = (open === {{ $i }}) ? null : {{ $i }}"
+                        class="w-full flex items-center justify-between gap-3 px-3 sm:px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition"
+                        :class="open === {{ $i }} ? 'bg-green-50 dark:bg-green-900/20' : ''">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                          <span class="size-2 rounded-full bg-green-500 shrink-0"></span>
+                          <span class="text-xs sm:text-sm font-bold text-gray-800 dark:text-neutral-100 truncate">
+                            {{ $room['room'] }}
                           </span>
                         </div>
-
-                        <p class="text-xs sm:text-sm font-bold text-gray-800 dark:text-neutral-100 truncate">
-                          {{ $facilityItem->item_name ?? 'N/A' }}
-                        </p>
-
-                        <p class="text-[10px] sm:text-xs text-gray-500 dark:text-neutral-400 mt-0.5 sm:mt-1 flex items-center gap-1">
-                          <svg class="size-2.5 sm:size-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        <div class="flex items-center gap-2 shrink-0">
+                          <span class="text-[10px] sm:text-xs text-gray-500 dark:text-neutral-400">
+                            {{ count($room['slots']) }} {{ Str::plural('reservation', count($room['slots'])) }}
+                          </span>
+                          <svg class="size-3.5 text-gray-400 transition-transform" :class="open === {{ $i }} ? 'rotate-90' : ''"
+                            fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                           </svg>
-                          {{ $reservation->user->name }}
-                        </p>
-
-                        @if($materialItems->isNotEmpty())
-                          <div class="mt-1.5 sm:mt-2 flex flex-wrap gap-1 sm:gap-1.5">
-                            @foreach($materialItems as $mat)
-                              <span class="inline-flex items-center gap-0.5 sm:gap-1 py-0.5 sm:py-1 px-1.5 sm:px-2.5 text-[8px] sm:text-[10px] font-semibold bg-purple-50 text-purple-700 rounded-full dark:bg-purple-900/40 dark:text-purple-300">
-                                <svg class="size-2 sm:size-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                  <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                                </svg>
-                                {{ $mat->item_name }} (x{{ $mat->quantity }})
-                              </span>
-                            @endforeach
-                          </div>
-                        @endif
-
-                        @if($reservation->purpose)
-                          <p class="text-[10px] sm:text-xs text-gray-400 dark:text-neutral-500 mt-1 sm:mt-1.5 italic">
-                            "{{ Str::limit($reservation->purpose, 60) }}"
-                          </p>
-                        @endif
-                      </div>
-
-                      @if($facilityItem && $facilityItem->start_time && $facilityItem->end_time)
-                        <div class="shrink-0 text-left sm:text-right">
-                          <p class="text-[10px] sm:text-xs font-bold text-gray-600 dark:text-neutral-300 bg-gray-50 dark:bg-neutral-700 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg">
-                            {{ \Carbon\Carbon::parse($facilityItem->start_time)->format('g:i') }} – {{ \Carbon\Carbon::parse($facilityItem->end_time)->format('g:i A') }}
-                          </p>
                         </div>
-                      @endif
-                    </div>
-                  </div>
+                      </button>
 
+                      {{-- Inside the room --}}
+                      <div x-show="open === {{ $i }}" x-cloak x-transition.opacity
+                        class="border-t border-gray-100 dark:border-neutral-700">
+
+                        {{-- 🖨 Print bar (this room only) --}}
+                        <div class="flex flex-wrap items-center gap-2 px-3 sm:px-4 py-2.5 bg-gray-50 dark:bg-neutral-900/50 border-b border-gray-100 dark:border-neutral-700">
+                          <select x-model="dept"
+                            class="flex-1 min-w-0 py-1.5 px-2.5 text-xs sm:text-sm rounded-lg border border-gray-200 bg-white text-gray-700 dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-200 focus:border-teal-500 focus:ring-teal-500">
+                            <option value="all">All departments ({{ $roomDeptCounts->sum() }})</option>
+                            @foreach($roomDeptCounts as $deptName => $count)
+                              <option value="{{ $deptName }}">{{ $deptName }} ({{ $count }})</option>
+                            @endforeach
+                          </select>
+
+                          <button type="button"
+                            @click="printRoomSchedule([room], dept, @js($dateLabel))"
+                            class="inline-flex items-center gap-1.5 py-1.5 px-3 text-xs sm:text-sm font-semibold rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition">
+                            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/>
+                            </svg>
+                            Print
+                          </button>
+                        </div>
+
+                        {{-- Reservations of this room --}}
+                        <div class="divide-y divide-gray-100 dark:divide-neutral-700">
+                          @foreach($room['slots'] as $slot)
+                            <div class="flex items-start gap-3 px-3 sm:px-4 py-2.5">
+                              <span class="w-32 sm:w-36 shrink-0 text-[11px] sm:text-xs font-bold text-gray-700 dark:text-neutral-200">
+                                {{ $slot['start'] && $slot['end'] ? $slot['start'] . ' – ' . $slot['end'] : 'No time' }}
+                              </span>
+                              <div class="min-w-0">
+                                <p class="text-[11px] sm:text-xs font-semibold text-gray-800 dark:text-neutral-100">
+                                  {{ $slot['department'] }}
+                                  <span class="font-normal text-gray-400 dark:text-neutral-500">· {{ $slot['user'] }}</span>
+                                </p>
+                                @if($slot['purpose'])
+                                  <p class="text-[10px] sm:text-xs text-gray-400 dark:text-neutral-500 italic truncate">
+                                    "{{ Str::limit($slot['purpose'], 60) }}"
+                                  </p>
+                                @endif
+                              </div>
+                            </div>
+                          @endforeach
+                        </div>
+
+                      </div>
+                    </div>
+                  @endforeach
                 </div>
-              @empty
+              @elseif($materials->isNotEmpty())
                 <div class="px-4 sm:px-6 py-10 sm:py-14 text-center">
                   <p class="text-xs sm:text-sm text-gray-400 dark:text-neutral-500">No facility reservations on this day.</p>
                 </div>
-              @endforelse
+              @endif
             @endif
 
             {{-- Material Requests --}}
             @if($activeTab === 'material')
               @forelse($materials as $material)
-                <div class="flex gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-gray-100 dark:border-neutral-700 hover:border-purple-200 dark:hover:border-purple-800 hover:bg-purple-50/40 dark:hover:bg-purple-900/10 transition">
+                <div wire:key="mat-{{ $material->id }}" class="flex gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-gray-100 dark:border-neutral-700 hover:border-purple-200 dark:hover:border-purple-800 hover:bg-purple-50/40 dark:hover:bg-purple-900/10 transition">
 
                   <div class="w-1 rounded-full bg-purple-400 dark:bg-purple-500 shrink-0"></div>
 
@@ -289,9 +307,11 @@
 
                 </div>
               @empty
-                <div class="px-4 sm:px-6 py-10 sm:py-14 text-center">
-                  <p class="text-xs sm:text-sm text-gray-400 dark:text-neutral-500">No material requests on this day.</p>
-                </div>
+                @if($reservations->isNotEmpty())
+                  <div class="px-4 sm:px-6 py-10 sm:py-14 text-center">
+                    <p class="text-xs sm:text-sm text-gray-400 dark:text-neutral-500">No material requests on this day.</p>
+                  </div>
+                @endif
               @endforelse
             @endif
 
@@ -319,3 +339,92 @@
 
   </div>
 </div>
+
+@script
+<script>
+  /**
+   * 🖨 Print a room's reservations for the selected day.
+   * dept = 'all' → every department, otherwise only that department.
+   */
+  window.printRoomSchedule = function (rooms, dept, dateLabel) {
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+
+    const list = rooms
+      .map((r) => ({
+        room:  r.room,
+        slots: r.slots.filter((s) => dept === 'all' || s.department === dept),
+      }))
+      .filter((r) => r.slots.length > 0);
+
+    const total = list.reduce((n, r) => n + r.slots.length, 0);
+
+    if (total === 0) {
+      alert('Nothing to print for this department.');
+      return;
+    }
+
+    const roomName  = list.length === 1 ? list[0].room : 'All rooms';
+    const deptLabel = dept === 'all' ? 'All departments' : dept;
+
+    const tables = list.map((r) => `
+      <table>
+        <thead>
+          <tr><th style="width:6%">#</th><th style="width:24%">Time</th><th style="width:24%">Department</th><th style="width:18%">Reserved by</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          ${r.slots.map((s, n) => `
+            <tr>
+              <td>${n + 1}</td>
+              <td>${s.start && s.end ? esc(s.start + ' – ' + s.end) : 'No time'}</td>
+              <td>${esc(s.department)}</td>
+              <td>${esc(s.user)}</td>
+              <td>${esc(s.purpose || '—')}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`).join('');
+
+    const w = window.open('', '_blank', 'width=900,height=700');
+    if (!w) {
+      alert('Please allow pop-ups for this site to print.');
+      return;
+    }
+
+    w.document.write(`<!doctype html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${esc(roomName)} - ${esc(dateLabel)}</title>
+        <style>
+          * { box-sizing: border-box; }
+          body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 32px; font-size: 13px; }
+          h1 { font-size: 20px; margin: 0 0 4px; }
+          .meta { color: #555; margin: 0 0 18px; line-height: 1.7; }
+          .meta b { color: #111; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; vertical-align: top; }
+          th { background: #f2f2f2; font-size: 12px; }
+          .foot { margin-top: 28px; color: #888; font-size: 11px; }
+          @page { margin: 14mm; }
+        </style>
+      </head>
+      <body>
+        <h1>${esc(roomName)}</h1>
+        <p class="meta">
+          <b>Date:</b> ${esc(dateLabel)}<br>
+          <b>Department:</b> ${esc(deptLabel)}<br>
+          <b>Total:</b> ${total} reservation${total > 1 ? 's' : ''}
+        </p>
+        ${tables}
+        <p class="foot">Printed on ${esc(new Date().toLocaleString())}</p>
+      </body>
+      </html>`);
+    w.document.close();
+    w.focus();
+
+    w.onafterprint = () => w.close();
+    setTimeout(() => w.print(), 300);
+  };
+</script>
+@endscript

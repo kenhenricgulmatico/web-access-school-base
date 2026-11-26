@@ -26,14 +26,14 @@ new #[Layout('layouts.admin')] class extends Component
     }
 
     /**
-     * Base query: only logs belonging to student, faculty, or program head
+     * Base query: only logs belonging to faculty or program head
      * (i.e. exclude the admin's own actions).
      */
     protected function baseQuery()
     {
         return AuditLog::with('user.roles')
             ->whereHas('user.roles', function ($q) {
-                $q->whereIn('name', ['student', 'faculty', 'program head']);
+                $q->whereIn('name', ['faculty', 'program head']);
             })
             ->when($this->roleFilter !== 'all', function ($query) {
                 $query->whereHas('user.roles', function ($q) {

@@ -59,7 +59,7 @@ new #[Layout('layouts.admin')] class extends Component
         }
 
         // Safety: don't delete core system roles
-        if (in_array($this->role->name, ['admin', 'program head', 'faculty', 'student'], true)) {
+        if (in_array($this->role->name, ['admin', 'program head', 'faculty'], true)) {
             session()->flash('error', 'Core system roles cannot be deleted.');
             return;
         }

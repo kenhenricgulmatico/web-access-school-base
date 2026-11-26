@@ -34,7 +34,7 @@ new #[Layout('layouts.admin')] class extends Component
     #[Computed]
 public function facilities()
 {
-    $facilityType = ResourceType::where('type_name', 'Facility')->first();
+    $facilityType = ResourceType::where('type_name', \App\Models\ResourceType::FACILITY)->first();
 
     // No "Facility" type exists yet -> there can be no facilities. Return empty, not everything.
     if (! $facilityType) {

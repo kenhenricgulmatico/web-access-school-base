@@ -91,7 +91,7 @@ Route::middleware(['auth', 'approved', 'program head', 'department'])->prefix('p
     Route::livewire('/view-student', 'pages::coordinator.student.view-student')->name('programHead.students');
 });
 
-Route::middleware(['auth', 'approved', 'role:faculty|student', 'department'])->prefix('portal')->group(function () {
+Route::middleware(['auth', 'approved', 'role:faculty', 'department'])->prefix('portal')->group(function () {
     Route::livewire('/dashboard', 'pages::student-faculty.dashbaord')->name('portal.dashboard');
     //Create reservation
     Route::livewire('/reservation', 'pages::student-faculty.reservation.view-reservation')->name('portal.reservation');
@@ -104,6 +104,9 @@ Route::middleware(['auth', 'approved', 'role:faculty|student', 'department'])->p
     Route::livewire('/material/{id}/edit', 'pages::student-faculty.material.edit-material')->name('portal.edit-material');
 
     Route::livewire('/view/material-reservation/{id}', 'pages::student-faculty.view-material-reservation')->name('portal.view-material-reservation');
+
+    //Borrowed items (things I must give back)
+    Route::livewire('/borrowed-items', 'pages::student-faculty.borrowed-items')->name('portal.borrowed-items');
 
     //Calendar
     Route::livewire('/calendar', 'pages::student-faculty.calendar')->name('portal.calendar');

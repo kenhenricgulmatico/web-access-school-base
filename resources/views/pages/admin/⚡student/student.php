@@ -44,7 +44,7 @@ new #[Layout('layouts.admin')] class extends Component
     public function users()
     {
         return User::with('roles', 'department')
-            ->whereHas('roles', fn($q) => $q->whereIn('name', ['student', 'faculty', 'program head']))
+            ->whereHas('roles', fn($q) => $q->whereIn('name', ['faculty', 'program head']))
             ->when(
                 $this->search,
                 fn($q) =>

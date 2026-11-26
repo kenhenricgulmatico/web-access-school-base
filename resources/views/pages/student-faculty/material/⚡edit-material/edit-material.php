@@ -90,14 +90,15 @@ new #[Layout('layouts.student-faculty')] class extends Component
                          ->where('resource_all_locations.department_id', '=', $user->department_id);
                 })
                 ->where('resources.status', 'available')
-                ->where('resource_types.type_name', '!=', 'Facility')
+                ->where('resource_types.type_name', '!=', \App\Models\ResourceType::FACILITY)
                 ->orderBy('resources.resource_name')
                 ->select(
                     'resources.id as resource_id',
                     'resources.resource_name',
                     'resources.unit',
-                    // Pcs: department + Admin  |  Ream / Set: department only
-                    DB::raw("CASE WHEN resources.unit = 'Pcs'
+                    'resources.is_returnable',
+                    // Material: department + Admin  |  Supplies: department only
+                    DB::raw("CASE WHEN resources.is_returnable = 1
                                   THEN COALESCE(resource_all_locations.allocated_quantity, 0) + resources.quantity_available
                                   ELSE COALESCE(resource_all_locations.allocated_quantity, 0)
                              END as allocated_quantity")
@@ -171,7 +172,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
         $qty = (int) $quantity;
 
         if ($qty > (int) $resource['allocated_quantity']) {
-            return "Exceeds available stock ({$resource['available_formatted']})";
+            return 'More than what is in stock — please request less';
         }
 
         return null;
@@ -229,7 +230,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
             }
 
             if ((int) $item['quantity'] > (int) $choice['allocated_quantity']) {
-                $this->addError("items.$i.quantity", "Only {$choice['available_formatted']} available.");
+                $this->addError("items.$i.quantity", 'Not enough in stock for this quantity. Please request less.');
                 return;
             }
         }
@@ -251,7 +252,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
                     'item_name' => $resource->resource_name,
                     'quantity' => $item['quantity'],
                     // ✅ Only Pcs items get the return date. Ream / Set: none.
-                    'due_back_at' => ($resource->unit === 'Pcs' && $this->return_by) ? $this->return_by : null,
+                    'due_back_at' => ($resource->is_returnable && $this->return_by) ? $this->return_by : null,
                 ]);
             } else {
                 RequestItem::create([
@@ -263,7 +264,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
                     'start_time' => null,
                     'end_time' => null,
                     // ✅ Only Pcs items get the return date. Ream / Set: none.
-                    'due_back_at' => ($resource->unit === 'Pcs' && $this->return_by) ? $this->return_by : null,
+                    'due_back_at' => ($resource->is_returnable && $this->return_by) ? $this->return_by : null,
                 ]);
             }
         }
@@ -290,7 +291,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     /** Longest a borrower may keep Pcs items: 1 month. */
     public const MAX_BORROW_MONTHS = 1;
 
-    /** True when at least one selected item has unit "Pcs" (it must be returned). */
+    /** True when at least one selected item is a Material (it must be returned). */
     public function hasBorrowItems(): bool
     {
         $ids = collect($this->items)
@@ -300,7 +301,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
             ->values()
             ->all();
 
-        return $ids && \App\Models\Resource::whereIn('id', $ids)->where('unit', 'Pcs')->exists();
+        return $ids && \App\Models\Resource::whereIn('id', $ids)->where('is_returnable', true)->exists();
     }
 
     /** Earliest return date: today — the day the request is made (never before today). */

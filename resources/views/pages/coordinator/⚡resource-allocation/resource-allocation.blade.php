@@ -5,7 +5,7 @@
     <div class="mb-6 sm:mb-8">
         <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Department Resources</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Materials used by your department's students and faculty
+            Materials used by your department's faculty
         </p>
     </div>
 
