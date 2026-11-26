@@ -95,14 +95,19 @@
 
               {{-- Items --}}
               <td class="px-6 py-4 align-top">
-                <div class="flex flex-wrap gap-1">
-                  @forelse($request->items as $item)
-                    <span class="px-1.5 py-0.5 text-xs rounded-md bg-gray-100 text-gray-700 dark:bg-neutral-700 dark:text-neutral-200">
+                {{-- ✅ Only the first item — the full list is on "View" --}}
+                <div class="flex flex-wrap items-center gap-1">
+                  @forelse($request->items->take(1) as $item)
+                    <span class="max-w-[14rem] truncate px-1.5 py-0.5 text-xs rounded-md bg-gray-100 text-gray-700 dark:bg-neutral-700 dark:text-neutral-200">
                       {{ $item->item_name }} <span class="text-gray-400">×{{ $item->quantity }}</span>
                     </span>
                   @empty
                     <span class="text-gray-300">—</span>
                   @endforelse
+                  @if($request->items->count() > 1)
+                    <a href="{{ route('coordinator.view-request-reserve', $request->id) }}" wire:navigate
+                       class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">+{{ $request->items->count() - 1 }} more</a>
+                  @endif
                 </div>
 
                 @if($returnBy)

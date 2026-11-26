@@ -27,7 +27,7 @@
             {{-- ✅ Forwarded from a student / faculty request --}}
             @if($forwardedFromId)
                 <div class="mb-4 p-4 rounded-lg bg-indigo-50 text-indigo-900 border border-indigo-200 text-sm dark:bg-indigo-950/30 dark:text-indigo-200 dark:border-indigo-900">
-                    <p class="font-semibold">Forwarding {{ $forwardedFromName }}'s request #{{ $forwardedFromId }} to the Admin</p>
+                    <p class="font-semibold">Forwarding {{ $forwardedFromName }}'s request to the Admin</p>
                     <p class="text-xs mt-0.5">Everything from the request is already filled in. Check it, then click <strong>Submit Request</strong>.
                         When the Admin approves, {{ $forwardedFromName }}'s request is <strong>approved automatically</strong>.</p>
                 </div>

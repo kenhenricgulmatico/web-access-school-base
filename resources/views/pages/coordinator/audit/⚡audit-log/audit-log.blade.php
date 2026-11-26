@@ -144,8 +144,7 @@
                             <td class="hidden sm:table-cell px-4 sm:px-5 py-3">
                                 @php $role = $log->user?->roles->first()?->name ?? 'N/A'; @endphp
                                 <span class="px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap
-                                    @if($role === 'student') bg-purple-100 text-purple-700
-                                    @elseif($role === 'faculty') bg-amber-100 text-amber-700
+                                    @if($role === 'faculty') bg-amber-100 text-amber-700
                                     @else bg-gray-100 text-gray-500 @endif">
                                     {{ ucfirst($role) }}
                                 </span>

@@ -2,6 +2,8 @@
 
 use App\Models\RequestType;
 use App\Models\Request as ResourceRequest;
+use App\Models\RequestItem;
+use App\Support\ReturnTracking;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -181,5 +183,85 @@ new #[Layout('layouts.student-faculty')] class extends Component
         }
 
         return $months;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // ✅ ITEMS TO RETURN — same rules as the Borrowed Items page
+    // ─────────────────────────────────────────────────────────────
+
+    #[Computed]
+    public function itemsToReturn(): array
+    {
+        $query = RequestItem::whereNotNull('due_back_at')
+            ->whereNull('returned_at')
+            ->whereHas('request', fn ($q) => $q
+                ->where('user_id', Auth::id())
+                ->where('status', 'approved'));
+
+        $items = (clone $query)->orderBy('due_back_at')->take(4)->get()
+            ->map(function (RequestItem $item) {
+                $days = (int) today()->diffInDays($item->due_back_at, false);
+
+                $state = match (true) {
+                    (bool) $item->return_requested_at => 'waiting',  // already handed back, PH to confirm
+                    $days < 0                         => 'overdue',
+                    $days <= 2                        => 'soon',
+                    default                           => 'ok',
+                };
+
+                return [
+                    'name'  => $item->item_name,
+                    'qty'   => $item->quantity,
+                    'due'   => Carbon::parse($item->due_back_at)->format('M d, Y'),
+                    'label' => $state === 'waiting' ? 'Waiting for Program Head to confirm' : ReturnTracking::label($item),
+                    'state' => $state,
+                ];
+            })
+            ->all();
+
+        return [
+            'total'   => (clone $query)->count(),
+            'overdue' => (clone $query)->whereNull('return_requested_at')->whereDate('due_back_at', '<', today())->count(),
+            'items'   => $items,
+        ];
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // ✅ UPCOMING RESERVATIONS — my next approved room bookings
+    // ─────────────────────────────────────────────────────────────
+
+    #[Computed]
+    public function upcomingReservations(): array
+    {
+        $now = now();
+
+        return RequestItem::whereNull('resource_id')
+            ->whereHas('request', fn ($q) => $q
+                ->where('user_id', Auth::id())
+                ->where('status', 'approved')
+                ->where('request_type_id', RequestType::FACILITY))
+            // later days, or today's bookings that haven't ended yet
+            ->where(fn ($q) => $q
+                ->whereDate('request_date', '>', $now->toDateString())
+                ->orWhere(fn ($t) => $t
+                    ->whereDate('request_date', $now->toDateString())
+                    ->where(fn ($e) => $e->whereNull('end_time')->orWhere('end_time', '>=', $now->format('H:i:s')))))
+            ->orderBy('request_date')
+            ->orderBy('start_time')
+            ->take(4)
+            ->get()
+            ->map(function (RequestItem $item) {
+                $date = Carbon::parse($item->request_date);
+
+                return [
+                    'room' => $item->item_name,
+                    'day'  => $date->isToday() ? 'Today' : ($date->isTomorrow() ? 'Tomorrow' : $date->format('D, M d')),
+                    'time' => $item->start_time && $item->end_time
+                        ? Carbon::parse($item->start_time)->format('g:i A') . ' – ' . Carbon::parse($item->end_time)->format('g:i A')
+                        : 'No time set',
+                    'request_id' => $item->request_id,
+                ];
+            })
+            ->all();
     }
 };

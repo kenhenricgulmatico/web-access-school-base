@@ -103,6 +103,9 @@ new #[Layout('layouts.coordinator')] class extends Component
     {
         return ResourceRequest::with(['items', 'requestType'])
             ->where('user_id', Auth::id())
+            // ✅ Only the Program Head's own requests — copies they endorsed (forwarded)
+            //    from a faculty request stay with that faculty request instead
+            ->whereNull('forwarded_from_request_id')
             ->latest()
             ->get();
     }

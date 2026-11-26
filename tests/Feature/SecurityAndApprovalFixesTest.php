@@ -58,8 +58,8 @@ class SecurityAndApprovalFixesTest extends TestCase
     {
         $dept = $this->createDepartment();
         $ph = $this->createUser('program head', $dept);
-        $a = $this->createUser('student', $dept);
-        $b = $this->createUser('student', $dept);
+        $a = $this->createUser('faculty', $dept);
+        $b = $this->createUser('faculty', $dept);
 
         $this->facilityRequest($dept, $a, 'approved');
         $clash = $this->facilityRequest($dept, $b);
@@ -76,7 +76,7 @@ class SecurityAndApprovalFixesTest extends TestCase
         Notification::fake();
         $dept = $this->createDepartment();
         $ph = $this->createUser('program head', $dept);
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $req = $this->materialRequest($dept, $student, 10, 4);
 
         Livewire::actingAs($ph)
@@ -93,7 +93,7 @@ class SecurityAndApprovalFixesTest extends TestCase
     {
         $dept = $this->createDepartment();
         $ph = $this->createUser('program head', $dept);
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $req = $this->materialRequest($dept, $student, 2, 5);
 
         Livewire::actingAs($ph)
@@ -108,7 +108,7 @@ class SecurityAndApprovalFixesTest extends TestCase
     {
         $dept = $this->createDepartment();
         $ph = $this->createUser('program head', $dept);
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $req = $this->facilityRequest($dept, $student, 'rejected');
 
         Livewire::actingAs($ph)
@@ -123,7 +123,7 @@ class SecurityAndApprovalFixesTest extends TestCase
         Notification::fake();
         $dept = $this->createDepartment();
         $ph = $this->createUser('program head', $dept);
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $req = $this->facilityRequest($dept, $student);
 
         Livewire::actingAs($ph)
@@ -145,8 +145,8 @@ class SecurityAndApprovalFixesTest extends TestCase
     public function test_other_student_cannot_print_someone_elses_receipt(): void
     {
         $dept = $this->createDepartment();
-        $owner = $this->createUser('student', $dept);
-        $other = $this->createUser('student', $dept);
+        $owner = $this->createUser('faculty', $dept);
+        $other = $this->createUser('faculty', $dept);
         $req = $this->facilityRequest($dept, $owner, 'approved');
 
         $this->actingAs($other)->get(route('printable.receipt', ['request_id' => $req->id]))->assertForbidden();
@@ -155,7 +155,7 @@ class SecurityAndApprovalFixesTest extends TestCase
     public function test_owner_and_department_head_can_print(): void
     {
         $dept = $this->createDepartment();
-        $owner = $this->createUser('student', $dept);
+        $owner = $this->createUser('faculty', $dept);
         $ph = $this->createUser('program head', $dept);
         $req = $this->facilityRequest($dept, $owner, 'approved');
 
@@ -167,7 +167,7 @@ class SecurityAndApprovalFixesTest extends TestCase
     {
         $dept = $this->createDepartment();
         $otherDept = $this->createDepartment('Business');
-        $owner = $this->createUser('student', $dept);
+        $owner = $this->createUser('faculty', $dept);
         $otherHead = $this->createUser('program head', $otherDept);
         $req = $this->facilityRequest($dept, $owner, 'approved');
 
@@ -180,7 +180,7 @@ class SecurityAndApprovalFixesTest extends TestCase
     {
         $dept = $this->createDepartment();
         $admin = $this->createUser('admin', $dept);
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $req = $this->facilityRequest($dept, $student, 'approved');
         $date = $req->items()->first()->request_date;
         $date = \Carbon\Carbon::parse($date);

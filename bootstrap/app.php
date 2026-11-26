@@ -5,7 +5,6 @@ use App\Http\Middleware\ApprovedUserMiddleware;
 use App\Http\Middleware\DepartmentMiddleware;
 use App\Http\Middleware\FacultyMiddleware;
 use App\Http\Middleware\ProgramHeadMiddleware;
-use App\Http\Middleware\StudentMiddleware;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -26,7 +25,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth' => Authenticate::class,
             'admin' => AdminMiddleware::class,
             'faculty' => FacultyMiddleware::class,
-            'student' => StudentMiddleware::class,
             'program head' => ProgramHeadMiddleware::class,
             'department' => DepartmentMiddleware::class,
             'approved'     => ApprovedUserMiddleware::class,

@@ -112,8 +112,9 @@ new #[Layout('layouts.coordinator')] class extends Component
         $materials = $source->items->whereNotNull('resource_id');
 
         $this->forwardedFromId   = $source->id;
-        $this->forwardedFromName = $source->user->name ?? 'a student';
-        $this->purpose           = \Illuminate\Support\Str::limit("For {$this->forwardedFromName}: {$source->purpose}", 500, '');
+        $this->forwardedFromName = $source->user->name ?? 'a faculty member';
+        // ✅ The faculty member's own purpose, as they wrote it (no "For <name>:" in front)
+        $this->purpose           = \Illuminate\Support\Str::limit((string) $source->purpose, 500, '');
 
         if ($facility) {
             // Facility reservation → forward the same facility, date and time

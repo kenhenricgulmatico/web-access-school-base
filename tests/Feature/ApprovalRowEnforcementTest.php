@@ -22,7 +22,7 @@ class ApprovalRowEnforcementTest extends TestCase
     {
         $dept        = $this->createDepartment();
         $programHead = $this->createUser('program head', $dept);
-        $student     = $this->createUser('student', $dept);
+        $student     = $this->createUser('faculty', $dept);
 
         $date = now()->addDays(3)->toDateString();
 
@@ -59,7 +59,7 @@ class ApprovalRowEnforcementTest extends TestCase
     {
         $dept        = $this->createDepartment();
         $programHead = $this->createUser('program head', $dept);
-        $student     = $this->createUser('student', $dept);
+        $student     = $this->createUser('faculty', $dept);
 
         $material = $this->createMaterial('Bond Paper A4', 100);
 

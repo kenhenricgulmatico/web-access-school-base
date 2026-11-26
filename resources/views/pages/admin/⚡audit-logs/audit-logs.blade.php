@@ -56,7 +56,6 @@
             <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
                 <thead class="bg-gray-50 dark:bg-neutral-900/40">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">ID</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">User</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">Role</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">Action</th>
@@ -69,10 +68,6 @@
                     @forelse($this->logs as $log)
                         @php $roleName = $log->user?->roles->first()?->name; @endphp
                         <tr wire:key="log-{{ $log->id }}" class="hover:bg-gray-50 dark:hover:bg-neutral-700/40 transition">
-                            <td class="px-4 py-3 text-sm text-gray-500 dark:text-neutral-400 whitespace-nowrap">
-                                #{{ $log->id }}
-                            </td>
-
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <p class="text-sm text-gray-800 dark:text-neutral-200">
                                     {{ $log->user->name ?? 'System' }}
@@ -85,7 +80,6 @@
                             <td class="px-4 py-3 whitespace-nowrap">
                                 @if($roleName)
                                     <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full
-                                        {{ $roleName === 'student' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : '' }}
                                         {{ $roleName === 'faculty' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' : '' }}
                                         {{ $roleName === 'program head' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' : '' }}">
                                         {{ ucwords($roleName) }}
@@ -112,7 +106,7 @@
 
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <button type="button"
-                                    @click="$dispatch('open-modal', { record: {{ json_encode($log->record) }} })"
+                                    @click="$dispatch('open-modal', {{ \Illuminate\Support\Js::from(\App\Support\AuditLogDetails::for($log)) }})"
                                     class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300 transition">
                                     View Details
                                 </button>
@@ -125,7 +119,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-14 text-center">
+                            <td colspan="6" class="px-6 py-14 text-center">
                                 <div class="flex flex-col items-center gap-2">
                                     <div class="size-12 rounded-full bg-gray-100 dark:bg-neutral-700 flex items-center justify-center">
                                         <svg class="size-6 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -152,8 +146,8 @@
         </div>
 
         {{-- Record Details Modal --}}
-        <div x-data="{ showModal: false, recordData: null }"
-             x-on:open-modal.window="showModal = true; recordData = $event.detail.record"
+        <div x-data="{ showModal: false, details: { title: '', rows: [] } }"
+             x-on:open-modal.window="showModal = true; details = $event.detail"
              x-show="showModal"
              x-cloak
              @keydown.escape.window="showModal = false"
@@ -185,9 +179,7 @@
                                 <h3 class="text-base font-semibold text-gray-800 dark:text-white leading-tight">
                                     Record Details
                                 </h3>
-                                <p class="text-xs text-gray-500 dark:text-neutral-400">
-                                    Raw snapshot captured at the time of the action
-                                </p>
+                                <p class="text-xs text-gray-500 dark:text-neutral-400" x-text="details.title"></p>
                             </div>
                         </div>
                         <button type="button" @click="showModal = false" title="Close (Esc)"
@@ -200,8 +192,18 @@
 
                     {{-- Body --}}
                     <div class="p-6 max-h-[70vh] overflow-y-auto">
-                        <pre class="text-xs font-mono text-gray-800 dark:text-neutral-200 bg-gray-50 dark:bg-neutral-900 p-4 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-x-auto whitespace-pre-wrap break-words"
-                             x-text="recordData ? JSON.stringify(recordData, null, 2) : 'No data recorded.'"></pre>
+                        {{-- Readable details: label on the left, value on the right --}}
+                        <dl x-show="details.rows.length" class="divide-y divide-gray-100 dark:divide-neutral-700 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
+                            <template x-for="(row, i) in details.rows" :key="i">
+                                <div class="grid grid-cols-3 gap-4 px-4 py-2.5 bg-white dark:bg-neutral-800">
+                                    <dt class="text-xs font-medium text-gray-500 dark:text-neutral-400" x-text="row.label"></dt>
+                                    <dd class="col-span-2 text-sm text-gray-800 dark:text-neutral-200 whitespace-pre-line break-words" x-text="row.value"></dd>
+                                </div>
+                            </template>
+                        </dl>
+                        <p x-show="! details.rows.length" class="text-sm text-gray-500 dark:text-neutral-400 text-center py-6">
+                            No details were recorded for this action.
+                        </p>
                     </div>
 
                     {{-- Footer --}}

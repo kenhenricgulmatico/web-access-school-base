@@ -77,7 +77,7 @@
               <td class="px-4 py-3">
                 <p class="font-semibold text-gray-900 dark:text-neutral-100">{{ $item->item_name }}</p>
                 <p class="text-xs text-gray-500">Qty {{ number_format($item->quantity) }} ·
-                  <a href="{{ route('portal.view-material-reservation', $item->request_id) }}" wire:navigate class="hover:underline">Request #{{ $item->request_id }}</a>
+                  <a href="{{ route('portal.view-material-reservation', $item->request_id) }}" wire:navigate class="hover:underline">View request</a>
                 </p>
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-neutral-300">{{ $item->due_back_at->format('M d, Y') }}</td>

@@ -152,8 +152,7 @@
                             <td class="px-4 sm:px-6 py-3">
                                 @php $role = $user->roles->first()?->name ?? 'N/A'; @endphp
                                 <span class="px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap
-                                    @if($role === 'student') bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300
-                                    @elseif($role === 'faculty') bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300
+                                    @if($role === 'faculty') bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300
                                     @elseif($role === 'program head') bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300
                                     @else bg-gray-100 text-gray-600 dark:bg-neutral-700 dark:text-neutral-300 @endif">
                                     {{ ucfirst($role) }}

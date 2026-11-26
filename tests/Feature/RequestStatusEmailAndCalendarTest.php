@@ -65,7 +65,7 @@ class RequestStatusEmailAndCalendarTest extends TestCase
         Notification::fake();
         $dept = $this->createDepartment();
         $ph = $this->createUser('program head', $dept);
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $req = $this->materialRequest($dept, $student);
 
         Livewire::actingAs($ph)->test('pages::coordinator.request-material')->call('accept', $req->id);
@@ -79,7 +79,7 @@ class RequestStatusEmailAndCalendarTest extends TestCase
         Notification::fake();
         $dept = $this->createDepartment();
         $ph = $this->createUser('program head', $dept);
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $req = $this->materialRequest($dept, $student);
 
         Livewire::actingAs($ph)->test('pages::coordinator.request-material')
@@ -99,7 +99,7 @@ class RequestStatusEmailAndCalendarTest extends TestCase
         Notification::fake();
         $dept = $this->createDepartment();
         $ph = $this->createUser('program head', $dept);
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
 
         $a = $this->facilityRequest($dept, $student);
         Livewire::actingAs($ph)->test('pages::coordinator.reservation-facility')->call('accept', $a->id);
@@ -117,7 +117,7 @@ class RequestStatusEmailAndCalendarTest extends TestCase
         Notification::fake();
         $dept = $this->createDepartment();
         $ph = $this->createUser('program head', $dept);
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $req = $this->materialRequest($dept, $student);
         \DB::table('resource_all_locations')->update(['allocated_quantity' => 0]);
 
@@ -129,7 +129,7 @@ class RequestStatusEmailAndCalendarTest extends TestCase
     public function test_portal_calendar_shows_own_requests_and_booked_facilities(): void
     {
         $dept = $this->createDepartment();
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $other = $this->createUser('faculty', $dept);
 
         $this->facilityRequest($dept, $student, 'pending');
@@ -137,11 +137,11 @@ class RequestStatusEmailAndCalendarTest extends TestCase
 
         $this->actingAs($student)->get(route('portal.calendar'))->assertOk();
 
+        // The calendar shows APPROVED bookings of every department (so rooms can be planned);
+        // pending requests stay on "My reservations" until they're approved.
         Livewire::actingAs($student)->test('pages::student-faculty.calendar')
-            ->assertSee('Computer Lab 1')          // my own pending request
-            ->assertSee('pending')
-            ->set('activeTab', 'availability')
             ->assertSee('AVR Hall')               // someone else's approved booking
-            ->assertDontSee($other->name);        // but not who booked it
+            ->assertSee($other->name)             // with who booked it
+            ->assertDontSee('Computer Lab 1');    // my own request is still pending
     }
 }

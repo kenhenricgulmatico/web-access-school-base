@@ -78,6 +78,82 @@
             </div>
         </div>
 
+        {{-- ✅ Items to return + Upcoming reservations --}}
+        @php
+            $toReturn = $this->itemsToReturn;
+            $upcoming = $this->upcomingReservations;
+            $stateCls = [
+                'overdue' => 'bg-[#B8352A]/10 text-[#B8352A] dark:bg-[#B8352A]/25 dark:text-red-300',
+                'soon'    => 'bg-[#D4A537]/15 text-[#8A6A1F] dark:bg-[#D4A537]/25 dark:text-[#E8C877]',
+                'waiting' => 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+                'ok'      => 'bg-[#1C6B45]/10 text-[#1C6B45] dark:bg-[#1C6B45]/25 dark:text-green-300',
+            ];
+        @endphp
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5 mb-6 sm:mb-8">
+
+            {{-- Items to return --}}
+            <div class="bg-white dark:bg-[#16281F] rounded-2xl shadow-sm border overflow-hidden
+                        {{ $toReturn['overdue'] ? 'border-[#B8352A]/50 ring-1 ring-[#B8352A]/30' : 'border-[#E4E1D8] dark:border-[#2A4B3A]' }}">
+                <div class="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-[#E4E1D8] dark:border-[#2A4B3A]">
+                    <div>
+                        <h3 class="text-base font-semibold text-[#123524] dark:text-white" style="font-family: 'Fraunces', serif;">Items to return</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            @if ($toReturn['overdue'])
+                                <span class="font-semibold text-[#B8352A]">{{ $toReturn['overdue'] }} overdue</span> ·
+                            @endif
+                            {{ $toReturn['total'] }} borrowed
+                        </p>
+                    </div>
+                    <a href="{{ route('portal.borrowed-items') }}" wire:navigate class="text-xs font-semibold text-[#1C6B45] hover:underline whitespace-nowrap">View all →</a>
+                </div>
+
+                <ul class="divide-y divide-[#EEF1EE] dark:divide-[#2A4B3A]">
+                    @forelse ($toReturn['items'] as $item)
+                        <li class="flex items-center justify-between gap-3 px-4 sm:px-5 py-3">
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-[#1F2A24] dark:text-white truncate">{{ $item['name'] }} <span class="text-gray-400 font-normal">×{{ $item['qty'] }}</span></p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Return by {{ $item['due'] }}</p>
+                            </div>
+                            <span class="shrink-0 px-2 py-0.5 rounded-full text-[11px] font-semibold {{ $stateCls[$item['state']] }}">{{ $item['label'] }}</span>
+                        </li>
+                    @empty
+                        <li class="px-4 sm:px-5 py-8 text-center text-sm text-gray-400 dark:text-gray-500">Nothing to return — you're all set.</li>
+                    @endforelse
+                </ul>
+            </div>
+
+            {{-- Upcoming reservations --}}
+            <div class="bg-white dark:bg-[#16281F] rounded-2xl shadow-sm border border-[#E4E1D8] dark:border-[#2A4B3A] overflow-hidden">
+                <div class="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-[#E4E1D8] dark:border-[#2A4B3A]">
+                    <div>
+                        <h3 class="text-base font-semibold text-[#123524] dark:text-white" style="font-family: 'Fraunces', serif;">Upcoming reservations</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Your next approved room bookings</p>
+                    </div>
+                    <a href="{{ route('portal.calendar') }}" wire:navigate class="text-xs font-semibold text-[#1C6B45] hover:underline whitespace-nowrap">Calendar →</a>
+                </div>
+
+                <ul class="divide-y divide-[#EEF1EE] dark:divide-[#2A4B3A]">
+                    @forelse ($upcoming as $r)
+                        <li class="flex items-center gap-3 px-4 sm:px-5 py-3">
+                            <span class="shrink-0 w-20 text-center px-2 py-1 rounded-lg text-[11px] font-semibold
+                                {{ $r['day'] === 'Today' ? 'bg-[#123524] text-white' : 'bg-[#EEF1EE] text-[#33403A] dark:bg-[#0E1A14] dark:text-neutral-300' }}">
+                                {{ $r['day'] }}
+                            </span>
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-[#1F2A24] dark:text-white truncate">{{ $r['room'] }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $r['time'] }}</p>
+                            </div>
+                        </li>
+                    @empty
+                        <li class="px-4 sm:px-5 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                            No upcoming reservations.
+                            <a href="{{ route('portal.create-reservation') }}" wire:navigate class="text-[#1C6B45] font-semibold hover:underline">Book a room</a>
+                        </li>
+                    @endforelse
+                </ul>
+            </div>
+        </div>
+
         @php
             // Combine monthlyStats (Facility) and monthlyMaterialStats (Material) by month label
             $materialStats = collect($this->monthlyMaterialStats)->keyBy('month');

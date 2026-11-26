@@ -203,14 +203,15 @@
                                                 <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
                                                 </svg>
-                                                {{ number_format($stock->quantity_added) }}
+                                                <span class="sr-only">plus</span>{{ number_format(abs($stock->quantity_added)) }}
                                             </span>
                                         @else
                                             <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-900 dark:text-red-400">
                                                 <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/>
                                                 </svg>
-                                                -{{ number_format($stock->quantity_added) }}
+                                                {{-- ✅ The icon already shows the minus — print the number only (abs, in case a negative is ever stored) --}}
+                                                <span class="sr-only">minus</span>{{ number_format(abs($stock->quantity_added)) }}
                                             </span>
                                         @endif
                                     </td>
@@ -225,6 +226,10 @@
                                                 </svg>
                                                 <span class="font-semibold text-gray-800 dark:text-neutral-200">{{ number_format($stock->quantity_after) }}</span>
                                             </div>
+                                        @elseif(! $isRestock)
+                                            {{-- Approved / returned before stock levels were recorded --}}
+                                            <span class="text-xs text-gray-400 dark:text-neutral-500 italic"
+                                                  title="This {{ $isReturn ? 'return' : 'approval' }} happened before stock levels were recorded.">Not recorded</span>
                                         @else
                                             <span class="text-sm text-gray-400 dark:text-neutral-500">—</span>
                                         @endif

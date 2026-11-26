@@ -273,7 +273,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
         foreach ($coordinators as $coordinator) {
             Notification::create([
                 'user_id' => $coordinator->id,
-                'message' => 'Material request #' . $request->id . ' was updated by ' . Auth::user()->name,
+                'message' => 'A material request was updated by ' . Auth::user()->name,
                 'type' => 'Gmail',
                 'status' => 'pending',
             ]);

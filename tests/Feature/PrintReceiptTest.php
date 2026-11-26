@@ -22,7 +22,7 @@ class PrintReceiptTest extends TestCase
     public function test_approved_request_has_linked_approval_with_approved_at(): void
     {
         $dept    = $this->createDepartment();
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $ph      = $this->createUser('program head', $dept);
 
         $request = ResourceRequest::create([

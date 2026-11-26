@@ -22,8 +22,8 @@ class FacilityApprovalEnforcementTest extends TestCase
     {
         // 1. Set up users
         $dept        = $this->createDepartment();
-        $studentA    = $this->createUser('student', $dept);
-        $studentB    = $this->createUser('student', $dept);
+        $studentA    = $this->createUser('faculty', $dept);
+        $studentB    = $this->createUser('faculty', $dept);
         $programHead = $this->createUser('program head', $dept);
 
         $date = now()->addDays(3)->toDateString();

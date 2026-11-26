@@ -139,8 +139,8 @@ class FacilityConflictDateScopingTest extends TestCase
     ): array {
         $dept        = $this->createDepartment();
         $programHead = $this->createUser('program head', $dept);
-        $studentA    = $this->createUser('student', $dept);
-        $studentB    = $this->createUser('student', $dept);
+        $studentA    = $this->createUser('faculty', $dept);
+        $studentB    = $this->createUser('faculty', $dept);
 
         $existing = ResourceRequest::create([
             'user_id'         => $studentA->id,

@@ -69,7 +69,7 @@ new class extends Component
                 'id'            => $n->id,
                 'type'          => 'Return',
                 'is_facility'   => false,
-                'requester'     => $n->request->user->name ?? 'Student',
+                'requester'     => $n->request->user->name ?? 'Faculty',
                 'department'    => $n->request->department->department_name ?? '—',
                 'purpose'       => $n->message,
                 'status'        => $n->status,

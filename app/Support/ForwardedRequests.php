@@ -68,14 +68,15 @@ class ForwardedRequests
             return [false, 'The Admin has none left of: ' . $notAtAdmin->implode(', ') . '. Please reject this request instead.'];
         }
 
-        $studentName = $student->user->name ?? 'a student';
+        $studentName = $student->user->name ?? 'a faculty member';
 
         $forward = DB::transaction(function () use ($student, $programHead, $facility, $sendable, $studentName) {
             $forward = ResourceRequest::create([
                 'user_id'                          => $programHead->id,
                 'department_id'                    => $programHead->department_id ?? $student->department_id,
                 'request_type_id'                  => $facility ? RequestType::FACILITY : RequestType::MATERIAL,
-                'purpose'                          => \Illuminate\Support\Str::limit("For {$studentName}: {$student->purpose}", 500, ''),
+                // ✅ The faculty member's own purpose, as they wrote it (no "For <name>:" in front)
+                'purpose'                          => \Illuminate\Support\Str::limit((string) $student->purpose, 500, ''),
                 'status'                           => 'pending',
                 'current_responsibility_center_id' => $programHead->responsibility_center_id ?? null,
             ]);
@@ -112,7 +113,7 @@ class ForwardedRequests
 
         // Tell the Admins (bell + e-mail) and the student
         $kind    = $facility ? 'Facility Reservation' : 'Material Request';
-        $details = "Forwarded from {$studentName}'s request #{$student->id}: " . static::details($forward->load('items'));
+        $details = "Forwarded from {$studentName}'s request: " . static::details($forward->load('items'));
 
         foreach (User::role('admin')->get() as $admin) {
             Notification::create([
@@ -134,7 +135,7 @@ class ForwardedRequests
             'status'     => 'pending',
         ]);
 
-        $message = "Forwarded to the Admin (request #{$forward->id}). {$studentName}'s request will be approved automatically when the Admin approves it.";
+        $message = "Forwarded to the Admin. {$studentName}'s request will be approved automatically when the Admin approves it.";
         if ($notAtAdmin->isNotEmpty()) {
             $message .= ' Not sent (the Admin has none left): ' . $notAtAdmin->implode(', ') . '.';
         }
@@ -173,8 +174,8 @@ class ForwardedRequests
             ->where('ri.start_time', '<', $facility->end_time)
             ->where('ri.end_time', '>', $facility->start_time)
             ->exists()) {
-            static::tellProgramHead($forward, "{$facility->item_name} is already booked at that time, so {$student->user->name}'s request #{$student->id} was NOT approved automatically. Please check it.");
-            return "{$student->user->name}'s request #{$student->id} could not be approved automatically (the facility is already booked).";
+            static::tellProgramHead($forward, "{$facility->item_name} is already booked at that time, so {$student->user->name}'s request was NOT approved automatically. Please check it.");
+            return "{$student->user->name}'s request could not be approved automatically (the facility is already booked).";
         }
 
         $materials = $student->items->whereNotNull('resource_id');
@@ -210,7 +211,7 @@ class ForwardedRequests
                     ['request_id' => $student->id, 'approver_id' => $programHead?->id ?? $forward->user_id],
                     [
                         'status'      => 'approved',
-                        'remarks'     => "Approved automatically when the Admin approved request #{$forward->id}",
+                        'remarks'     => "Approved automatically when the Admin approved the forwarded request",
                         'approved_at' => now(),
                         'updated_at'  => now(),
                         'created_at'  => now(),
@@ -218,8 +219,8 @@ class ForwardedRequests
                 );
             });
         } catch (\RuntimeException $e) {
-            static::tellProgramHead($forward, "{$student->user->name}'s request #{$student->id} was NOT approved automatically: {$e->getMessage()}. Please check it.");
-            return "{$student->user->name}'s request #{$student->id} could not be approved automatically ({$e->getMessage()}).";
+            static::tellProgramHead($forward, "{$student->user->name}'s request was NOT approved automatically: {$e->getMessage()}. Please check it.");
+            return "{$student->user->name}'s request could not be approved automatically ({$e->getMessage()}).";
         }
 
         $details = static::details($student);
@@ -241,9 +242,9 @@ class ForwardedRequests
             requestId:    $student->id,
         )));
 
-        static::tellProgramHead($forward, "The Admin approved your request #{$forward->id}, so {$student->user->name}'s request #{$student->id} was approved automatically.");
+        static::tellProgramHead($forward, "The Admin approved your request, so {$student->user->name}'s request was approved automatically.");
 
-        return "{$student->user->name}'s request #{$student->id} was approved automatically.";
+        return "{$student->user->name}'s request was approved automatically.";
     }
 
     // =================================================================
@@ -297,7 +298,7 @@ class ForwardedRequests
             requestId:    $student->id,
         )));
 
-        return "{$student->user->name}'s request #{$student->id} was rejected too.";
+        return "{$student->user->name}'s request was rejected too.";
     }
 
     // =================================================================

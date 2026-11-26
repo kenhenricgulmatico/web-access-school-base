@@ -30,7 +30,7 @@ abstract class TestCase extends BaseTestCase
     }
 
     protected function createUser(
-        string $role = 'student',
+        string $role = 'faculty',
         ?Department $department = null,
         string $status = 'approved',
         ?string $email = null,

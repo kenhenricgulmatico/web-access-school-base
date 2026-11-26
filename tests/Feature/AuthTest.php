@@ -30,7 +30,7 @@ class AuthTest extends TestCase
     public function test_pending_user_is_redirected_to_waiting_page(): void
     {
         $dept = $this->createDepartment();
-        $user = $this->createUser('student', $dept, 'pending', 'pending@test.com');
+        $user = $this->createUser('faculty', $dept, 'pending', 'pending@test.com');
 
         $this->actingAs($user);
 
@@ -41,7 +41,7 @@ class AuthTest extends TestCase
     public function test_rejected_user_cannot_reach_protected_routes(): void
     {
         $dept = $this->createDepartment();
-        $user = $this->createUser('student', $dept, 'rejected', 'rejected@test.com');
+        $user = $this->createUser('faculty', $dept, 'rejected', 'rejected@test.com');
 
         $this->actingAs($user);
 

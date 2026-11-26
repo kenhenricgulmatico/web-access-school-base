@@ -30,7 +30,7 @@ new #[Layout('layouts.admin')] class extends Component
     public function updatedChartYear()
     {
         // Force recompute of monthlyData (it caches by $this->chartYear)
-        unset($this->monthlyData);
+        unset($this->monthlyData, $this->yearBreakdown);
 
         // Send a signal to the front-end with fresh data
         $this->dispatch('chartYearChanged',
@@ -246,6 +246,52 @@ new #[Layout('layouts.admin')] class extends Component
         return [
             'labels'      => $labels,
             'departments' => $series,
+        ];
+    }
+
+    /**
+     * ✅ The two donut charts under Monthly Requests (same year as the picker):
+     *  - status: approved / pending / rejected / cancelled
+     *  - type:   facility / material
+     * Each slice: ['label', 'count', 'percent', 'color'].
+     */
+    #[Computed]
+    public function yearBreakdown(): array
+    {
+        $rows = $this->adminVisibleRequests()
+            ->whereYear('created_at', $this->chartYear)
+            ->get(['status', 'request_type_id']);
+
+        $total = $rows->count();
+
+        $slices = function (array $defs, callable $countFor) use ($total) {
+            return collect($defs)
+                ->map(fn ($d) => $d + ['count' => $countFor($d['key'])])
+                // cancelled only shows up when there are some
+                ->reject(fn ($d) => ($d['optional'] ?? false) && $d['count'] === 0)
+                ->map(fn ($d) => [
+                    'label'   => $d['label'],
+                    'count'   => $d['count'],
+                    'percent' => $total ? round($d['count'] / $total * 100, 1) : 0,
+                    'color'   => $d['color'],
+                ])
+                ->values()
+                ->all();
+        };
+
+        return [
+            'total'  => $total,
+            'status' => $slices([
+                ['key' => 'approved',  'label' => 'Approved',  'color' => '#10B981'],
+                ['key' => 'pending',   'label' => 'Pending',   'color' => '#FBBF24'],
+                ['key' => 'rejected',  'label' => 'Rejected',  'color' => '#EF4444'],
+                ['key' => 'cancelled', 'label' => 'Cancelled', 'color' => '#9CA3AF', 'optional' => true],
+            ], fn ($key) => $rows->where('status', $key)->count()),
+            // Same colors as the Admin calendar: facility green, material purple
+            'type'   => $slices([
+                ['key' => RequestType::FACILITY, 'label' => 'Facility reservations', 'color' => '#22C55E'],
+                ['key' => RequestType::MATERIAL, 'label' => 'Material requests',     'color' => '#A855F7'],
+            ], fn ($key) => $rows->where('request_type_id', $key)->count()),
         ];
     }
 };

@@ -114,8 +114,10 @@ new #[Layout('layouts.admin')] class extends Component
                 'r.resource_name',
                 'rt.type_name as resource_type_name',
                 'ri.quantity as quantity_added',
-                DB::raw('r.quantity_available + ri.quantity as quantity_before'),
-                DB::raw('r.quantity_available as quantity_after'),
+                // ✅ Stock level recorded at approval time (null for older approvals —
+                //    working it out from today's stock was only right for the latest one)
+                'ri.stock_before_approval as quantity_before',
+                'ri.stock_after_approval as quantity_after',
                 DB::raw('NULL as supplier'),
                 'd.department_name',
                 DB::raw('NULL as unit_price'),
@@ -154,8 +156,9 @@ new #[Layout('layouts.admin')] class extends Component
                 'r.resource_name',
                 'rt.type_name as resource_type_name',
                 'ri.quantity as quantity_added',
-                DB::raw('NULL as quantity_before'),
-                DB::raw('NULL as quantity_after'),
+                // ✅ Stock level recorded when the Admin confirmed the return (null for older returns)
+                'ri.stock_before_return as quantity_before',
+                'ri.stock_after_return as quantity_after',
                 DB::raw('NULL as supplier'),
                 'd.department_name',
                 DB::raw('NULL as unit_price'),

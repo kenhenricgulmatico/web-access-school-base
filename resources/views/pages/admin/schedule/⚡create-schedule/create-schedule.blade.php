@@ -18,7 +18,7 @@
                     Add Facility
                 </h2>
                 <p class="text-sm text-gray-500 dark:text-neutral-400 mt-1">
-                    Add a new facility that can be reserved by students and faculty.
+                    Add a new facility that faculty and program heads can reserve.
                 </p>
             </div>
 

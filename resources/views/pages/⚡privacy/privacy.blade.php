@@ -35,7 +35,7 @@
                 <ul class="list-disc pl-6 space-y-1">
                     <li>Full name</li>
                     <li>Email address</li>
-                    <li>Role (Student, Faculty, or Program Head) and Department</li>
+                    <li>Role (Faculty, Program Head, or Admin) and Department</li>
                     <li>Password (encrypted and never stored in plain text)</li>
                     <li>Details of your requests — for example, facility reservations, requested materials, date, time, and purpose</li>
                     <li>Activity logs for auditing and system security</li>
@@ -120,9 +120,8 @@
             <section>
                 <h2 class="text-lg font-semibold text-[#123524] dark:text-green-300 mb-2">8. Minors</h2>
                 <p>
-                    This system is intended only for registered CSAV students, faculty, and program heads. If
-                    you are under 18 years old, make sure you have permission from your parent, guardian, or
-                    the institution before using this system.
+                    This system is intended only for registered CSAV faculty, program heads, and administrators.
+                    It is not meant for students or for anyone under 18 years old.
                 </p>
             </section>
 

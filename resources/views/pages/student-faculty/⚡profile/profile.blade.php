@@ -13,7 +13,7 @@
                          class="w-16 h-16 rounded-full object-cover ring-2 ring-green-700/20">
                 @else
                     <div class="w-16 h-16 rounded-full bg-green-700 text-white flex items-center justify-center text-2xl font-semibold">
-                        {{ strtoupper(substr($name, 0, 1)) }}
+                        {{ strtoupper(substr($savedName, 0, 1)) }}
                     </div>
                 @endif
 
@@ -42,7 +42,7 @@
 
             {{-- Name / role / actions --}}
             <div class="min-w-0 flex-1">
-                <h2 class="text-lg sm:text-xl font-semibold text-gray-800 dark:text-neutral-200 truncate">{{ $name }}</h2>
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-800 dark:text-neutral-200 truncate">{{ $savedName }}</h2>
                 <p class="text-xs sm:text-sm text-gray-500 dark:text-neutral-400">{{ ucfirst($role) }} · {{ $department }}</p>
 
                 <div class="flex items-center gap-3 mt-1.5">
@@ -84,11 +84,11 @@
             </div>
         @endif
 
-        {{-- Personal Info (read-only) --}}
+        {{-- Personal Info (name editable, the rest read-only) --}}
         <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl shadow-sm overflow-hidden">
             <div class="px-4 py-3.5 sm:px-6 sm:py-4 border-b border-gray-100 dark:border-neutral-700">
                 <h3 class="text-sm font-semibold text-gray-800 dark:text-neutral-200">Personal information</h3>
-                <p class="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">Managed by the registrar and can't be edited here</p>
+                <p class="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">You can change your name. Email, department and role are managed by the registrar.</p>
             </div>
 
             <div class="p-4 sm:p-6 space-y-4 sm:space-y-5 select-none">
@@ -98,12 +98,26 @@
                     $labelClass = 'block text-xs sm:text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5';
                 @endphp
 
+                {{-- ✅ Full name — the only field you can change yourself --}}
                 <div>
-                    <label class="{{ $labelClass }}">Full name</label>
-                    <div class="{{ $fieldClass }}">
-                        <span class="truncate pr-2">{{ $name }}</span>
-                        {!! $lockIcon !!}
-                    </div>
+                    <label for="profile-name" class="{{ $labelClass }}">Full name</label>
+                    <form wire:submit="saveName" class="flex flex-col sm:flex-row gap-2">
+                        <input id="profile-name" type="text" wire:model="name" maxlength="100" autocomplete="name"
+                               class="flex-1 min-w-0 px-3 py-2.5 rounded-lg border bg-white dark:bg-neutral-900 text-gray-800 dark:text-neutral-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-green-600/30 focus:border-green-600
+                                      @error('name') border-red-400 @else border-gray-300 dark:border-neutral-600 @enderror">
+                        <div class="flex gap-2 shrink-0" x-show="$wire.name !== $wire.savedName" x-cloak>
+                            <button type="button" wire:click="cancelName"
+                                    class="px-3 py-2 text-xs sm:text-sm font-medium rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
+                                Cancel
+                            </button>
+                            <button type="submit" wire:loading.attr="disabled" wire:target="saveName"
+                                    class="px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-green-700 text-white hover:bg-green-800 disabled:opacity-60 transition">
+                                <span wire:loading.remove wire:target="saveName">Save</span>
+                                <span wire:loading wire:target="saveName">Saving…</span>
+                            </button>
+                        </div>
+                    </form>
+                    @error('name') <p class="text-xs text-red-600 dark:text-red-400 mt-1.5">{{ $message }}</p> @enderror
                 </div>
 
                 <div>

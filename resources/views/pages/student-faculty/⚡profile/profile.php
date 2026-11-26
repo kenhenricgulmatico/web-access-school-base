@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -11,6 +12,8 @@ new #[Layout('layouts.student-faculty')] class extends Component
     use WithFileUploads;
 
     public string $name = '';
+    #[Locked]
+    public string $savedName = ''; // the name as it is now in the database (shown in the header card)
     public string $email = '';
     public string $department = '';
     public string $role = '';
@@ -24,6 +27,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
         $user = Auth::user();
 
         $this->name          = $user->name ?? '';
+        $this->savedName     = $this->name;
         $this->email         = $user->email ?? '';
         $this->department    = $user->department?->department_name ?? 'Not assigned';
         $this->role          = $user->roles->first()?->name ?? 'No role';
@@ -45,12 +49,44 @@ new #[Layout('layouts.student-faculty')] class extends Component
     }
 
     protected $messages = [
+        'name.required'    => 'Please enter your name.',
+        'name.min'         => 'Your name must be at least 2 characters.',
+        'name.max'         => 'Your name can be at most 100 characters.',
+        'name.regex'       => 'Your name can only contain letters, spaces, periods, hyphens and apostrophes.',
         'avatar.file'      => 'The uploaded file is not valid. Please try again.',
         'avatar.image'     => 'Only image files are allowed. Documents, videos, and music files cannot be uploaded.',
         'avatar.mimes'     => 'Only image files are allowed — JPG, JPEG, PNG, GIF, or WebP.',
         'avatar.mimetypes' => 'The file content does not match a supported image format.',
         'avatar.max'       => 'Image is too large. Maximum size is 5MB.',
     ];
+
+    /** ✅ Change your own name (email, department and role stay locked). */
+    public function saveName(): void
+    {
+        $this->name = preg_replace('/\s+/u', ' ', trim($this->name));
+
+        $this->validate([
+            'name' => ['required', 'string', 'min:2', 'max:100', "regex:/^[\pL\pM .'\-]+$/u"],
+        ]);
+
+        if ($this->name === $this->savedName) {
+            return;
+        }
+
+        Auth::user()->update(['name' => $this->name]);
+        $this->savedName = $this->name;
+
+        session()->flash('message', 'Your name has been updated.');
+
+        // The header shows the name too — let it refresh
+        $this->dispatch('avatar-updated');
+    }
+
+    public function cancelName(): void
+    {
+        $this->name = $this->savedName;
+        $this->resetValidation('name');
+    }
 
     public function updatedAvatar(): void
     {

@@ -53,7 +53,7 @@
 
         <div class="mt-6 pt-6 border-t border-gray-100 dark:border-neutral-700">
             <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 dark:text-neutral-500 mb-1">Purpose</p>
-            <p class="text-sm text-gray-700 dark:text-neutral-300">{{ preg_replace("/^For (.+?)'s request #\d+: /", 'For $1: ', (string) $reservation->purpose) }}</p>
+            <p class="text-sm text-gray-700 dark:text-neutral-300">{{ $reservation->purpose }}</p>
         </div>
     </div>
 
@@ -93,6 +93,88 @@
             </tbody>
         </table>
     </div>
+
+    {{-- Flash Messages --}}
+    @if (session()->has('message'))
+        <div class="mb-4 p-3 rounded-lg bg-green-100 text-green-800 border border-green-200 text-sm flex items-center gap-2">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            {{ session('message') }}
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="mb-4 p-3 rounded-lg bg-red-100 text-red-800 border border-red-200 text-sm flex items-center gap-2">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01" />
+            </svg>
+            {{ session('error') }}
+        </div>
+    @endif
+
+    {{-- ✅ Approve / Reject right here — no need to go back to the list --}}
+    @if ($this->canReview)
+        <div class="flex justify-end gap-2">
+            @can('program-head-requests.reject')
+                <button wire:click="openRejectForm"
+                    class="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                    Reject
+                </button>
+            @endcan
+            @can('program-head-requests.approve')
+                <button wire:click="approveRequest"
+                    wire:confirm="Approve this request?"
+                    wire:loading.attr="disabled"
+                    wire:loading.class="opacity-50 cursor-not-allowed"
+                    class="px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                    <span wire:loading.remove wire:target="approveRequest">Approve</span>
+                    <span wire:loading wire:target="approveRequest">Approving...</span>
+                </button>
+            @endcan
+        </div>
+
+        {{-- Reject reason form --}}
+        @can('program-head-requests.reject')
+            @if ($rejectingRequestId === $reservation->id)
+                <div class="mt-4 bg-white dark:bg-neutral-800 border border-red-200 dark:border-red-900/50 rounded-lg p-4 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <svg class="size-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" />
+                            <path stroke-linecap="round" d="M12 8v4m0 4h.01" />
+                        </svg>
+                        <label class="text-sm font-semibold text-red-700 dark:text-red-400">
+                            Reason for rejecting this request
+                        </label>
+                        <span class="text-xs text-gray-400 dark:text-neutral-500">(optional)</span>
+                    </div>
+
+                    <textarea wire:model="rejectReason" rows="3"
+                        placeholder="e.g. Missing documents, budget exceeded, conflicting schedule..."
+                        class="w-full px-3 py-2 text-sm rounded-lg border border-red-200 dark:border-red-900/50 dark:bg-neutral-900 dark:text-neutral-200 focus:ring-2 focus:ring-red-300 focus:border-red-400"></textarea>
+
+                    <p class="text-xs text-gray-500 dark:text-neutral-400">
+                        This reason will be sent to <strong>{{ $reservation->user->name }}</strong> via in-app notification and email.
+                    </p>
+
+                    <div class="flex justify-end gap-2">
+                        <button wire:click="cancelReject"
+                            class="px-4 py-2 text-sm font-medium bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-600 transition">
+                            Cancel
+                        </button>
+                        <button wire:click="confirmRejectRequest"
+                            wire:loading.attr="disabled"
+                            wire:loading.class="opacity-50 cursor-not-allowed"
+                            class="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                            <span wire:loading.remove wire:target="confirmRejectRequest">Confirm Rejection</span>
+                            <span wire:loading wire:target="confirmRejectRequest">Rejecting...</span>
+                        </button>
+                    </div>
+                </div>
+            @endif
+        @endcan
+    @endif
 
 </div>
 </div>

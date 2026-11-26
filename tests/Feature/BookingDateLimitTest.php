@@ -20,7 +20,7 @@ class BookingDateLimitTest extends TestCase
     protected function reservationForm(string $date)
     {
         $dept    = $this->createDepartment();
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $this->createFacility('Computer Laboratory 1');
 
         return Livewire::actingAs($student)
@@ -64,7 +64,7 @@ class BookingDateLimitTest extends TestCase
     public function test_date_picker_has_min_and_max(): void
     {
         $dept    = $this->createDepartment();
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
 
         Livewire::actingAs($student)
             ->test('pages::student-faculty.reservation.create-reservation')
@@ -75,7 +75,7 @@ class BookingDateLimitTest extends TestCase
     public function test_calendar_cannot_go_past_booking_window(): void
     {
         $dept    = $this->createDepartment();
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
 
         $c = Livewire::actingAs($student)->test('pages::student-faculty.calendar');
         for ($i = 0; $i < 40; $i++) {
@@ -85,6 +85,6 @@ class BookingDateLimitTest extends TestCase
         $last = \Carbon\Carbon::parse(BookingDate::max());
         $c->assertSet('year', $last->year)->assertSet('month', $last->month);
 
-        $c->call('selectDate', '2089-05-01')->assertSet('selectedDate', now()->toDateString());
+        $c->set('selectedDate', '2089-05-01')->assertSet('selectedDate', now()->toDateString());
     }
 }

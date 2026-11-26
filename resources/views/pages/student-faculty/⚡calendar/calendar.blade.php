@@ -1,30 +1,33 @@
 @php
   $isFacility = $activeTab === 'facility';
-  $selected   = \Carbon\Carbon::parse($selectedDate);
   $today      = now()->format('Y-m-d');
-  $rooms      = $this->rooms;
-  $materials  = $this->materials;
-  $bookings   = collect($rooms)->sum(fn ($r) => count($r['slots']));
+  $days       = $this->monthDays;
+  $cells      = $this->calendarCells;
 @endphp
 
-<div class="min-h-screen bg-[#F4F6F3] text-[#1F2A24]">
+{{-- ✅ tab + sel live in the browser, so Facility / Material and picking a day are instant.
+     They're sent back with the next request (month / department change) so nothing resets. --}}
+<div x-data="{ tab: $wire.entangle('activeTab'), sel: $wire.entangle('selectedDate') }"
+     class="min-h-screen bg-[#F4F6F3] dark:bg-[#0E1A14] text-[#1F2A24] dark:text-neutral-100">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-6">
 
     {{-- ===== Header ===== --}}
     <div class="flex flex-wrap items-end justify-between gap-4">
       <div class="flex flex-col gap-1.5">
-        <p class="text-xs font-semibold tracking-widest uppercase text-[#8A6A1F]">Faculty Portal</p>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#123524]">Calendar</h1>
-        <p class="text-sm text-[#4A564F]">See which rooms are booked and what materials are requested — every department.</p>
+        <p class="text-xs font-semibold tracking-widest uppercase text-[#8A6A1F] dark:text-[#E8C877]">Faculty Portal</p>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#123524] dark:text-green-200">Calendar</h1>
+        <p class="text-sm text-[#4A564F] dark:text-neutral-400">See which rooms are booked (every department) and your department's material requests.</p>
       </div>
 
       <div class="flex flex-wrap items-center gap-3">
         {{-- Facility / Material --}}
-        <div class="inline-flex p-1 bg-[#E6EAE6] rounded-2xl gap-1" role="tablist" aria-label="Request type">
+        <div class="inline-flex p-1 bg-[#E6EAE6] dark:bg-[#0E1A14] rounded-2xl gap-1" role="tablist" aria-label="Request type">
           @foreach(['facility' => 'Facility', 'material' => 'Material'] as $key => $label)
-            <button type="button" role="tab" wire:click="setTab('{{ $key }}')" aria-selected="{{ $activeTab === $key ? 'true' : 'false' }}"
+            <button type="button" role="tab" @click="tab = '{{ $key }}'"
+              aria-selected="{{ $activeTab === $key ? 'true' : 'false' }}" :aria-selected="tab === '{{ $key }}'"
               class="min-h-10 px-4 rounded-xl text-sm font-semibold transition inline-flex items-center gap-2
-                {{ $activeTab === $key ? 'bg-white text-[#123524] shadow-sm' : 'text-[#4A564F] hover:text-[#123524]' }}">
+                {{ $activeTab === $key ? 'bg-white dark:bg-[#16281F] text-[#123524] dark:text-green-200 shadow-sm' : 'text-[#4A564F] dark:text-neutral-400 hover:text-[#123524] dark:hover:text-green-200' }}"
+              :class="{ 'bg-white dark:bg-[#16281F] text-[#123524] dark:text-green-200 shadow-sm': tab === '{{ $key }}', 'text-[#4A564F] dark:text-neutral-400 hover:text-[#123524] dark:hover:text-green-200': tab !== '{{ $key }}' }">
               <span class="size-2 rounded-full {{ $key === 'facility' ? 'bg-[#1C7A4A]' : 'bg-[#B8862A]' }}"></span>
               {{ $label }}
             </button>
@@ -32,239 +35,255 @@
         </div>
 
         {{-- Department --}}
+        {{-- Facility: pick any department · Material: always your own department --}}
         <label class="sr-only" for="cal-department">Department</label>
         <select id="cal-department" wire:model.live="department"
-          class="w-full sm:w-auto min-h-11 ps-3 pe-9 rounded-xl border border-[#D9DED9] bg-white text-sm font-medium text-[#1F2A24] focus:border-[#123524] focus:ring-[#123524]">
+          x-show="tab === 'facility'" @if(! $isFacility) style="display: none" @endif
+          class="w-full sm:w-auto min-h-11 ps-3 pe-9 rounded-xl border border-[#D9DED9] dark:border-[#2A4B3A] bg-white dark:bg-[#16281F] text-sm font-medium text-[#1F2A24] dark:text-neutral-100 focus:border-[#123524] dark:focus:border-[#7FBF8E] focus:ring-[#123524] dark:focus:ring-[#7FBF8E]">
           <option value="">All departments</option>
           @foreach($this->departments as $id => $name)
             <option value="{{ $id }}">{{ $name }}{{ (int) $id === (int) $this->myDepartmentId ? ' (yours)' : '' }}</option>
           @endforeach
         </select>
+        <span x-show="tab === 'material'" @if($isFacility) style="display: none" @endif
+          class="inline-flex items-center gap-2 min-h-11 px-4 rounded-xl border border-[#D9DED9] dark:border-[#2A4B3A] bg-white dark:bg-[#16281F] text-sm font-medium text-[#1F2A24] dark:text-neutral-100">
+          <span class="size-2 rounded-full bg-[#B8862A]"></span>
+          {{ $this->departments[(int) $this->myDepartmentId] ?? 'No department' }} <span class="text-[#8A968F] dark:text-neutral-500 font-normal">(your department)</span>
+        </span>
 
         {{-- New reservation (faculty) --}}
         <a href="{{ route('portal.create-reservation') }}" wire:navigate
-           class="inline-flex items-center gap-2 min-h-11 px-4 rounded-xl bg-[#123524] text-white text-sm font-semibold hover:bg-[#0B2418] transition">
+           class="inline-flex items-center gap-2 min-h-11 px-4 rounded-xl bg-[#123524] dark:bg-[#1C6B45] text-white text-sm font-semibold hover:bg-[#0B2418] dark:hover:bg-[#15573A] transition">
           <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
           New reservation
         </a>
       </div>
     </div>
 
-    <div class="flex flex-col lg:flex-row gap-6 items-start">
+    {{-- Fades while a new month / department is loading --}}
+    <div class="flex flex-col lg:flex-row gap-6 items-start transition-opacity"
+         wire:loading.class="opacity-50 pointer-events-none" wire:target="previousMonth, nextMonth, goToToday, department">
 
-      {{-- ===== Month grid ===== --}}
-      <section aria-label="Month view" class="w-full lg:flex-1 min-w-0 bg-white border border-[#E1E6E1] rounded-2xl sm:rounded-3xl overflow-hidden">
+      {{-- ===== Month grid (compact, same size as the Admin calendar) ===== --}}
+      <section aria-label="Month view" class="w-full lg:w-[340px] xl:w-[380px] shrink-0 bg-white dark:bg-[#16281F] border border-[#E1E6E1] dark:border-[#2A4B3A] rounded-2xl sm:rounded-3xl overflow-hidden">
 
-        <div class="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 py-4 border-b border-[#E6EAE6]">
-          <div class="flex items-center gap-2.5">
-            <button type="button" wire:click="previousMonth" aria-label="Previous month"
-              class="size-11 inline-flex items-center justify-center rounded-xl border border-[#D9DED9] bg-white hover:bg-[#EEF1EE] transition">
-              <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-            </button>
-            <button type="button" wire:click="nextMonth" aria-label="Next month"
-              class="size-11 inline-flex items-center justify-center rounded-xl border border-[#D9DED9] bg-white hover:bg-[#EEF1EE] transition">
-              <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
-            </button>
-            <h2 class="ms-1.5 text-lg sm:text-xl font-bold text-[#123524]">
+        <div class="flex items-center justify-between gap-2 px-4 sm:px-5 py-3.5 border-b border-[#E6EAE6] dark:border-[#2A4B3A]">
+          <button type="button" wire:click="previousMonth" aria-label="Previous month"
+            class="size-9 inline-flex items-center justify-center rounded-full border border-[#D9DED9] dark:border-[#2A4B3A] bg-white dark:bg-[#16281F] hover:bg-[#EEF1EE] dark:hover:bg-[#1F3A2C] transition">
+            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div class="flex flex-col items-center">
+            <h2 class="text-sm sm:text-base font-bold text-[#123524] dark:text-green-200">
               {{ \Carbon\Carbon::create($year, $month, 1)->format('F Y') }}
             </h2>
+            <button type="button" wire:click="goToToday" class="text-[11px] font-semibold text-[#8A6A1F] dark:text-[#E8C877] hover:underline">
+              Today
+            </button>
           </div>
-          <button type="button" wire:click="goToToday"
-            class="min-h-11 px-4 rounded-xl border border-[#D9DED9] bg-white text-sm font-semibold hover:bg-[#EEF1EE] transition">
-            Today
+          <button type="button" wire:click="nextMonth" aria-label="Next month"
+            @disabled(! $this->canGoNext) title="{{ $this->canGoNext ? 'Next month' : 'Bookings only go up to ' . \Carbon\Carbon::parse(\App\Support\BookingDate::max())->format('M d, Y') }}"
+            class="disabled:opacity-40 disabled:cursor-not-allowed size-9 inline-flex items-center justify-center rounded-full border border-[#D9DED9] dark:border-[#2A4B3A] bg-white dark:bg-[#16281F] hover:bg-[#EEF1EE] dark:hover:bg-[#1F3A2C] transition">
+            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
           </button>
         </div>
 
         {{-- Weekdays --}}
-        <div class="grid grid-cols-7 bg-[#FAFBFA] border-b border-[#E6EAE6]">
-          @foreach(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $wd)
-            <div class="px-2 py-2.5 text-[11px] font-semibold tracking-widest uppercase text-[#5C6862]">{{ $wd }}</div>
+        <div class="grid grid-cols-7 px-2 sm:px-4 pt-3">
+          @foreach(['S', 'M', 'T', 'W', 'T', 'F', 'S'] as $wd)
+            <div class="text-center py-1 text-[10px] font-bold tracking-widest text-[#8A968F] dark:text-neutral-500">{{ $wd }}</div>
           @endforeach
         </div>
 
         {{-- Days --}}
-        <div class="grid grid-cols-7">
-          @foreach($this->calendarCells as $cell)
+        <div class="grid grid-cols-7 px-2 sm:px-4 pb-3 gap-y-0.5">
+          @foreach($cells as $cell)
             @if(! $cell)
-              <div class="min-h-16 sm:min-h-28 bg-[#FAFBFA] border-r border-b border-[#E6EAE6]" aria-hidden="true"></div>
+              <div aria-hidden="true"></div>
             @else
               @php
                 $isSel   = $cell['date'] === $selectedDate;
                 $isToday = $cell['date'] === $today;
-                $count   = $isFacility ? $cell['facility'] : $cell['material'];
-                $noun    = $isFacility ? 'reservation' : 'request';
+                $label   = \Carbon\Carbon::parse($cell['date'])->format('F j')
+                         . ($cell['facility'] ? ', ' . $cell['facility'] . ' ' . \Illuminate\Support\Str::plural('reservation', $cell['facility']) : '')
+                         . ($cell['material'] ? ', ' . $cell['material'] . ' material ' . \Illuminate\Support\Str::plural('request', $cell['material']) : '');
+                $selOn   = 'bg-[#123524] dark:bg-[#1C6B45] text-white shadow-sm';
+                $selOff  = $isToday ? 'bg-[#F3E9CC] dark:bg-[#D4A537]/20 text-[#6B5216] dark:text-[#E8C877] ring-1 ring-[#D4A537]' : 'text-[#1F2A24] dark:text-neutral-100 hover:bg-[#EEF1EE] dark:hover:bg-[#1F3A2C]';
               @endphp
-              <button type="button" wire:click="selectDate('{{ $cell['date'] }}')" wire:key="cell-{{ $cell['date'] }}"
-                aria-pressed="{{ $isSel ? 'true' : 'false' }}"
-                aria-label="{{ \Carbon\Carbon::parse($cell['date'])->format('F j') }}{{ $count ? ', ' . $count . ' ' . \Illuminate\Support\Str::plural($noun, $count) : '' }}"
-                class="relative flex flex-col items-stretch gap-1 min-h-16 sm:min-h-28 p-1 sm:p-2 min-w-0 text-left border-r border-b border-[#E6EAE6] transition
-                  focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#123524]
-                  {{ $isSel ? 'bg-[#EEF4EF] ring-2 ring-inset ring-[#123524]' : 'bg-white hover:bg-[#F7F9F6]' }}">
-
-                <span class="flex items-center justify-between">
-                  <span class="inline-flex items-center justify-center size-7 rounded-full text-[13px] font-semibold
-                    {{ $isToday ? 'bg-[#D4A537] text-[#1A1405]' : 'text-[#1F2A24]' }}">
-                    {{ $cell['day'] }}
-                  </span>
-                  {{-- Phone: a dot --}}
-                  @if($count)
-                    <span class="sm:hidden size-1.5 me-0.5 rounded-full {{ $isFacility ? 'bg-[#1C7A4A]' : 'bg-[#B8862A]' }}"></span>
+              <div class="flex flex-col items-center py-0.5">
+                <button type="button" @click="sel = '{{ $cell['date'] }}'" wire:key="cell-{{ $cell['date'] }}"
+                  aria-pressed="{{ $isSel ? 'true' : 'false' }}" :aria-pressed="sel === '{{ $cell['date'] }}'"
+                  aria-label="{{ $label }}" title="{{ $label }}"
+                  class="size-8 sm:size-9 inline-flex items-center justify-center rounded-xl text-[13px] font-semibold transition
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-[#123524] dark:focus-visible:ring-[#7FBF8E]
+                    {{ $isSel ? $selOn : $selOff }}"
+                  :class="{ '{{ $selOn }}': sel === '{{ $cell['date'] }}', '{{ $selOff }}': sel !== '{{ $cell['date'] }}' }">
+                  {{ $cell['day'] }}
+                </button>
+                {{-- Dot for days that have something (for the open tab) --}}
+                <span class="h-1.5 mt-0.5 flex items-center">
+                  @if($cell['facility'])
+                    <span x-show="tab === 'facility'" @if(! $isFacility) style="display: none" @endif class="size-1.5 rounded-full bg-[#1C7A4A]"></span>
+                  @endif
+                  @if($cell['material'])
+                    <span x-show="tab === 'material'" @if($isFacility) style="display: none" @endif class="size-1.5 rounded-full bg-[#B8862A]"></span>
                   @endif
                 </span>
-
-                {{-- Tablet / desktop: label --}}
-                @if($count)
-                  <span class="hidden sm:block truncate px-1.5 py-0.5 rounded-md text-[11.5px] font-medium
-                    {{ $isFacility ? 'bg-[#E3F1E8] text-[#145A37]' : 'bg-[#F3E9CC] text-[#6B5216]' }}">
-                    {{ $count }} {{ \Illuminate\Support\Str::plural($noun, $count) }}
-                  </span>
-                @endif
-              </button>
+              </div>
             @endif
           @endforeach
         </div>
 
         {{-- Legend --}}
-        <div class="flex flex-wrap items-center gap-4 px-4 sm:px-5 py-3.5 border-t border-[#E6EAE6] text-[12.5px] text-[#4A564F]">
-          @if($isFacility)
-            <span class="inline-flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-[#1C7A4A]"></span>Approved facility reservations</span>
-          @else
-            <span class="inline-flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-[#B8862A]"></span>Approved material requests</span>
-          @endif
-          <span class="text-[#8A968F]">·</span>
-          <span>{{ $department !== '' ? ($this->departments[(int) $department] ?? '') : 'All departments' }}</span>
+        <div class="mx-2 sm:mx-4 mb-4 px-3 py-2 bg-[#FAFBFA] dark:bg-[#0E1A14]/60 rounded-xl flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-[#4A564F] dark:text-neutral-400">
+          <span x-show="tab === 'facility'" @if(! $isFacility) style="display: none" @endif class="inline-flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-[#1C7A4A]"></span>Approved facility reservations</span>
+          <span x-show="tab === 'material'" @if($isFacility) style="display: none" @endif class="inline-flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-[#B8862A]"></span>Approved material requests</span>
+          <span class="text-[#8A968F] dark:text-neutral-500">·</span>
+          <span x-show="tab === 'facility'" @if(! $isFacility) style="display: none" @endif>{{ $department !== '' ? ($this->departments[(int) $department] ?? '') : 'All departments' }}</span>
+          <span x-show="tab === 'material'" @if($isFacility) style="display: none" @endif>{{ $this->departments[(int) $this->myDepartmentId] ?? 'No department' }}</span>
         </div>
       </section>
 
-      {{-- ===== Selected day panel ===== --}}
-      <aside aria-label="Selected day" class="w-full lg:w-[380px] shrink-0 flex flex-col gap-4">
+      {{-- ===== Selected day panel (every day of the month is ready; only the picked one shows) ===== --}}
+      <aside aria-label="Selected day" class="w-full lg:flex-1 min-w-0">
+        @foreach($cells as $cell)
+          @continue(! $cell)
+          @php
+            $date      = $cell['date'];
+            $selected  = \Carbon\Carbon::parse($date);
+            $rooms     = $days[$date]['rooms'] ?? [];
+            $materials = $days[$date]['materials'] ?? [];
+            $bookings  = $cell['facility'];
+          @endphp
 
-        <div class="flex items-center gap-3.5 px-5 py-4 bg-[#123524] rounded-2xl sm:rounded-3xl text-white">
-          <div class="flex flex-col items-center justify-center size-[60px] rounded-2xl bg-[#D4A537] text-[#1A1405] shrink-0">
-            <span class="text-2xl font-extrabold leading-none">{{ $selected->format('d') }}</span>
-            <span class="text-[10px] font-bold tracking-widest uppercase">{{ $selected->format('M') }}</span>
-          </div>
-          <div class="flex flex-col gap-1">
-            <p class="text-lg font-bold leading-tight">{{ $selected->format('l') }}</p>
-            <p class="text-[13px] text-[#CFE0D5]">
-              {{ $bookings }} {{ \Illuminate\Support\Str::plural('reservation', $bookings) }}
-              · {{ count($materials) }} material {{ \Illuminate\Support\Str::plural('request', count($materials)) }}
-            </p>
-          </div>
-        </div>
+          <div x-show="sel === '{{ $date }}'" @if($date !== $selectedDate) style="display: none" @endif
+               wire:key="day-{{ $date }}-{{ $department }}" class="flex flex-col gap-4">
 
-        @if($isFacility)
-          {{-- ===== Rooms booked that day ===== --}}
-          <div x-data="{ open: null }" wire:key="rooms-{{ $selectedDate }}-{{ $department }}" class="flex flex-col gap-3">
-            @forelse($rooms as $i => $room)
-              @php
-                $roomDeptCounts = collect($room['slots'])->countBy('department')->sortKeys();
-                $dateLabel      = $selected->format('l, F j, Y');
-              @endphp
-              <div x-data="{ dept: 'all', room: @js($room) }" class="bg-white border border-[#E6EAE6] rounded-2xl overflow-hidden">
-                <button type="button" @click="open = (open === {{ $i }}) ? null : {{ $i }}"
-                  class="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left hover:bg-[#FAFCFA] transition"
-                  :class="open === {{ $i }} ? 'bg-[#EEF4EF]' : ''">
-                  <span class="min-w-0">
-                    <span class="block text-[15px] font-bold text-[#1F2A24] truncate">{{ $room['room'] }}</span>
-                    <span class="block text-[12.5px] text-[#5C6862]">
-                      {{ count($room['slots']) }} {{ \Illuminate\Support\Str::plural('booking', count($room['slots'])) }}
-                      · {{ collect($room['slots'])->pluck('department')->unique()->count() }} {{ \Illuminate\Support\Str::plural('department', collect($room['slots'])->pluck('department')->unique()->count()) }}
-                    </span>
-                  </span>
-                  <svg class="size-4 shrink-0 text-[#8A968F] transition-transform" :class="open === {{ $i }} ? 'rotate-90' : ''"
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-                </button>
+            <div class="flex items-center gap-3.5 px-5 py-4 bg-[#123524] dark:bg-[#1C6B45] rounded-2xl sm:rounded-3xl text-white">
+              <div class="flex flex-col items-center justify-center size-[60px] rounded-2xl bg-[#D4A537] text-[#1A1405] shrink-0">
+                <span class="text-2xl font-extrabold leading-none">{{ $selected->format('d') }}</span>
+                <span class="text-[10px] font-bold tracking-widest uppercase">{{ $selected->format('M') }}</span>
+              </div>
+              <div class="flex flex-col gap-1">
+                <p class="text-lg font-bold leading-tight">{{ $selected->format('l') }}</p>
+                <p class="text-[13px] text-[#CFE0D5]">
+                  {{ $bookings }} {{ \Illuminate\Support\Str::plural('reservation', $bookings) }}
+                  · {{ count($materials) }} material {{ \Illuminate\Support\Str::plural('request', count($materials)) }}
+                </p>
+              </div>
+            </div>
 
-                <div x-show="open === {{ $i }}" x-cloak x-transition.opacity class="border-t border-[#EEF1EE] divide-y divide-[#EEF1EE]">
-
-                  {{-- 🖨 Print bar (this room only) — same as the Admin calendar --}}
-                  <div class="flex flex-wrap items-center gap-2 px-4 py-2.5 bg-[#FAFBFA]">
-                    <label class="sr-only" for="print-dept-{{ $i }}">Department to print</label>
-                    <select id="print-dept-{{ $i }}" x-model="dept"
-                      class="flex-1 min-w-0 py-1.5 px-2.5 text-[13px] rounded-lg border border-[#D9DED9] bg-white text-[#1F2A24] focus:border-[#123524] focus:ring-[#123524]">
-                      <option value="all">All departments ({{ $roomDeptCounts->sum() }})</option>
-                      @foreach($roomDeptCounts as $deptName => $count)
-                        <option value="{{ $deptName }}">{{ $deptName }} ({{ $count }})</option>
-                      @endforeach
-                    </select>
-                    <button type="button" @click="printRoomSchedule([room], dept, @js($dateLabel))"
-                      class="inline-flex items-center gap-1.5 py-1.5 px-3 text-[13px] font-semibold rounded-lg bg-[#123524] text-white hover:bg-[#0B2418] transition">
-                      <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/>
-                      </svg>
-                      Print
-                    </button>
-                  </div>
-
-                  @foreach($room['slots'] as $slot)
-                    <div class="flex gap-3 px-4 py-3">
-                      <span class="w-[92px] shrink-0 text-[12.5px] font-bold text-[#33403A] leading-snug">
-                        @if($slot['start'] && $slot['end'])
-                          {{ $slot['start'] }}<br><span class="font-normal text-[#5C6862]">to {{ $slot['end'] }}</span>
-                        @else
-                          No time
-                        @endif
+            {{-- ===== Rooms booked that day ===== --}}
+            <div x-show="tab === 'facility'" @if(! $isFacility) style="display: none" @endif
+                 x-data="{ open: null }" class="flex flex-col gap-3 overflow-y-auto overscroll-contain max-h-[400px] sm:max-h-[500px] md:max-h-[600px] pe-1">
+              @forelse($rooms as $i => $room)
+                @php
+                  $roomDeptCounts = collect($room['slots'])->countBy('department')->sortKeys();
+                  $dateLabel      = $selected->format('l, F j, Y');
+                  $deptCount      = collect($room['slots'])->pluck('department')->unique()->count();
+                @endphp
+                <div x-data="{ dept: 'all', room: @js($room) }" class="bg-white dark:bg-[#16281F] border border-[#E6EAE6] dark:border-[#2A4B3A] rounded-2xl overflow-hidden">
+                  <button type="button" @click="open = (open === {{ $i }}) ? null : {{ $i }}"
+                    class="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left hover:bg-[#FAFCFA] dark:hover:bg-[#1F3A2C] transition"
+                    :class="open === {{ $i }} ? 'bg-[#EEF4EF] dark:bg-[#1F3A2C]' : ''">
+                    <span class="min-w-0">
+                      <span class="block text-[15px] font-bold text-[#1F2A24] dark:text-neutral-100 truncate">{{ $room['room'] }}</span>
+                      <span class="block text-[12.5px] text-[#5C6862] dark:text-neutral-400">
+                        {{ count($room['slots']) }} {{ \Illuminate\Support\Str::plural('booking', count($room['slots'])) }}
+                        · {{ $deptCount }} {{ \Illuminate\Support\Str::plural('department', $deptCount) }}
                       </span>
-                      <span class="flex flex-col gap-1 min-w-0">
-                        <span class="flex flex-wrap items-center gap-1.5">
-                          <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#E3F1E8] text-[#145A37]">{{ $slot['department'] }}</span>
-                          @if($slot['mine'])
-                            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#F3E9CC] text-[#6B5216]">Your dept</span>
+                    </span>
+                    <svg class="size-4 shrink-0 text-[#8A968F] dark:text-neutral-500 transition-transform" :class="open === {{ $i }} ? 'rotate-90' : ''"
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                  </button>
+
+                  <div x-show="open === {{ $i }}" x-cloak x-transition.opacity class="border-t border-[#EEF1EE] dark:border-[#2A4B3A] divide-y divide-[#EEF1EE] dark:divide-[#2A4B3A]">
+
+                    {{-- 🖨 Print bar (this room only) — same as the Admin calendar --}}
+                    <div class="flex flex-wrap items-center gap-2 px-4 py-2.5 bg-[#FAFBFA] dark:bg-[#0E1A14]/60">
+                      <label class="sr-only" for="print-dept-{{ $date }}-{{ $i }}">Department to print</label>
+                      <select id="print-dept-{{ $date }}-{{ $i }}" x-model="dept"
+                        class="flex-1 min-w-0 py-1.5 px-2.5 text-[13px] rounded-lg border border-[#D9DED9] dark:border-[#2A4B3A] bg-white dark:bg-[#16281F] text-[#1F2A24] dark:text-neutral-100 focus:border-[#123524] dark:focus:border-[#7FBF8E] focus:ring-[#123524] dark:focus:ring-[#7FBF8E]">
+                        <option value="all">All departments ({{ $roomDeptCounts->sum() }})</option>
+                        @foreach($roomDeptCounts as $deptName => $count)
+                          <option value="{{ $deptName }}">{{ $deptName }} ({{ $count }})</option>
+                        @endforeach
+                      </select>
+                      <button type="button" @click="printRoomSchedule([room], dept, @js($dateLabel))"
+                        class="inline-flex items-center gap-1.5 py-1.5 px-3 text-[13px] font-semibold rounded-lg bg-[#123524] dark:bg-[#1C6B45] text-white hover:bg-[#0B2418] dark:hover:bg-[#15573A] transition">
+                        <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/>
+                        </svg>
+                        Print
+                      </button>
+                    </div>
+
+                    @foreach($room['slots'] as $slot)
+                      <div class="flex gap-3 px-4 py-3">
+                        <span class="w-[92px] shrink-0 text-[12.5px] font-bold text-[#33403A] dark:text-neutral-200 leading-snug">
+                          @if($slot['start'] && $slot['end'])
+                            {{ $slot['start'] }}<br><span class="font-normal text-[#5C6862] dark:text-neutral-400">to {{ $slot['end'] }}</span>
+                          @else
+                            No time
                           @endif
                         </span>
-                        <span class="text-[13px] text-[#1F2A24]">{{ $slot['user'] }}</span>
-                        @if($slot['extras'])
-                          <span class="text-[12.5px] text-[#4A564F]">With: {{ $slot['extras'] }}</span>
-                        @endif
-                        @if($slot['purpose'])
-                          <span class="text-[12.5px] text-[#5C6862] italic">"{{ \Illuminate\Support\Str::limit($slot['purpose'], 80) }}"</span>
-                        @endif
-                      </span>
-                    </div>
-                  @endforeach
+                        <span class="flex flex-col gap-1 min-w-0">
+                          <span class="flex flex-wrap items-center gap-1.5">
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#E3F1E8] dark:bg-[#1C6B45]/25 text-[#145A37] dark:text-green-300">{{ $slot['department'] }}</span>
+                            @if($slot['mine'])
+                              <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#F3E9CC] dark:bg-[#D4A537]/20 text-[#6B5216] dark:text-[#E8C877]">Your dept</span>
+                            @endif
+                          </span>
+                          <span class="text-[13px] text-[#1F2A24] dark:text-neutral-100">{{ $slot['user'] }}</span>
+                          @if($slot['extras'])
+                            <span class="text-[12.5px] text-[#4A564F] dark:text-neutral-400">With: {{ $slot['extras'] }}</span>
+                          @endif
+                          @if($slot['purpose'])
+                            <span class="text-[12.5px] text-[#5C6862] dark:text-neutral-400 italic">"{{ \Illuminate\Support\Str::limit($slot['purpose'], 80) }}"</span>
+                          @endif
+                        </span>
+                      </div>
+                    @endforeach
+                  </div>
                 </div>
-              </div>
-            @empty
-              <div class="flex flex-col items-center gap-2.5 px-5 py-9 bg-white border border-dashed border-[#CBD3CC] rounded-2xl text-center">
-                <svg class="size-8 text-[#8A968F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                <p class="text-sm font-semibold text-[#33403A]">No facility reservations on this day</p>
-                <p class="text-[13px] text-[#5C6862]">Pick another date{{ count($materials) ? ', or check the Material tab' : '' }}.</p>
-              </div>
-            @endforelse
-          </div>
+              @empty
+                <div class="flex flex-col items-center gap-2.5 px-5 py-9 bg-white dark:bg-[#16281F] border border-dashed border-[#CBD3CC] dark:border-[#2A4B3A] rounded-2xl text-center">
+                  <svg class="size-8 text-[#8A968F] dark:text-neutral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                  <p class="text-sm font-semibold text-[#33403A] dark:text-neutral-200">No facility reservations on this day</p>
+                  <p class="text-[13px] text-[#5C6862] dark:text-neutral-400">Pick another date{{ count($materials) ? ', or check the Material tab' : '' }}.</p>
+                </div>
+              @endforelse
+            </div>
 
-        @else
-          {{-- ===== Material requests that day ===== --}}
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
-            @forelse($materials as $m)
-              <div wire:key="mat-{{ $m['id'] }}" class="flex flex-col gap-2 min-w-0 p-4 bg-white border border-[#E6EAE6] rounded-2xl break-words">
-                <span class="flex flex-wrap items-center gap-1.5">
-                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#F3E9CC] text-[#6B5216]">{{ $m['department'] }}</span>
-                  @if($m['mine'])
-                    <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#E3F1E8] text-[#145A37]">Your dept</span>
+            {{-- ===== Material requests that day: 2 across, 2 rows tall, then it scrolls ===== --}}
+            {{-- Every card is 160px tall → 2 rows = 2×160 + 12 (gap) = 332px --}}
+            <div x-show="tab === 'material'" @if($isFacility) style="display: none" @endif
+                 class="grid grid-cols-1 sm:grid-cols-2 auto-rows-[160px] gap-3 content-start overflow-y-auto overscroll-contain max-h-[332px] pe-1">
+              @forelse($materials as $m)
+                <div wire:key="mat-{{ $date }}-{{ $m['id'] }}" class="flex flex-col gap-1.5 min-w-0 min-h-0 p-3 bg-white dark:bg-[#16281F] border border-[#E6EAE6] dark:border-[#2A4B3A] rounded-2xl break-words">
+                  <span class="flex flex-wrap items-center gap-1">
+                    <span class="max-w-full truncate px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-[#F3E9CC] dark:bg-[#D4A537]/20 text-[#6B5216] dark:text-[#E8C877]" title="{{ $m['department'] }}">{{ $m['department'] }}</span>
+                  </span>
+                  <span class="text-[13.5px] font-bold text-[#1F2A24] dark:text-neutral-100 truncate" title="{{ $m['user'] }}">{{ $m['user'] }}</span>
+                  {{-- Items: scroll inside the card if there are many --}}
+                  <span class="flex flex-wrap content-start gap-1 flex-1 min-h-0 overflow-y-auto">
+                    @foreach($m['items'] as $it)
+                      <span class="max-w-full px-1.5 py-0.5 rounded-md text-[11.5px] bg-[#EEF1EE] dark:bg-[#0E1A14] text-[#33403A] dark:text-neutral-200 break-words">{{ $it }}</span>
+                    @endforeach
+                  </span>
+                  @if($m['purpose'])
+                    <span class="text-[11.5px] text-[#5C6862] dark:text-neutral-400 italic truncate" title="{{ $m['purpose'] }}">"{{ $m['purpose'] }}"</span>
                   @endif
-                </span>
-                <span class="text-[15px] font-bold text-[#1F2A24] truncate">{{ $m['user'] }}</span>
-                <span class="flex flex-wrap gap-1">
-                  @foreach($m['items'] as $it)
-                    <span class="max-w-full px-2 py-0.5 rounded-md text-[12px] bg-[#EEF1EE] text-[#33403A] break-words">{{ $it }}</span>
-                  @endforeach
-                </span>
-                @if($m['purpose'])
-                  <span class="text-[13px] leading-relaxed text-[#5C6862] italic">"{{ \Illuminate\Support\Str::limit($m['purpose'], 100) }}"</span>
-                @endif
-              </div>
-            @empty
-              <div class="sm:col-span-2 lg:col-span-1 flex flex-col items-center gap-2.5 px-5 py-9 bg-white border border-dashed border-[#CBD3CC] rounded-2xl text-center">
-                <svg class="size-8 text-[#8A968F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                <p class="text-sm font-semibold text-[#33403A]">No material requests on this day</p>
-                <p class="text-[13px] text-[#5C6862]">Pick another date{{ $bookings ? ', or check the Facility tab' : '' }}.</p>
-              </div>
-            @endforelse
+                </div>
+              @empty
+                <div class="col-span-full flex flex-col items-center justify-center gap-2 px-5 bg-white dark:bg-[#16281F] border border-dashed border-[#CBD3CC] dark:border-[#2A4B3A] rounded-2xl text-center">
+                  <svg class="size-8 text-[#8A968F] dark:text-neutral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                  <p class="text-sm font-semibold text-[#33403A] dark:text-neutral-200">No material requests on this day</p>
+                  <p class="text-[13px] text-[#5C6862] dark:text-neutral-400">Pick another date{{ $bookings ? ', or check the Facility tab' : '' }}.</p>
+                </div>
+              @endforelse
+            </div>
           </div>
-        @endif
-
+        @endforeach
       </aside>
     </div>
   </div>

@@ -29,6 +29,8 @@ new #[Layout('layouts.coordinator')] class extends Component
     // ✅ #[Url] so the Admin's "Overdue" reminder can open ?view=mine directly
     #[Url]
     public string $view   = 'students';    // students | mine
+    // ✅ #[Url] so the dashboard's overdue alert can open ?filter=overdue directly
+    #[Url]
     public string $filter = 'outstanding'; // outstanding | overdue | returned
     public string $search = '';
 

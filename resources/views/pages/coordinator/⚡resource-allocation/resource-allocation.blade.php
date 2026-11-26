@@ -192,10 +192,6 @@
                                     <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
                                         Faculty
                                     </span>
-                                @elseif($log->requester_role === 'student')
-                                    <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
-                                        Student
-                                    </span>
                                 @endif
                             </div>
                         </td>

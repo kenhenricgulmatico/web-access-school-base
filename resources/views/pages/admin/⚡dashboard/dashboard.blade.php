@@ -114,6 +114,72 @@
             style="display:none;"></div>
     </div>
 
+    {{-- ✅ Request Status + Request Types (donuts, same year as Monthly Requests) --}}
+    @php $breakdown = $this->yearBreakdown; @endphp
+    <div class="grid md:grid-cols-2 gap-6">
+        @foreach ([
+            ['title' => 'Request Status', 'sub' => 'Approved, pending and rejected', 'slices' => $breakdown['status']],
+            ['title' => 'Request Types',  'sub' => 'Facility reservations vs material requests', 'slices' => $breakdown['type']],
+        ] as $chart)
+            <div wire:key="donut-{{ $loop->index }}-{{ $chartYear }}"
+                 class="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 shadow-sm rounded-2xl p-6">
+                <div class="mb-5">
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-white">{{ $chart['title'] }}</h2>
+                    <p class="text-sm text-gray-400 dark:text-neutral-500">{{ $chart['sub'] }}, {{ $chartYear }}</p>
+                </div>
+
+                @if ($breakdown['total'] === 0)
+                    <div class="flex flex-col items-center justify-center py-10 text-center">
+                        <p class="text-sm font-medium text-gray-500 dark:text-neutral-400">No requests in {{ $chartYear }}</p>
+                        <p class="text-xs text-gray-400 dark:text-neutral-500 mt-1">Pick another year above.</p>
+                    </div>
+                @else
+                    <div class="flex flex-col sm:flex-row items-center gap-6">
+                        {{-- Donut: circumference 100, so each slice's length = its percent --}}
+                        <div class="relative size-40 shrink-0">
+                            <svg viewBox="0 0 42 42" class="size-full -rotate-90" role="img"
+                                 aria-label="{{ $chart['title'] }}: {{ collect($chart['slices'])->map(fn ($s) => $s['label'] . ' ' . $s['count'])->implode(', ') }}">
+                                <circle cx="21" cy="21" r="15.9155" fill="none" stroke-width="6" class="stroke-gray-100 dark:stroke-neutral-800" stroke="#F3F4F6"></circle>
+                                @php $offset = 0; @endphp
+                                @foreach ($chart['slices'] as $slice)
+                                    @if ($slice['count'] > 0)
+                                        <circle cx="21" cy="21" r="15.9155" fill="none" stroke-width="6"
+                                            stroke="{{ $slice['color'] }}"
+                                            stroke-dasharray="{{ $slice['percent'] }} {{ 100 - $slice['percent'] }}"
+                                            stroke-dashoffset="{{ -$offset }}">
+                                            <title>{{ $slice['label'] }}: {{ $slice['count'] }} ({{ $slice['percent'] }}%)</title>
+                                        </circle>
+                                        @php $offset += $slice['percent']; @endphp
+                                    @endif
+                                @endforeach
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span class="text-2xl font-bold text-gray-800 dark:text-white leading-none">{{ $breakdown['total'] }}</span>
+                                <span class="text-[11px] text-gray-400 dark:text-neutral-500 mt-1">requests</span>
+                            </div>
+                        </div>
+
+                        {{-- Legend --}}
+                        <ul class="flex-1 w-full space-y-2.5">
+                            @foreach ($chart['slices'] as $slice)
+                                <li class="flex items-center justify-between gap-3">
+                                    <span class="flex items-center gap-2 min-w-0">
+                                        <span class="size-2.5 rounded-full shrink-0" style="background: {{ $slice['color'] }}"></span>
+                                        <span class="text-sm text-gray-700 dark:text-neutral-300 truncate">{{ $slice['label'] }}</span>
+                                    </span>
+                                    <span class="text-sm whitespace-nowrap">
+                                        <span class="font-semibold text-gray-800 dark:text-white">{{ $slice['count'] }}</span>
+                                        <span class="text-gray-400 dark:text-neutral-500">· {{ $slice['percent'] }}%</span>
+                                    </span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+            </div>
+        @endforeach
+    </div>
+
     {{-- Recent Requests Table --}}
     <div class="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-2xl shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 dark:border-neutral-700 flex items-center justify-between">
@@ -471,7 +537,7 @@
                                                 @endif
 
                                                 <p class="mt-3 text-[11px] text-gray-400 dark:text-neutral-500">
-                                                    Request #{{ $h->id }} · Submitted {{ $h->created_at->diffForHumans() }}
+                                                    Submitted {{ $h->created_at->diffForHumans() }}
                                                 </p>
                                             </td>
                                         </tr>

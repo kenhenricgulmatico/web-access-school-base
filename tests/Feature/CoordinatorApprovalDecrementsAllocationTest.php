@@ -29,7 +29,7 @@ class CoordinatorApprovalDecrementsAllocationTest extends TestCase
         // 1. Setup
         $dept        = $this->createDepartment();
         $programHead = $this->createUser('program head', $dept);
-        $student     = $this->createUser('student', $dept);
+        $student     = $this->createUser('faculty', $dept);
 
         $material = $this->createMaterial('Bond Paper A4', 100);
 
@@ -86,7 +86,7 @@ class CoordinatorApprovalDecrementsAllocationTest extends TestCase
     {
         $dept        = $this->createDepartment();
         $programHead = $this->createUser('program head', $dept);
-        $student     = $this->createUser('student', $dept);
+        $student     = $this->createUser('faculty', $dept);
 
         $paper  = $this->createMaterial('Bond Paper A4', 100);
         $marker = $this->createMaterial('Marker', 50);
@@ -160,7 +160,7 @@ class CoordinatorApprovalDecrementsAllocationTest extends TestCase
     {
         $dept        = $this->createDepartment();
         $programHead = $this->createUser('program head', $dept);
-        $student     = $this->createUser('student', $dept);
+        $student     = $this->createUser('faculty', $dept);
 
         $material = $this->createMaterial('Bond Paper A4', 100);
 
@@ -216,7 +216,7 @@ class CoordinatorApprovalDecrementsAllocationTest extends TestCase
     {
         $dept        = $this->createDepartment();
         $programHead = $this->createUser('program head', $dept);
-        $student     = $this->createUser('student', $dept);
+        $student     = $this->createUser('faculty', $dept);
 
         $paper  = $this->createMaterial('Bond Paper A4', 100);
         $marker = $this->createMaterial('Marker', 50);

@@ -20,7 +20,7 @@ class DoubleBookingTest extends TestCase
     public function test_facility_can_be_detected_as_conflicting_for_same_time(): void
     {
         $dept    = $this->createDepartment();
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
 
         $date = now()->addDays(3)->toDateString();
 
@@ -56,7 +56,7 @@ class DoubleBookingTest extends TestCase
     public function test_non_overlapping_time_has_no_conflict(): void
     {
         $dept    = $this->createDepartment();
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
 
         $date = now()->addDays(3)->toDateString();
 

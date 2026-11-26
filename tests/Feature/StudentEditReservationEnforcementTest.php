@@ -21,8 +21,8 @@ class StudentEditReservationEnforcementTest extends TestCase
     public function test_student_cannot_edit_into_conflicting_time(): void
     {
         $dept     = $this->createDepartment();
-        $studentA = $this->createUser('student', $dept);
-        $studentB = $this->createUser('student', $dept);
+        $studentA = $this->createUser('faculty', $dept);
+        $studentB = $this->createUser('faculty', $dept);
 
         $date = now()->addDays(3)->toDateString();
 

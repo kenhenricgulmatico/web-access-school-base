@@ -22,7 +22,7 @@ class RequestFlowTest extends TestCase
     public function test_student_can_create_facility_reservation(): void
     {
         $dept     = $this->createDepartment();
-        $student  = $this->createUser('student', $dept);
+        $student  = $this->createUser('faculty', $dept);
         $facility = $this->createFacility('Computer Laboratory 1');
 
         $this->actingAs($student);
@@ -60,7 +60,7 @@ class RequestFlowTest extends TestCase
     public function test_program_head_approval_sets_status_to_approved(): void
     {
         $dept    = $this->createDepartment();
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $ph      = $this->createUser('program head', $dept);
 
         $request = ResourceRequest::create([
@@ -82,7 +82,7 @@ class RequestFlowTest extends TestCase
     public function test_approval_creates_a_notification_row(): void
     {
         $dept    = $this->createDepartment();
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
 
         $request = ResourceRequest::create([
             'user_id'         => $student->id,
@@ -110,7 +110,7 @@ class RequestFlowTest extends TestCase
     public function test_request_approval_row_can_be_created(): void
     {
         $dept    = $this->createDepartment();
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $ph      = $this->createUser('program head', $dept);
 
         $request = ResourceRequest::create([

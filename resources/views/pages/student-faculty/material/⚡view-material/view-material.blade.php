@@ -52,9 +52,14 @@
                     <div>
                         <div class="text-xs text-gray-500 dark:text-gray-400">Items</div>
                         <div class="text-sm text-gray-700 dark:text-gray-300 space-y-0.5 mt-0.5">
-                            @foreach($request->items as $item)
-                                <div>{{ $item->item_name }} <span class="text-gray-500 text-xs">(x{{ $item->quantity }})</span></div>
+                            {{-- ✅ Only the first item — the full list is on "View" --}}
+                            @foreach($request->items->take(1) as $item)
+                                <div class="truncate">{{ $item->item_name }} <span class="text-gray-500 text-xs">(x{{ $item->quantity }})</span></div>
                             @endforeach
+                            @if($request->items->count() > 1)
+                                <a href="{{ route('portal.view-material-reservation', $request->id) }}" wire:navigate
+                                   class="inline-block text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">+{{ $request->items->count() - 1 }} more</a>
+                            @endif
                         </div>
                     </div>
 
@@ -124,9 +129,14 @@
                                     {{ $request->created_at->format('M d, Y h:i A') }}
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
-                                    @foreach($request->items as $item)
-                                        <div>{{ $item->item_name }} <span class="text-gray-400 text-xs">(x{{ $item->quantity }})</span></div>
+                                    {{-- ✅ Only the first item — the full list is on "View" --}}
+                                    @foreach($request->items->take(1) as $item)
+                                        <div class="truncate max-w-[16rem]">{{ $item->item_name }} <span class="text-gray-400 text-xs">(x{{ $item->quantity }})</span></div>
                                     @endforeach
+                                    @if($request->items->count() > 1)
+                                        <a href="{{ route('portal.view-material-reservation', $request->id) }}" wire:navigate
+                                           class="inline-block text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">+{{ $request->items->count() - 1 }} more</a>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @php $status = $request->status; @endphp

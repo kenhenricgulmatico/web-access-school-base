@@ -293,7 +293,11 @@ new #[Layout('layouts.admin')] class extends Component
                         );
                     }
 
+                    $stockBefore = (int) $resource->quantity_available;
                     $resource->decrement('quantity_available', $qty);
+
+                    // ✅ Remember Before → After for Stock History
+                    \App\Support\StockSnapshot::recordApproval($fresh->id, $resource->id, $stockBefore);
 
                     $existing = DB::table('resource_all_locations')
                         ->where('resource_id', $resource->id)
@@ -609,9 +613,20 @@ new #[Layout('layouts.admin')] class extends Component
 
                 // Good condition → back to the Admin's main stock
                 if ($this->returnCondition === 'good') {
+                    // ✅ Remember the stock level before / after, for Stock History's "Before → After"
+                    $before = (int) DB::table('resources')
+                        ->where('id', $item->resource_id)
+                        ->lockForUpdate()
+                        ->value('quantity_available');
+
                     DB::table('resources')
                         ->where('id', $item->resource_id)
                         ->increment('quantity_available', $item->quantity);
+
+                    $item->update([
+                        'stock_before_return' => $before,
+                        'stock_after_return'  => $before + (int) $item->quantity,
+                    ]);
                 }
             });
         } catch (\RuntimeException $e) {

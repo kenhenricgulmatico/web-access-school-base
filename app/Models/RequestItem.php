@@ -33,6 +33,10 @@ class RequestItem extends Model
         'return_notes',
         'received_by',
         'reminder_sent_at',
+        'stock_before_return',
+        'stock_after_return',
+        'stock_before_approval',
+        'stock_after_approval',
     ];
 
     protected $casts = [

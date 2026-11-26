@@ -15,7 +15,7 @@
     </div>
 
     {{-- Stats Cards --}}
-    <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
 
         {{-- Total Requests --}}
         <div class="relative overflow-hidden flex flex-col bg-white border border-[#E4E1D8] shadow-sm rounded-2xl p-4 sm:p-6 dark:bg-[#16281F] dark:border-[#2A4B3A]">
@@ -33,20 +33,50 @@
             <div class="absolute bottom-0 left-0 right-0 h-1 bg-blue-500 rounded-b-2xl"></div>
         </div>
 
-        {{-- Pending --}}
-        <div class="relative overflow-hidden flex flex-col bg-white border border-[#E4E1D8] shadow-sm rounded-2xl p-4 sm:p-6 dark:bg-[#16281F] dark:border-[#2A4B3A]">
+        {{-- ✅ Waiting for you (faculty / student requests the Program Head must act on) --}}
+        @php
+            $mine     = $this->waitingForMe;
+            $mineLink = $mine['facility'] === 0 && $mine['material'] > 0
+                ? route('coordinator.material')
+                : route('coordinator.facility');
+        @endphp
+        <a href="{{ $mineLink }}" wire:navigate
+           class="relative overflow-hidden flex flex-col bg-white border shadow-sm rounded-2xl p-4 sm:p-6 transition hover:shadow-md dark:bg-[#16281F]
+                  {{ $mine['total'] ? 'border-[#D4A537] ring-1 ring-[#D4A537]/40' : 'border-[#E4E1D8] dark:border-[#2A4B3A]' }}">
             <div class="flex items-center justify-between mb-2 sm:mb-4">
-                <p class="text-xs sm:text-sm font-medium text-gray-500 dark:text-neutral-400">Pending</p>
+                <p class="text-xs sm:text-sm font-medium text-gray-500 dark:text-neutral-400">Waiting for you</p>
                 <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#D4A537]/12 dark:bg-[#D4A537]/20 flex items-center justify-center shrink-0">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5 text-[#B8862A]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
                 </div>
             </div>
-            <h3 class="text-2xl sm:text-4xl font-bold text-[#123524] dark:text-neutral-200">{{ $this->pendingRequests }}</h3>
-            <p class="text-xs text-gray-400 mt-1">Awaiting action</p>
+            <h3 class="text-2xl sm:text-4xl font-bold text-[#123524] dark:text-neutral-200">{{ $mine['total'] }}</h3>
+            <p class="text-xs text-gray-400 mt-1">
+                @if ($mine['total'])
+                    {{ $mine['facility'] }} facility · {{ $mine['material'] }} material
+                @else
+                    Nothing to review
+                @endif
+            </p>
             <div class="absolute bottom-0 left-0 right-0 h-1 bg-[#D4A537] rounded-b-2xl"></div>
-        </div>
+        </a>
+
+        {{-- ✅ Waiting for Admin (the Program Head's own requests) --}}
+        <a href="{{ route('coordinator.request-to-admin.view-request') }}" wire:navigate
+           class="relative overflow-hidden flex flex-col bg-white border border-[#E4E1D8] shadow-sm rounded-2xl p-4 sm:p-6 transition hover:shadow-md dark:bg-[#16281F] dark:border-[#2A4B3A]">
+            <div class="flex items-center justify-between mb-2 sm:mb-4">
+                <p class="text-xs sm:text-sm font-medium text-gray-500 dark:text-neutral-400">Waiting for Admin</p>
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-teal-600 dark:text-teal-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                    </svg>
+                </div>
+            </div>
+            <h3 class="text-2xl sm:text-4xl font-bold text-[#123524] dark:text-neutral-200">{{ $this->waitingForAdmin }}</h3>
+            <p class="text-xs text-gray-400 mt-1">Your requests sent to the Admin</p>
+            <div class="absolute bottom-0 left-0 right-0 h-1 bg-teal-500 rounded-b-2xl"></div>
+        </a>
 
         {{-- Total Faculty --}}
         <div class="relative overflow-hidden flex flex-col bg-white border border-[#E4E1D8] shadow-sm rounded-2xl p-4 sm:p-6 dark:bg-[#16281F] dark:border-[#2A4B3A]">
@@ -65,7 +95,33 @@
 
     </div>
 
-    <div class="grid lg:grid-cols-1 gap-4 sm:gap-6">
+    {{-- ✅ Overdue borrowed items (only when something is out) — details live on Borrowed Items --}}
+    @php $borrowed = $this->borrowedItems; @endphp
+    @if ($borrowed['out'] > 0)
+        <a href="{{ route('coordinator.borrowed-items', $borrowed['overdue'] ? ['filter' => 'overdue'] : []) }}" wire:navigate
+           class="flex items-center justify-between gap-4 px-4 sm:px-5 py-3.5 rounded-2xl border transition hover:shadow-sm
+                  {{ $borrowed['overdue']
+                      ? 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-900/50 dark:text-red-300'
+                      : 'bg-white border-[#E4E1D8] text-[#123524] dark:bg-[#16281F] dark:border-[#2A4B3A] dark:text-neutral-200' }}">
+            <span class="flex items-center gap-3 min-w-0">
+                <svg class="size-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                </svg>
+                <span class="text-sm">
+                    @if ($borrowed['overdue'])
+                        <strong>{{ $borrowed['overdue'] }} {{ \Illuminate\Support\Str::plural('item', $borrowed['overdue']) }} overdue</strong>
+                        · {{ $borrowed['out'] }} out on loan
+                    @else
+                        <strong>{{ $borrowed['out'] }} {{ \Illuminate\Support\Str::plural('item', $borrowed['out']) }} out on loan</strong>
+                        · none overdue
+                    @endif
+                </span>
+            </span>
+            <span class="text-sm font-semibold whitespace-nowrap">View borrowed items →</span>
+        </a>
+    @endif
+
+    <div class="grid lg:grid-cols-2 gap-4 sm:gap-6">
 
         {{-- Bar Chart - Request Types --}}
         <div class="bg-white border border-[#E4E1D8] shadow-sm rounded-2xl p-4 sm:p-6 dark:bg-[#16281F] dark:border-[#2A4B3A]">
@@ -81,6 +137,60 @@
             <div class="relative w-full h-[200px]">
                 <canvas id="barChart"></canvas>
             </div>
+        </div>
+
+        {{-- ✅ Request Status (department) — drawn in SVG, no extra script --}}
+        @php $status = $this->statusBreakdown; @endphp
+        <div class="bg-white border border-[#E4E1D8] shadow-sm rounded-2xl p-4 sm:p-6 dark:bg-[#16281F] dark:border-[#2A4B3A]">
+            <div class="mb-4">
+                <h2 class="text-base sm:text-lg font-semibold text-[#123524] dark:text-neutral-200" style="font-family: 'Fraunces', serif;">Request Status</h2>
+                <p class="text-xs sm:text-sm text-gray-400">Approved, pending and rejected — your department</p>
+            </div>
+
+            @if ($status['total'] === 0)
+                <div class="flex items-center justify-center h-[200px] text-sm text-gray-400">No requests yet.</div>
+            @else
+                <div class="flex flex-col sm:flex-row items-center gap-6 min-h-[200px]">
+                    {{-- Donut: circumference 100, so each slice's length = its percent --}}
+                    <div class="relative size-40 shrink-0">
+                        <svg viewBox="0 0 42 42" class="size-full -rotate-90" role="img"
+                             aria-label="Request status: {{ collect($status['slices'])->map(fn ($s) => $s['label'] . ' ' . $s['count'])->implode(', ') }}">
+                            <circle cx="21" cy="21" r="15.9155" fill="none" stroke-width="6" stroke="#F1EEE6"></circle>
+                            @php $offset = 0; @endphp
+                            @foreach ($status['slices'] as $slice)
+                                @if ($slice['count'] > 0)
+                                    <circle cx="21" cy="21" r="15.9155" fill="none" stroke-width="6"
+                                        stroke="{{ $slice['color'] }}"
+                                        stroke-dasharray="{{ $slice['percent'] }} {{ 100 - $slice['percent'] }}"
+                                        stroke-dashoffset="{{ -$offset }}">
+                                        <title>{{ $slice['label'] }}: {{ $slice['count'] }} ({{ $slice['percent'] }}%)</title>
+                                    </circle>
+                                    @php $offset += $slice['percent']; @endphp
+                                @endif
+                            @endforeach
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span class="text-2xl font-bold text-[#123524] dark:text-white leading-none">{{ $status['total'] }}</span>
+                            <span class="text-[11px] text-gray-400 mt-1">requests</span>
+                        </div>
+                    </div>
+
+                    <ul class="flex-1 w-full space-y-2.5">
+                        @foreach ($status['slices'] as $slice)
+                            <li class="flex items-center justify-between gap-3">
+                                <span class="flex items-center gap-2">
+                                    <span class="size-2.5 rounded-full shrink-0" style="background: {{ $slice['color'] }}"></span>
+                                    <span class="text-sm text-gray-700 dark:text-neutral-300">{{ $slice['label'] }}</span>
+                                </span>
+                                <span class="text-sm whitespace-nowrap">
+                                    <span class="font-semibold text-[#123524] dark:text-white">{{ $slice['count'] }}</span>
+                                    <span class="text-gray-400">· {{ $slice['percent'] }}%</span>
+                                </span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -214,67 +324,5 @@
             btn.classList.remove('text-gray-500', 'dark:text-neutral-400');
         });
     });
-
-    // 2. Pie Chart - Status Breakdown
-    const pieChartEl = document.getElementById('pieChart');
-    if (pieChartEl) {
-        new Chart(pieChartEl, {
-            type: 'pie',
-            data: {
-                labels: ['Pending', 'Approved', 'Rejected'],
-                datasets: [{
-                    data: [
-                        {{ $this->pendingRequests }},
-                        {{ $this->approvedRequests }},
-                        {{ $this->rejectedRequests }}
-                    ],
-                    backgroundColor: [
-                        'rgba(212, 165, 55, 0.9)',
-                        'rgba(28, 107, 69, 0.9)',
-                        'rgba(184, 53, 42, 0.9)',
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#fff',
-                    hoverOffset: 6,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } }
-            }
-        });
-    }
-
-    // 3. Radial/Doughnut Chart - Approval Rate
-    const radialChartEl = document.getElementById('radialChart');
-    if (radialChartEl) {
-        new Chart(radialChartEl, {
-            type: 'doughnut',
-            data: {
-                labels: ['Approved', 'Pending', 'Rejected'],
-                datasets: [{
-                    data: [
-                        {{ $this->approvedRequests }},
-                        {{ $this->pendingRequests }},
-                        {{ $this->rejectedRequests }}
-                    ],
-                    backgroundColor: [
-                        'rgba(28, 107, 69, 0.9)',
-                        'rgba(212, 165, 55, 0.9)',
-                        'rgba(184, 53, 42, 0.9)',
-                    ],
-                    borderWidth: 0,
-                    hoverOffset: 6,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '75%',
-                plugins: { legend: { display: false } }
-            }
-        });
-    }
 </script>
 </div>

@@ -12,7 +12,7 @@ class StudentApprovedNotification extends Notification implements ShouldQueue
     use Queueable;
 
     public function __construct(
-        protected string $role = 'Student', // ✅ default keeps old calls working
+        protected string $role = 'Faculty', // ✅ only admin, program head and faculty accounts exist
     ) {}
 
     public function via(object $notifiable): array

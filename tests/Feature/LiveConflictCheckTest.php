@@ -22,7 +22,7 @@ class LiveConflictCheckTest extends TestCase
     {
         $dept        = $this->createDepartment();
         $programHead = $this->createUser('program head', $dept);
-        $student     = $this->createUser('student', $dept);
+        $student     = $this->createUser('faculty', $dept);
 
         // Existing approved booking
         $existing = ResourceRequest::create([
@@ -57,8 +57,8 @@ class LiveConflictCheckTest extends TestCase
     public function test_student_create_form_shows_live_conflict_error(): void
     {
         $dept    = $this->createDepartment();
-        $studentA = $this->createUser('student', $dept);
-        $studentB = $this->createUser('student', $dept);
+        $studentA = $this->createUser('faculty', $dept);
+        $studentB = $this->createUser('faculty', $dept);
 
         // Existing approved booking
         $existing = ResourceRequest::create([

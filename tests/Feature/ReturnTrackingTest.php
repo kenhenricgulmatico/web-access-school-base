@@ -56,7 +56,7 @@ class ReturnTrackingTest extends TestCase
     {
         $dept = $this->createDepartment();
         $ph = $this->createUser('program head', $dept);
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
 
         $chair = $this->borrow($dept, $student, true);
         Livewire::actingAs($ph)->test('pages::coordinator.request-material')->call('accept', $chair->id);
@@ -74,7 +74,7 @@ class ReturnTrackingTest extends TestCase
     public function test_facility_reservation_items_are_due_on_reservation_day(): void
     {
         $dept = $this->createDepartment();
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $res = $this->createMaterial('Projector', 5);
         $res->update(['is_returnable' => true]);
 
@@ -97,7 +97,7 @@ class ReturnTrackingTest extends TestCase
     {
         $dept = $this->createDepartment();
         $ph = $this->createUser('program head', $dept);
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $req = $this->borrow($dept, $student, true, 3);
 
         Livewire::actingAs($ph)->test('pages::coordinator.request-material')->call('accept', $req->id);
@@ -121,7 +121,7 @@ class ReturnTrackingTest extends TestCase
     {
         $dept = $this->createDepartment();
         $ph = $this->createUser('program head', $dept);
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $req = $this->borrow($dept, $student, true, 3);
         Livewire::actingAs($ph)->test('pages::coordinator.request-material')->call('accept', $req->id);
         $item = $req->items()->first();
@@ -137,7 +137,7 @@ class ReturnTrackingTest extends TestCase
     {
         Notification::fake();
         $dept = $this->createDepartment();
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $other = $this->createUser('faculty', $dept);
 
         $overdue = $this->borrow($dept, $student, true);
@@ -161,7 +161,7 @@ class ReturnTrackingTest extends TestCase
     {
         Notification::fake();
         $dept = $this->createDepartment();
-        $student = $this->createUser('student', $dept);
+        $student = $this->createUser('faculty', $dept);
         $req = $this->borrow($dept, $student, true);
         $req->update(['status' => 'approved']);
         $req->items()->update(['due_back_at' => now()->toDateString(), 'returned_at' => now()]);
@@ -175,8 +175,8 @@ class ReturnTrackingTest extends TestCase
         $dept = $this->createDepartment();
         $otherDept = $this->createDepartment('Business');
         $ph = $this->createUser('program head', $dept);
-        $student = $this->createUser('student', $dept);
-        $outsider = $this->createUser('student', $otherDept);
+        $student = $this->createUser('faculty', $dept);
+        $outsider = $this->createUser('faculty', $otherDept);
 
         $mine = $this->borrow($dept, $student, true);
         $mine->update(['status' => 'approved']);

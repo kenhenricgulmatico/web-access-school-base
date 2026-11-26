@@ -86,7 +86,7 @@
               <tr wire:key="mine-{{ $item->id }}">
                 <td class="px-4 py-3">
                   <p class="font-semibold text-gray-900 dark:text-neutral-100">{{ $item->item_name }}</p>
-                  <p class="text-xs text-gray-500">{{ number_format($item->quantity) }} pcs · Request #{{ $item->request_id }}</p>
+                  <p class="text-xs text-gray-500">{{ number_format($item->quantity) }} pcs</p>
                   @if($facultyItem)
                     <p class="text-xs text-gray-500">For {{ $facultyItem->request?->user?->name ?? 'a faculty member' }}</p>
                   @endif
@@ -225,7 +225,7 @@
               <tr wire:key="item-{{ $item->id }}">
                 <td class="px-4 py-3">
                   <p class="font-semibold text-gray-900 dark:text-neutral-100">{{ $item->item_name }}</p>
-                  <p class="text-xs text-gray-500">Qty {{ $item->quantity }} · Request #{{ $item->request_id }}</p>
+                  <p class="text-xs text-gray-500">Qty {{ $item->quantity }}</p>
                   @if($adminItem)
                     <span class="inline-flex mt-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">Borrowed from the Admin</span>
                   @endif
