@@ -1,36 +1,39 @@
 <?php
 
+use App\Models\Department;
+use App\Models\Request as ResourceRequest;
 use App\Models\RequestType;
-use App\Models\RequestItem;
-use App\Models\Resource;
-use App\Support\BookingDate;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * Student / Faculty calendar (Objective 4 of the study).
- *  - "My Requests": the user's own facility reservations and material requests (any status).
- *  - "Facility Availability": every APPROVED facility booking shown as a room timeline,
- *    so users can see free time slots before reserving. Requester names are hidden.
+ * ✅ Faculty calendar (same as the Program Head calendar)
+ *  - Approved facility reservations and material requests of ALL departments (like the Admin calendar),
+ *    so rooms and materials can be planned across departments.
+ *  - Facility / Material are separate tabs; a department picker narrows everything down.
+ *  - Each room has a Print bar (all departments or one) — same printout as the Admin calendar.
+ *  Endorsed copies sent to the Admin are skipped — the original faculty request already shows it.
  */
 new #[Layout('layouts.student-faculty')] class extends Component
 {
     public int    $year;
     public int    $month;
     public string $selectedDate = '';
-    public string $activeTab    = 'mine'; // 'mine' | 'availability'
-
-    /** Timeline range shown in the room schedule (24h clock). */
-    public const DAY_START = 7;
-    public const DAY_END   = 19;
+    public string $activeTab    = 'facility'; // facility | material
+    public string $department   = '';         // '' = all departments, otherwise a department id
 
     public function mount(): void
     {
         $this->goToToday();
     }
+
+    // ============================================================
+    // NAVIGATION
+    // ============================================================
 
     public function goToToday(): void
     {
@@ -39,241 +42,167 @@ new #[Layout('layouts.student-faculty')] class extends Component
         $this->selectedDate = now()->format('Y-m-d');
     }
 
-    /** Earliest month the calendar can show: 12 months back (for history). */
-    protected function firstMonth(): Carbon
-    {
-        return now()->startOfMonth()->subMonths(12);
-    }
-
-    /** Latest month the calendar can show: the last month users can book in. */
-    protected function lastMonth(): Carbon
-    {
-        return Carbon::parse(BookingDate::max())->startOfMonth();
-    }
-
-    protected function currentMonth(): Carbon
-    {
-        return Carbon::create($this->year, $this->month, 1)->startOfMonth();
-    }
-
-    #[Computed]
-    public function canGoPrevious(): bool
-    {
-        return $this->currentMonth()->gt($this->firstMonth());
-    }
-
-    #[Computed]
-    public function canGoNext(): bool
-    {
-        return $this->currentMonth()->lt($this->lastMonth());
-    }
-
     public function previousMonth(): void
     {
-        if (! $this->canGoPrevious()) {
-            return;
-        }
-        $d = $this->currentMonth()->subMonth();
-        $this->year  = $d->year;
-        $this->month = $d->month;
+        $d = Carbon::create($this->year, $this->month, 1)->subMonth();
+        [$this->year, $this->month] = [$d->year, $d->month];
     }
 
     public function nextMonth(): void
     {
-        if (! $this->canGoNext()) {
-            return;
-        }
-        $d = $this->currentMonth()->addMonth();
-        $this->year  = $d->year;
-        $this->month = $d->month;
+        $d = Carbon::create($this->year, $this->month, 1)->addMonth();
+        [$this->year, $this->month] = [$d->year, $d->month];
     }
 
     public function selectDate(string $date): void
     {
-        // Ignore anything that is not a real Y-m-d date inside the shown range.
-        $d = Carbon::createFromFormat('!Y-m-d', $date) ?: null;
-        if (! $d || $d->lt($this->firstMonth()) || $d->gt($this->lastMonth()->endOfMonth())) {
-            return;
-        }
-        $this->selectedDate = $d->format('Y-m-d');
+        $this->selectedDate = Carbon::parse($date)->format('Y-m-d');
     }
 
     public function setTab(string $tab): void
     {
-        $this->activeTab = $tab === 'availability' ? 'availability' : 'mine';
+        $this->activeTab = in_array($tab, ['facility', 'material'], true) ? $tab : 'facility';
     }
 
-    // ------------------------------------------------------------------
-    // Queries
-    // ------------------------------------------------------------------
+    // ============================================================
+    // DATA
+    // ============================================================
 
-    /** Items of the logged-in user's own requests. */
-    protected function myItemsQuery()
-    {
-        return RequestItem::query()
-            ->with(['request.approvals'])
-            ->whereHas('request', fn ($q) => $q
-                ->where('user_id', Auth::id())
-                ->whereIn('status', ['pending', 'approved', 'rejected']));
-    }
-
-    /** Approved facility bookings of everyone (facility rows have no resource_id). */
-    protected function bookedFacilitiesQuery()
-    {
-        return RequestItem::query()
-            ->whereNull('resource_id')
-            ->whereNotNull('start_time')
-            ->whereHas('request', fn ($q) => $q->where('status', 'approved'));
-    }
-
-    /** Turns a request's items into one display row. */
-    protected function toRow($items): array
-    {
-        $request   = $items->first()->request;
-        $facility  = $items->firstWhere('resource_id', null);
-        $materials = $items->whereNotNull('resource_id');
-
-        if ($facility) {
-            $title = $facility->item_name;
-        } else {
-            $first = $materials->first();
-            $title = "{$first->item_name} (x{$first->quantity})";
-            if ($materials->count() > 1) {
-                $title .= ' +' . ($materials->count() - 1) . ' more';
-            }
-        }
-
-        $reason = $request->status === 'rejected'
-            ? optional($request->approvals->where('status', 'rejected')->sortByDesc('id')->first())->remarks
-            : null;
-
-        return [
-            'id'         => $request->id,
-            'status'     => $request->status,
-            'isFacility' => (int) $request->request_type_id === RequestType::FACILITY,
-            'title'      => $title,
-            'time'       => ($facility && $facility->start_time)
-                ? Carbon::parse($facility->start_time)->format('g:i A') . ' – ' . Carbon::parse($facility->end_time)->format('g:i A')
-                : null,
-            'materials'  => $facility
-                ? $materials->map(fn ($m) => "{$m->item_name} (x{$m->quantity})")->implode(', ')
-                : null,
-            'purpose'    => $request->purpose,
-            'reason'     => $reason,
-            // ✅ Borrowed items still to be returned, e.g. "Chair (x2) — return by Nov 03 (Due in 3 days)"
-            'returns'    => $materials
-                ->filter(fn ($m) => $m->due_back_at && ! $m->returned_at)
-                ->map(fn ($m) => [
-                    'text'    => "{$m->item_name} (x{$m->quantity}) — return by " . $m->due_back_at->format('M d') . ' (' . \App\Support\ReturnTracking::label($m) . ')',
-                    'overdue' => $m->isOverdue(),
-                ])->values()->all(),
-        ];
-    }
-
-    // ------------------------------------------------------------------
-    // Month grid
-    // ------------------------------------------------------------------
-
-    /** Every cell of the month grid, with the chips to show inside it. */
     #[Computed]
-    public function calendarCells(): array
+    public function departments(): array
+    {
+        return Department::orderBy('department_name')->pluck('department_name', 'id')->all();
+    }
+
+    #[Computed]
+    public function myDepartmentId(): ?int
+    {
+        return Auth::user()->department_id;
+    }
+
+    /** Approved facility / material requests (all departments, or the picked one), no endorsed copies. */
+    protected function scoped($query, string $prefix = '')
+    {
+        return $query
+            ->where("{$prefix}status", 'approved')
+            ->whereIn("{$prefix}request_type_id", [RequestType::FACILITY, RequestType::MATERIAL])
+            ->whereNull("{$prefix}forwarded_from_request_id")
+            ->when($this->department !== '', fn ($q) => $q->where("{$prefix}department_id", (int) $this->department));
+    }
+
+    /** date => ['facility' => n, 'material' => n] for the shown month. */
+    #[Computed]
+    public function monthCounts(): array
     {
         $start = Carbon::create($this->year, $this->month, 1)->startOfMonth();
         $end   = $start->copy()->endOfMonth();
-        $range = [$start->toDateString(), $end->toDateString()];
 
-        // My requests this month, grouped by date → request
-        $mine = $this->myItemsQuery()
-            ->whereBetween('request_date', $range)
-            ->get()
-            ->groupBy(fn ($i) => Carbon::parse($i->request_date)->format('Y-m-d'))
-            ->map(fn ($dayItems) => $dayItems->groupBy('request_id')->map(fn ($items) => $this->toRow($items))->values());
+        $rows = $this->scoped(
+                DB::table('request_items as ri')->join('requests as r', 'r.id', '=', 'ri.request_id'),
+                'r.'
+            )
+            ->whereBetween('ri.request_date', [$start->toDateString(), $end->toDateString()])
+            ->selectRaw('DATE(ri.request_date) as d, r.request_type_id as t, COUNT(DISTINCT r.id) as n')
+            ->groupBy('d', 't')
+            ->get();
 
-        // Number of approved facility bookings per date
-        $booked = $this->bookedFacilitiesQuery()
-            ->whereBetween('request_date', $range)
-            ->pluck('request_date')
-            ->countBy(fn ($d) => Carbon::parse($d)->format('Y-m-d'));
-
-        $cells = array_fill(0, $start->dayOfWeek, null);
-
-        for ($day = 1; $day <= $start->daysInMonth; $day++) {
-            $key  = $start->copy()->day($day)->format('Y-m-d');
-            $rows = $mine->get($key, collect());
-
-            $cells[] = [
-                'day'    => $day,
-                'date'   => $key,
-                'rows'   => $rows,
-                'booked' => (int) $booked->get($key, 0),
-            ];
+        $counts = [];
+        foreach ($rows as $row) {
+            $key = (int) $row->t === RequestType::FACILITY ? 'facility' : 'material';
+            $counts[$row->d][$key] = (int) $row->n;
         }
 
-        while (count($cells) % 7 !== 0) {
-            $cells[] = null;
+        return $counts;
+    }
+
+    /** Month grid: null for padding, otherwise ['date', 'day', 'facility', 'material']. */
+    #[Computed]
+    public function calendarCells(): array
+    {
+        $first  = Carbon::create($this->year, $this->month, 1);
+        $cells  = array_fill(0, $first->dayOfWeek, null);
+        $counts = $this->monthCounts;
+
+        for ($d = 1; $d <= $first->daysInMonth; $d++) {
+            $date    = $first->copy()->day($d)->format('Y-m-d');
+            $cells[] = [
+                'date'     => $date,
+                'day'      => $d,
+                'facility' => $counts[$date]['facility'] ?? 0,
+                'material' => $counts[$date]['material'] ?? 0,
+            ];
         }
 
         return $cells;
     }
 
-    // ------------------------------------------------------------------
-    // Selected day panel
-    // ------------------------------------------------------------------
-
-    #[Computed]
-    public function myRequests()
+    /** Approved requests that have an item on the selected day. */
+    protected function dayRequests(int $type)
     {
-        return $this->myItemsQuery()
-            ->whereDate('request_date', $this->selectedDate)
-            ->get()
-            ->groupBy('request_id')
-            ->map(fn ($items) => $this->toRow($items))
-            ->values();
+        return $this->scoped(ResourceRequest::query())
+            ->where('request_type_id', $type)
+            ->whereHas('items', fn ($q) => $q->whereDate('request_date', $this->selectedDate))
+            ->with(['user', 'department', 'items'])
+            ->get();
     }
 
-    /** One row per facility, with booked bars positioned on a 7 AM – 7 PM timeline. */
+    /**
+     * Rooms booked on the selected day:
+     * [ ['room' => 'Room 101', 'slots' => [ [start, end, department, mine, user, purpose, extras], ... ]], ... ]
+     */
     #[Computed]
-    public function roomSchedule(): array
+    public function rooms(): array
     {
-        $bookings = $this->bookedFacilitiesQuery()
-            ->whereDate('request_date', $this->selectedDate)
-            ->orderBy('start_time')
-            ->get(['item_name', 'start_time', 'end_time']);
+        $rooms = [];
 
-        $facilityNames = Resource::whereHas('resourceType', fn ($q) => $q->where('type_name', 'like', '%facilit%'))
-            ->orderBy('resource_name')
-            ->pluck('resource_name');
+        foreach ($this->dayRequests(RequestType::FACILITY) as $request) {
+            $dayItems = $request->items->filter(fn ($i) =>
+                $i->request_date && Carbon::parse($i->request_date)->toDateString() === $this->selectedDate);
+            $pool = $dayItems->isNotEmpty() ? $dayItems : $request->items;
+            $room = $pool->first(fn ($i) => ! $i->resource_id && $i->start_time)
+                 ?? $pool->firstWhere('resource_id', null)
+                 ?? $pool->first();
 
-        $names = $facilityNames->merge($bookings->pluck('item_name'))->unique()->values();
+            $name = $room->item_name ?? 'Unknown room';
 
-        $span = self::DAY_END - self::DAY_START;
-        $toHour = function ($time) {
-            $t = Carbon::parse($time);
-            return $t->hour + $t->minute / 60;
-        };
+            $rooms[$name]['room']    = $name;
+            $rooms[$name]['slots'][] = [
+                'start'      => $room?->start_time ? Carbon::parse($room->start_time)->format('g:i A') : null,
+                'end'        => $room?->end_time   ? Carbon::parse($room->end_time)->format('g:i A')   : null,
+                'sort'       => $room?->start_time ? Carbon::parse($room->start_time)->format('H:i')   : '99:99',
+                'department' => $request->department->department_name ?? 'N/A',
+                'mine'       => (int) $request->department_id === (int) $this->myDepartmentId,
+                'user'       => $request->user->name ?? 'N/A',
+                'purpose'    => $request->purpose,
+                'extras'     => $request->items->whereNotNull('resource_id')
+                                    ->map(fn ($i) => "{$i->item_name} ×{$i->quantity}")->implode(', '),
+            ];
+        }
 
-        return $names->map(function ($name) use ($bookings, $span, $toHour) {
-            $bars = $bookings->where('item_name', $name)->map(function ($b) use ($span, $toHour) {
-                $from = max(self::DAY_START, $toHour($b->start_time));
-                $to   = min(self::DAY_END, $toHour($b->end_time));
-                if ($to <= $from) {
-                    return null;
-                }
+        foreach ($rooms as &$r) {
+            usort($r['slots'], fn ($a, $b) => strcmp($a['sort'], $b['sort']));
+        }
+        unset($r);
+        uksort($rooms, 'strnatcasecmp');
 
-                return [
-                    'left'  => round(($from - self::DAY_START) / $span * 100, 2),
-                    'width' => round(($to - $from) / $span * 100, 2),
-                    'label' => Carbon::parse($b->start_time)->format('g:i') . '–' . Carbon::parse($b->end_time)->format('g:i A'),
-                ];
-            })->filter()->values();
-
-            return ['name' => $name, 'bars' => $bars];
-        })->all();
+        return array_values($rooms);
     }
 
+    /** Material requests on the selected day. */
     #[Computed]
-    public function bookedCount(): int
+    public function materials(): array
     {
-        return collect($this->roomSchedule)->sum(fn ($r) => count($r['bars']));
+        return $this->dayRequests(RequestType::MATERIAL)
+            ->map(fn ($r) => [
+                'id'         => $r->id,
+                'department' => $r->department->department_name ?? 'N/A',
+                'mine'       => (int) $r->department_id === (int) $this->myDepartmentId,
+                'user'       => $r->user->name ?? 'N/A',
+                'items'      => $r->items->whereNotNull('resource_id')->map(fn ($i) => "{$i->item_name} ×{$i->quantity}")->values()->all(),
+                'purpose'    => $r->purpose,
+            ])
+            ->sortBy([['department', 'asc'], ['user', 'asc']])
+            ->values()
+            ->all();
     }
 };

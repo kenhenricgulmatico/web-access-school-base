@@ -79,6 +79,22 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
               <span class="truncate">Reservations & Requests</span>
             </a>
           </li>
+          {{-- ✅ Calendar: my department's approved reservations and material requests --}}
+          <li>
+            <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition min-w-0
+                {{ request()->routeIs('coordinator.calendar')
+                    ? 'bg-[#123524] text-white font-medium shadow-sm'
+                    : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
+                focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800" href="{{ route('coordinator.calendar') }}">
+              <svg class="shrink-0 size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              <span class="truncate">Calendar</span>
+            </a>
+          </li>
         </ul>
       </div>
 

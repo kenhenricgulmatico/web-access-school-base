@@ -72,6 +72,9 @@ Route::middleware(['auth', 'approved', 'program head', 'department'])->prefix('p
     //Borrowed items (return tracking)
     Route::livewire('/borrowed-items', 'pages::coordinator.borrowed-items')->name('coordinator.borrowed-items');
 
+    //Calendar (my department's approved reservations and material requests)
+    Route::livewire('/calendar', 'pages::coordinator.calendar')->name('coordinator.calendar');
+
     //Request to admin
     Route::livewire('/request-to-admin/view-request', 'pages::coordinator.request-to-admin.view-request')->name('coordinator.request-to-admin.view-request');
     Route::livewire('/request-to-admin/create', 'pages::coordinator.request-to-admin.create-request')->name('coordinator.request-to-admin.create-request');
