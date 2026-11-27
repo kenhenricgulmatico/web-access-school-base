@@ -9,13 +9,13 @@
      They're sent back with the next request (month / department change) so nothing resets. --}}
 <div x-data="{ tab: $wire.entangle('activeTab'), sel: $wire.entangle('selectedDate') }"
      class="min-h-screen bg-[#F4F6F3] dark:bg-[#0E1A14] text-[#1F2A24] dark:text-neutral-100">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-6">
+  <div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8 flex flex-col gap-6">
 
     {{-- ===== Header ===== --}}
     <div class="flex flex-wrap items-end justify-between gap-4">
       <div class="flex flex-col gap-1.5">
-        <p class="text-xs font-semibold tracking-widest uppercase text-[#8A6A1F] dark:text-[#E8C877]">Faculty Portal</p>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#123524] dark:text-green-200">Calendar</h1>
+        <p class="text-xs font-semibold tracking-widest uppercase text-[#1C6B45] dark:text-[#7FBF8E]">Faculty Portal</p>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">Calendar</h1>
         <p class="text-sm text-[#4A564F] dark:text-neutral-400">See which rooms are booked (every department) and your department's material requests.</p>
       </div>
 
@@ -28,7 +28,7 @@
               class="min-h-10 px-4 rounded-xl text-sm font-semibold transition inline-flex items-center gap-2
                 {{ $activeTab === $key ? 'bg-white dark:bg-[#16281F] text-[#123524] dark:text-green-200 shadow-sm' : 'text-[#4A564F] dark:text-neutral-400 hover:text-[#123524] dark:hover:text-green-200' }}"
               :class="{ 'bg-white dark:bg-[#16281F] text-[#123524] dark:text-green-200 shadow-sm': tab === '{{ $key }}', 'text-[#4A564F] dark:text-neutral-400 hover:text-[#123524] dark:hover:text-green-200': tab !== '{{ $key }}' }">
-              <span class="size-2 rounded-full {{ $key === 'facility' ? 'bg-[#1C7A4A]' : 'bg-[#B8862A]' }}"></span>
+              <span class="size-2 rounded-full {{ $key === 'facility' ? 'bg-[#123524] dark:bg-[#9FD3AE]' : 'bg-[#7FBF8E]' }}"></span>
               {{ $label }}
             </button>
           @endforeach
@@ -58,7 +58,7 @@
         </select>
         <span x-show="tab === 'material'" @if($isFacility) style="display: none" @endif
           class="inline-flex items-center gap-2 min-h-11 px-4 rounded-xl border border-[#D9DED9] dark:border-[#2A4B3A] bg-white dark:bg-[#16281F] text-sm font-medium text-[#1F2A24] dark:text-neutral-100">
-          <span class="size-2 rounded-full bg-[#B8862A]"></span>
+          <span class="size-2 rounded-full bg-[#7FBF8E]"></span>
           {{ $this->departments[(int) $this->myDepartmentId] ?? 'No department' }} <span class="text-[#8A968F] dark:text-neutral-500 font-normal">(your department)</span>
         </span>
 
@@ -87,7 +87,7 @@
             <h2 class="text-sm sm:text-base font-bold text-[#123524] dark:text-green-200">
               {{ \Carbon\Carbon::create($year, $month, 1)->format('F Y') }}
             </h2>
-            <button type="button" wire:click="goToToday" class="text-[11px] font-semibold text-[#8A6A1F] dark:text-[#E8C877] hover:underline">
+            <button type="button" wire:click="goToToday" class="text-[11px] font-semibold text-[#1C6B45] dark:text-[#7FBF8E] hover:underline">
               Today
             </button>
           </div>
@@ -118,7 +118,7 @@
                          . ($cell['facility'] ? ', ' . $cell['facility'] . ' ' . \Illuminate\Support\Str::plural('reservation', $cell['facility']) : '')
                          . ($cell['material'] ? ', ' . $cell['material'] . ' material ' . \Illuminate\Support\Str::plural('request', $cell['material']) : '');
                 $selOn   = 'bg-[#123524] dark:bg-[#1C6B45] text-white shadow-sm';
-                $selOff  = $isToday ? 'bg-[#F3E9CC] dark:bg-[#D4A537]/20 text-[#6B5216] dark:text-[#E8C877] ring-1 ring-[#D4A537]' : 'text-[#1F2A24] dark:text-neutral-100 hover:bg-[#EEF1EE] dark:hover:bg-[#1F3A2C]';
+                $selOff  = $isToday ? 'bg-[#E8F3EC] dark:bg-[#1C6B45]/25 text-[#123524] dark:text-[#9FD3AE] ring-1 ring-[#1C6B45]' : 'text-[#1F2A24] dark:text-neutral-100 hover:bg-[#EEF1EE] dark:hover:bg-[#1F3A2C]';
               @endphp
               <div class="flex flex-col items-center py-0.5">
                 <button type="button" @click="sel = '{{ $cell['date'] }}'" wire:key="cell-{{ $cell['date'] }}"
@@ -136,7 +136,7 @@
                     <span x-show="tab === 'facility'" @if(! $isFacility) style="display: none" @endif class="size-1.5 rounded-full bg-[#1C7A4A]"></span>
                   @endif
                   @if($cell['material'])
-                    <span x-show="tab === 'material'" @if($isFacility) style="display: none" @endif class="size-1.5 rounded-full bg-[#B8862A]"></span>
+                    <span x-show="tab === 'material'" @if($isFacility) style="display: none" @endif class="size-1.5 rounded-full bg-[#7FBF8E]"></span>
                   @endif
                 </span>
               </div>
@@ -147,7 +147,7 @@
         {{-- Legend --}}
         <div class="mx-2 sm:mx-4 mb-4 px-3 py-2 bg-[#FAFBFA] dark:bg-[#0E1A14]/60 rounded-xl flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-[#4A564F] dark:text-neutral-400">
           <span x-show="tab === 'facility'" @if(! $isFacility) style="display: none" @endif class="inline-flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-[#1C7A4A]"></span>Approved facility reservations</span>
-          <span x-show="tab === 'material'" @if($isFacility) style="display: none" @endif class="inline-flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-[#B8862A]"></span>Approved material requests</span>
+          <span x-show="tab === 'material'" @if($isFacility) style="display: none" @endif class="inline-flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-[#7FBF8E]"></span>Approved material requests</span>
           <span class="text-[#8A968F] dark:text-neutral-500">·</span>
           <span x-show="tab === 'facility'" @if(! $isFacility) style="display: none" @endif>{{ $department !== '' ? ($this->departments[(int) $department] ?? '') : 'All departments' }}{{ $this->room !== '' ? ' · ' . $this->room : '' }}</span>
           <span x-show="tab === 'material'" @if($isFacility) style="display: none" @endif>{{ $this->departments[(int) $this->myDepartmentId] ?? 'No department' }}</span>
@@ -170,7 +170,7 @@
                wire:key="day-{{ $date }}-{{ $department }}" class="flex flex-col gap-4">
 
             <div class="flex items-center gap-3.5 px-5 py-4 bg-[#123524] dark:bg-[#1C6B45] rounded-2xl sm:rounded-3xl text-white">
-              <div class="flex flex-col items-center justify-center size-[60px] rounded-2xl bg-[#D4A537] text-[#1A1405] shrink-0">
+              <div class="flex flex-col items-center justify-center size-[60px] rounded-2xl bg-[#E8F3EC] text-[#123524] shrink-0">
                 <span class="text-2xl font-extrabold leading-none">{{ $selected->format('d') }}</span>
                 <span class="text-[10px] font-bold tracking-widest uppercase">{{ $selected->format('M') }}</span>
               </div>
@@ -250,7 +250,7 @@
                           <span class="flex flex-wrap items-center gap-1.5">
                             <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#E3F1E8] dark:bg-[#1C6B45]/25 text-[#145A37] dark:text-green-300">{{ $slot['department'] }}</span>
                             @if($slot['mine'])
-                              <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#F3E9CC] dark:bg-[#D4A537]/20 text-[#6B5216] dark:text-[#E8C877]">Your dept</span>
+                              <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#E8F3EC] dark:bg-[#1C6B45]/25 text-[#1C6B45] dark:text-[#9FD3AE]">Your dept</span>
                             @endif
                           </span>
                           <span class="text-[13px] text-[#1F2A24] dark:text-neutral-100">{{ $slot['user'] }}</span>
@@ -300,7 +300,7 @@
               @forelse($materials as $m)
                 <div wire:key="mat-{{ $date }}-{{ $m['id'] }}" class="flex flex-col gap-1.5 min-w-0 min-h-0 p-3 bg-white dark:bg-[#16281F] border border-[#E6EAE6] dark:border-[#2A4B3A] rounded-2xl break-words">
                   <span class="flex flex-wrap items-center gap-1">
-                    <span class="max-w-full truncate px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-[#F3E9CC] dark:bg-[#D4A537]/20 text-[#6B5216] dark:text-[#E8C877]" title="{{ $m['department'] }}">{{ $m['department'] }}</span>
+                    <span class="max-w-full truncate px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-[#E8F3EC] dark:bg-[#1C6B45]/25 text-[#1C6B45] dark:text-[#9FD3AE]" title="{{ $m['department'] }}">{{ $m['department'] }}</span>
                   </span>
                   <span class="text-[13.5px] font-bold text-[#1F2A24] dark:text-neutral-100 truncate" title="{{ $m['user'] }}">{{ $m['user'] }}</span>
                   {{-- Items: scroll inside the card if there are many --}}

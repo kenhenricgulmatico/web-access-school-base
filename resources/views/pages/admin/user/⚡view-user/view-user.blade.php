@@ -1,10 +1,10 @@
 <div>
-     <div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+     <div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
 
         @include('partials.users-tabs')
 
         @if (session()->has('success'))
-            <div class="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm dark:bg-green-900/20 dark:border-green-800 dark:text-green-400">{{ session('success') }}</div>
+            <div class="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-[#1C6B45] text-sm dark:bg-[#1C6B45]/20 dark:border-[#1C6B45/40] dark:text-green-400">{{ session('success') }}</div>
         @endif
         @if (session()->has('error'))
             <div class="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
@@ -20,11 +20,11 @@
             <div class="px-4 sm:px-6 py-4 grid gap-3 border-b border-gray-200 dark:border-neutral-700">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">Users</h2>
+                        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">Users</h2>
                         <p class="text-sm text-gray-600 dark:text-neutral-400">Admin, program head and faculty accounts</p>
                     </div>
                     @can('users.create')
-                        <a class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700"
+                        <a class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#123524] text-white hover:bg-[#0B2418]"
                             href="{{ route('admin.user.create') }}">
                             <svg class="shrink-0 size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                             Add User
@@ -49,7 +49,7 @@
                         <svg class="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
                         <label for="u-search" class="sr-only">Search users</label>
                         <input id="u-search" type="text" wire:model.live.debounce.300ms="search" placeholder="Search name or email…"
-                            class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-200 focus:ring-2 focus:ring-[#1C6B45] focus:border-[#1C6B45]">
                     </div>
                     <div>
                         <label for="u-role" class="sr-only">Role</label>
@@ -98,8 +98,8 @@
                             $open    = $this->openItems[$user->id] ?? ['pending' => 0, 'borrowed' => 0, 'assigned' => 0];
                             $roleTone = match ($role) {
                                 'admin'        => 'bg-gray-800 text-white dark:bg-neutral-200 dark:text-neutral-900',
-                                'program head' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
-                                default        => 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
+                                'program head' => 'bg-[#E8F3EC] text-[#123524] dark:bg-[#1C6B45]/40 dark:text-[#9FD3AE]',
+                                default        => 'bg-green-100 text-[#123524] dark:bg-[#1C6B45]/40 dark:text-green-300',
                             };
                         @endphp
                         <tr wire:key="u-{{ $user->id }}" class="block @3xl:table-row px-4 py-3 @3xl:p-0 {{ $show === 'deactivated' ? 'opacity-75' : '' }}">
@@ -122,11 +122,11 @@
                                         <span class="inline-block me-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">{{ $open['pending'] }} pending</span>
                                     @endif
                                     @if ($open['borrowed'])
-                                        <span class="inline-block px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300">{{ $open['borrowed'] }} borrowed</span>
+                                        <span class="inline-block px-2 py-0.5 rounded-full bg-slate-100 text-slate-800 dark:bg-slate-900/40 dark:text-slate-300">{{ $open['borrowed'] }} borrowed</span>
                                     @endif
                                     @if ($open['assigned'] ?? 0)
                                         <a href="{{ route('admin.borrowed-items', ['filter' => 'assigned', 'holder' => $user->id]) }}"
-                                           class="inline-block px-2 py-0.5 rounded-full bg-green-100 text-green-800 hover:underline dark:bg-green-900/40 dark:text-green-300">{{ $open['assigned'] }} kept</a>
+                                           class="inline-block px-2 py-0.5 rounded-full bg-green-100 text-[#123524] hover:underline dark:bg-[#1C6B45]/40 dark:text-green-300">{{ $open['assigned'] }} kept</a>
                                     @endif
                                 @else
                                     <span class="text-gray-400 dark:text-neutral-500">—</span>
@@ -134,12 +134,12 @@
                             </td>
                             <td class="block @3xl:table-cell @3xl:px-6 pt-2 @3xl:py-3 @3xl:text-end @3xl:whitespace-nowrap">
                                 @can('users.update')
-                                    <a href="{{ route('admin.user.edit', $user->id) }}" class="text-blue-600 hover:underline text-sm font-medium dark:text-blue-400">Edit</a>
+                                    <a href="{{ route('admin.user.edit', $user->id) }}" class="text-[#1C6B45] hover:underline text-sm font-medium dark:text-[#7FBF8E]">Edit</a>
                                     @if (! $isAdmin && auth()->user()->can('users.deactivate'))
                                         <span class="text-gray-300 dark:text-neutral-600 mx-1">·</span>
                                         @if ($show === 'deactivated')
                                             <button type="button" wire:click="reactivate({{ $user->id }})" wire:confirm="Let {{ $user->name }} sign in again?"
-                                                class="text-green-700 hover:underline text-sm font-medium dark:text-green-400">Reactivate</button>
+                                                class="text-[#1C6B45] hover:underline text-sm font-medium dark:text-green-400">Reactivate</button>
                                         @else
                                             <button type="button" wire:click="deactivate({{ $user->id }})" wire:confirm="{{ $this->deactivateConfirm($user) }}"
                                                 class="text-red-600 hover:underline text-sm font-medium dark:text-red-400">Deactivate</button>

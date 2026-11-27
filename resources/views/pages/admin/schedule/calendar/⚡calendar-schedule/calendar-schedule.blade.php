@@ -1,5 +1,5 @@
 <div>
-  <div class="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+  <div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
 
     {{-- ✅ @container: side-by-side only when THIS area is wide enough (the sidebar takes 240px) --}}
     <div class="@container">
@@ -10,7 +10,7 @@
         <div class="bg-white dark:bg-neutral-800 rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 dark:border-neutral-700 overflow-hidden">
 
           {{-- Calendar Header: ‹ [Month ▾] [Year ▾] › --}}
-          <div class="flex items-center justify-between gap-2 px-3 sm:px-5 py-4 bg-gradient-to-br from-teal-50 to-white dark:from-neutral-900 dark:to-neutral-800 border-b border-gray-100 dark:border-neutral-700">
+          <div class="flex items-center justify-between gap-2 px-3 sm:px-5 py-4 bg-gradient-to-br from-[#F3F8F5] to-white dark:from-neutral-900 dark:to-neutral-800 border-b border-gray-100 dark:border-neutral-700">
             <button wire:click="previousMonth" aria-label="Previous month"
               class="p-1.5 sm:p-2 rounded-full bg-white dark:bg-neutral-700 shadow-sm hover:shadow transition text-gray-500 dark:text-neutral-300">
               <svg class="size-3.5 sm:size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
@@ -20,14 +20,14 @@
             <div class="flex items-center gap-1.5">
               <label for="cal-month" class="sr-only">Month</label>
               <select id="cal-month" wire:model.live="month"
-                class="py-1 ps-2 pe-7 text-sm font-bold rounded-lg border-transparent bg-transparent text-gray-800 hover:bg-white focus:ring-teal-500 dark:text-neutral-100 dark:hover:bg-neutral-700">
+                class="py-1 ps-2 pe-7 text-sm font-bold rounded-lg border-transparent bg-transparent text-gray-800 hover:bg-white focus:ring-[#1C6B45] dark:text-neutral-100 dark:hover:bg-neutral-700">
                 @foreach (range(1, 12) as $m)
                   <option value="{{ $m }}" @selected($m === $month)>{{ \Carbon\Carbon::create(2000, $m, 1)->format('F') }}</option>
                 @endforeach
               </select>
               <label for="cal-year" class="sr-only">Year</label>
               <select id="cal-year" wire:model.live="year"
-                class="py-1 ps-2 pe-7 text-sm font-bold rounded-lg border-transparent bg-transparent text-gray-800 hover:bg-white focus:ring-teal-500 dark:text-neutral-100 dark:hover:bg-neutral-700">
+                class="py-1 ps-2 pe-7 text-sm font-bold rounded-lg border-transparent bg-transparent text-gray-800 hover:bg-white focus:ring-[#1C6B45] dark:text-neutral-100 dark:hover:bg-neutral-700">
                 @foreach ($this->years() as $y)
                   <option value="{{ $y }}" @selected($y === $year)>{{ $y }}</option>
                 @endforeach
@@ -43,7 +43,7 @@
 
           {{-- Tabs: Facility / Material / Returns --}}
           <div class="grid grid-cols-3 gap-1.5 sm:gap-2 px-3 sm:px-4 pt-3 sm:pt-4">
-            @foreach (['reservation' => ['FACILITY', 'bg-green-600'], 'material' => ['MATERIAL', 'bg-purple-500'], 'returns' => ['RETURNS', 'bg-red-500']] as $tab => [$label, $on])
+            @foreach (['reservation' => ['FACILITY', 'bg-[#123524]'], 'material' => ['MATERIAL', 'bg-[#2F8A5B]'], 'returns' => ['RETURNS', 'bg-red-500']] as $tab => [$label, $on])
               <button wire:click="$set('activeTab', '{{ $tab }}')"
                 class="relative py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold rounded-full transition
                   {{ $activeTab === $tab ? $on . ' text-white shadow-sm' : 'bg-gray-100 dark:bg-neutral-700 text-gray-500 dark:text-neutral-400 hover:bg-gray-200 dark:hover:bg-neutral-600' }}">
@@ -61,7 +61,7 @@
             @if ($activeTab === 'reservation')
               <label for="cal-room" class="sr-only">Room</label>
               <select id="cal-room" wire:model.live="roomFilter"
-                class="flex-1 min-w-0 py-1.5 px-2.5 text-xs rounded-lg border border-gray-200 bg-white text-gray-700 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-200 focus:border-teal-500 focus:ring-teal-500">
+                class="flex-1 min-w-0 py-1.5 px-2.5 text-xs rounded-lg border border-gray-200 bg-white text-gray-700 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-200 focus:border-[#1C6B45] focus:ring-[#1C6B45]">
                 <option value="">All rooms</option>
                 @foreach ($this->rooms as $r)
                   <option value="{{ $r->resource_name }}" @selected($r->resource_name === $roomFilter)>{{ $r->resource_name }}{{ $r->status === 'maintenance' ? ' (maintenance)' : '' }}</option>
@@ -94,9 +94,9 @@
                 $isSelected = $dateKey === $selectedDate;
                 $c          = $day ? ($this->dayCounts[$dateKey] ?? null) : null;
                 [$n, $p, $tone] = match ($activeTab) {
-                    'material' => [$c['materials'] ?? 0, $c['materialsPending'] ?? 0, 'text-purple-700 dark:text-purple-300'],
-                    'returns'  => [$c['due'] ?? 0, 0, ($c['overdue'] ?? false) ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-300'],
-                    default    => [$c['rooms'] ?? 0, $c['roomsPending'] ?? 0, 'text-green-700 dark:text-green-400'],
+                    'material' => [$c['materials'] ?? 0, $c['materialsPending'] ?? 0, 'text-[#2F8A5B] dark:text-[#7FBF8E]'],
+                    'returns'  => [$c['due'] ?? 0, 0, ($c['overdue'] ?? false) ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-300'],
+                    default    => [$c['rooms'] ?? 0, $c['roomsPending'] ?? 0, 'text-[#1C6B45] dark:text-green-400'],
                 };
                 $tip = collect([
                     $n ? $n . ' ' . match ($activeTab) { 'material' => 'material ' . \Illuminate\Support\Str::plural('request', $n), 'returns' => 'due back', default => \Illuminate\Support\Str::plural('booking', $n) } : null,
@@ -110,9 +110,9 @@
                     title="{{ trim($this->relativeDayLabel($dateKey) . ($tip ? ' — ' . $tip : '')) }}"
                     class="relative w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center text-[11px] sm:text-sm rounded-xl sm:rounded-2xl transition font-semibold
                       {{ $isSelected
-                        ? 'bg-teal-500 text-white shadow-md shadow-teal-200 dark:shadow-none scale-105'
+                        ? 'bg-[#1C6B45] text-white shadow-md shadow-[#1C6B45/25] dark:shadow-none scale-105'
                         : ($isToday
-                          ? 'bg-teal-50 text-teal-600 dark:bg-teal-900/40 dark:text-teal-300 ring-1 ring-teal-200 dark:ring-teal-800'
+                          ? 'bg-[#F3F8F5] text-[#1C6B45] dark:bg-[#1C6B45]/40 dark:text-[#9FD3AE] ring-1 ring-[#1C6B45/25] dark:ring-[#1C6B45/40]'
                           : 'text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700') }}">
                     {{ $day }}
                   </button>
@@ -132,10 +132,10 @@
           {{-- Legend --}}
           <div class="mx-2 sm:mx-4 mb-4 sm:mb-5 px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 dark:bg-neutral-900/50 rounded-xl sm:rounded-2xl flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] sm:text-[11px] font-medium text-gray-500 dark:text-neutral-400">
             @if ($activeTab === 'returns')
-              <span><b class="text-orange-600 dark:text-orange-300">2</b> due back that day</span>
+              <span><b class="text-amber-600 dark:text-amber-300">2</b> due back that day</span>
               <span><b class="text-red-600 dark:text-red-400">2</b> already overdue</span>
             @else
-              <span><b class="{{ $activeTab === 'material' ? 'text-purple-700 dark:text-purple-300' : 'text-green-700 dark:text-green-400' }}">3</b> approved</span>
+              <span><b class="{{ $activeTab === 'material' ? 'text-[#2F8A5B] dark:text-[#7FBF8E]' : 'text-[#1C6B45] dark:text-green-400' }}">3</b> approved</span>
               @if ($showPending)
                 <span><b class="text-amber-600 dark:text-amber-400">+1</b> pending (waiting for you)</span>
               @endif
@@ -160,7 +160,7 @@
           {{-- Panel Header --}}
           <div class="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 md:px-7 py-4 sm:py-5 bg-gradient-to-r from-gray-50 to-white dark:from-neutral-900 dark:to-neutral-800 border-b border-gray-100 dark:border-neutral-700">
             <div class="flex items-center gap-3 sm:gap-4">
-              <div class="flex flex-col items-center justify-center bg-teal-500 text-white rounded-xl sm:rounded-2xl size-11 sm:size-12 md:size-14 shadow-sm shrink-0">
+              <div class="flex flex-col items-center justify-center bg-[#1C6B45] text-white rounded-xl sm:rounded-2xl size-11 sm:size-12 md:size-14 shadow-sm shrink-0">
                 <span class="text-base sm:text-lg font-extrabold leading-none">
                   {{ $selectedDate ? \Carbon\Carbon::parse($selectedDate)->format('d') : '--' }}
                 </span>
@@ -181,9 +181,9 @@
             @php
               $relLabel = $this->relativeDayLabel($selectedDate);
               $relClass = match (true) {
-                $relLabel === 'Today'             => 'bg-teal-500 text-white',
+                $relLabel === 'Today'             => 'bg-[#1C6B45] text-white',
                 $relLabel === 'Tomorrow',
-                str_starts_with($relLabel, 'In ') => 'bg-blue-50 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800',
+                str_starts_with($relLabel, 'In ') => 'bg-[#F3F8F5] text-[#1C6B45] ring-1 ring-[#1C6B45/25] dark:bg-[#1C6B45]/30 dark:text-[#9FD3AE] dark:ring-[#1C6B45/40]',
                 default                           => 'bg-gray-100 text-gray-600 ring-1 ring-gray-200 dark:bg-neutral-700 dark:text-neutral-300 dark:ring-neutral-600',
               };
             @endphp
@@ -195,7 +195,7 @@
               @endif
               @if($relLabel !== 'Today')
                 <button wire:click="goToday"
-                  class="inline-flex items-center py-1 px-2.5 sm:px-3 text-[10px] sm:text-xs font-semibold rounded-full border border-teal-200 text-teal-700 hover:bg-teal-50 dark:border-teal-800 dark:text-teal-300 dark:hover:bg-teal-900/30 transition">
+                  class="inline-flex items-center py-1 px-2.5 sm:px-3 text-[10px] sm:text-xs font-semibold rounded-full border border-[#1C6B45/25] text-[#1C6B45] hover:bg-[#F3F8F5] dark:border-[#1C6B45/40] dark:text-[#9FD3AE] dark:hover:bg-[#1C6B45]/30 transition">
                   Go to Today
                 </button>
               @endif
@@ -225,7 +225,7 @@
                   <label for="cal-room-search" class="sr-only">Find a room</label>
                   <svg class="absolute left-3.5 top-1/2 mt-0.5 -translate-y-1/2 size-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                   <input id="cal-room-search" type="text" wire:model.live.debounce.300ms="roomSearch" placeholder="Find a room…"
-                    class="w-full py-1.5 ps-8 pe-3 text-xs sm:text-sm rounded-lg border border-gray-200 bg-white text-gray-700 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-200 focus:border-teal-500 focus:ring-teal-500">
+                    class="w-full py-1.5 ps-8 pe-3 text-xs sm:text-sm rounded-lg border border-gray-200 bg-white text-gray-700 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-200 focus:border-[#1C6B45] focus:ring-[#1C6B45]">
                 </div>
               @endif
 
@@ -257,13 +257,13 @@
                     <button type="button"
                       @click="open = (open === {{ $i }}) ? null : {{ $i }}"
                       class="w-full px-3 sm:px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition"
-                      :class="open === {{ $i }} ? 'bg-green-50 dark:bg-green-900/20' : ''">
+                      :class="open === {{ $i }} ? 'bg-green-50 dark:bg-[#1C6B45]/20' : ''">
                       <div class="flex items-center justify-between gap-3">
                         <div class="flex items-center gap-2 min-w-0">
-                          <span class="size-2 rounded-full shrink-0 {{ $room['status'] === 'maintenance' ? 'bg-yellow-500' : ($room['busy'] ? 'bg-green-500' : 'bg-gray-300 dark:bg-neutral-600') }}"></span>
+                          <span class="size-2 rounded-full shrink-0 {{ $room['status'] === 'maintenance' ? 'bg-amber-500' : ($room['busy'] ? 'bg-[#1C6B45]' : 'bg-gray-300 dark:bg-neutral-600') }}"></span>
                           <span class="text-xs sm:text-sm font-bold text-gray-800 dark:text-neutral-100 truncate">{{ $room['room'] }}</span>
                           @if ($room['status'] === 'maintenance')
-                            <span class="shrink-0 px-1.5 py-0.5 text-[9px] font-bold rounded bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300" title="{{ $room['note'] }}">MAINTENANCE{{ $room['note'] ? ' · ' . $room['note'] : '' }}</span>
+                            <span class="shrink-0 px-1.5 py-0.5 text-[9px] font-bold rounded bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" title="{{ $room['note'] }}">MAINTENANCE{{ $room['note'] ? ' · ' . $room['note'] : '' }}</span>
                           @elseif ($room['status'] === 'removed')
                             <span class="shrink-0 px-1.5 py-0.5 text-[9px] font-bold rounded bg-gray-100 text-gray-600 dark:bg-neutral-700 dark:text-neutral-300">NOT A ROOM ANYMORE</span>
                           @endif
@@ -278,7 +278,7 @@
                               <span class="text-amber-600 dark:text-amber-400">+{{ $pendingN }} pending</span>
                             @endif
                           @else
-                            <span class="text-green-700 dark:text-green-400 font-semibold">Free all day</span>
+                            <span class="text-[#1C6B45] dark:text-green-400 font-semibold">Free all day</span>
                           @endif
                           <svg class="size-3.5 text-gray-400 transition-transform" :class="open === {{ $i }} ? 'rotate-90' : ''"
                             fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
@@ -291,7 +291,7 @@
                       <div class="relative mt-2 h-2.5 rounded-full bg-gray-100 dark:bg-neutral-700 overflow-hidden" aria-hidden="true">
                         @foreach ($room['slots'] as $slot)
                           <span class="absolute inset-y-0 rounded-full
-                            {{ $slot['clash'] ? 'bg-red-500' : ($slot['status'] === 'pending' ? 'bg-amber-300 dark:bg-amber-500/70' : 'bg-green-500') }}"
+                            {{ $slot['clash'] ? 'bg-red-500' : ($slot['status'] === 'pending' ? 'bg-amber-300 dark:bg-amber-500/70' : 'bg-[#1C6B45]') }}"
                             style="left: {{ $slot['left'] }}%; width: {{ $slot['width'] }}%"></span>
                         @endforeach
                       </div>
@@ -301,7 +301,7 @@
                         @endforeach
                       </div>
                       @if ($room['busy'] && $room['free'])
-                        <p class="mt-1 text-[10px] sm:text-[11px] text-green-700 dark:text-green-400 truncate">Free: {{ implode(', ', $room['free']) }}</p>
+                        <p class="mt-1 text-[10px] sm:text-[11px] text-[#1C6B45] dark:text-green-400 truncate">Free: {{ implode(', ', $room['free']) }}</p>
                       @elseif ($room['busy'])
                         <p class="mt-1 text-[10px] sm:text-[11px] text-red-600 dark:text-red-400">Fully booked</p>
                       @endif
@@ -315,7 +315,7 @@
                         {{-- 🖨 Print bar (approved bookings of this room) --}}
                         <div class="flex flex-wrap items-center gap-2 px-3 sm:px-4 py-2.5 bg-gray-50 dark:bg-neutral-900/50 border-b border-gray-100 dark:border-neutral-700">
                           <select x-model="dept" aria-label="Department to print"
-                            class="flex-1 min-w-0 py-1.5 px-2.5 text-xs sm:text-sm rounded-lg border border-gray-200 bg-white text-gray-700 dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-200 focus:border-teal-500 focus:ring-teal-500">
+                            class="flex-1 min-w-0 py-1.5 px-2.5 text-xs sm:text-sm rounded-lg border border-gray-200 bg-white text-gray-700 dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-200 focus:border-[#1C6B45] focus:ring-[#1C6B45]">
                             <option value="all">All departments ({{ $roomDeptCounts->sum() }})</option>
                             @foreach($roomDeptCounts as $deptName => $count)
                               <option value="{{ $deptName }}">{{ $deptName }} ({{ $count }})</option>
@@ -324,7 +324,7 @@
 
                           <button type="button"
                             @click="printRoomSchedule([room], dept, @js($dateLabel))"
-                            class="inline-flex items-center gap-1.5 py-1.5 px-3 text-xs sm:text-sm font-semibold rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition">
+                            class="inline-flex items-center gap-1.5 py-1.5 px-3 text-xs sm:text-sm font-semibold rounded-lg bg-[#1C6B45] text-white hover:bg-[#123524] transition">
                             <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                               <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/>
                             </svg>
@@ -377,7 +377,7 @@
               {{-- ✅ Free all day: compact chips (click one to see that room's month) --}}
               @if (count($freeRooms))
                 <div class="mt-1 px-2 sm:px-3 py-3 rounded-xl bg-gray-50 dark:bg-neutral-900/50">
-                  <p class="mb-2 text-[11px] sm:text-xs font-semibold text-green-700 dark:text-green-400">
+                  <p class="mb-2 text-[11px] sm:text-xs font-semibold text-[#1C6B45] dark:text-green-400">
                     Free all day · {{ count($freeRooms) }} {{ \Illuminate\Support\Str::plural('room', count($freeRooms)) }}
                   </p>
                   <div class="flex flex-wrap gap-1.5">
@@ -386,14 +386,14 @@
                         title="{{ $free['status'] === 'maintenance' ? 'Under maintenance' . ($free['note'] ? ': ' . $free['note'] : '') : 'Free 7:00 AM – 8:00 PM' }} · click to see this room's month"
                         class="px-2 py-1 text-[11px] font-medium rounded-full border transition
                         {{ $free['status'] === 'maintenance'
-                          ? 'border-yellow-300 bg-yellow-50 text-yellow-800 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300'
-                          : 'border-gray-200 bg-white text-gray-700 hover:border-green-400 hover:text-green-700 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200' }}">
+                          ? 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300'
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-green-400 hover:text-[#1C6B45] dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200' }}">
                         {{ $free['room'] }}{{ $free['status'] === 'maintenance' ? ' · maintenance' : '' }}
                       </button>
                     @endforeach
                     @if (count($freeRooms) > $chipLimit)
                       <button type="button" wire:click="$set('showAllFree', {{ $showAllFree ? 'false' : 'true' }})"
-                        class="px-2 py-1 text-[11px] font-semibold rounded-full text-teal-700 hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-900/30">
+                        class="px-2 py-1 text-[11px] font-semibold rounded-full text-[#1C6B45] hover:bg-[#F3F8F5] dark:text-[#9FD3AE] dark:hover:bg-[#1C6B45]/30">
                         {{ $showAllFree ? 'Show less' : '+' . (count($freeRooms) - $chipLimit) . ' more' }}
                       </button>
                     @endif
@@ -407,16 +407,16 @@
               @forelse($this->selectedMaterials as $material)
                 @php $isPending = $material->status === 'pending'; @endphp
                 <div wire:key="mat-{{ $material->id }}" class="flex gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl border transition
-                  {{ $isPending ? 'border-amber-200 bg-amber-50/40 dark:border-amber-900 dark:bg-amber-950/10' : 'border-gray-100 dark:border-neutral-700 hover:border-purple-200 dark:hover:border-purple-800 hover:bg-purple-50/40 dark:hover:bg-purple-900/10' }}">
+                  {{ $isPending ? 'border-amber-200 bg-amber-50/40 dark:border-amber-900 dark:bg-amber-950/10' : 'border-gray-100 dark:border-neutral-700 hover:border-[#1C6B45]/20 hover:bg-[#F3F8F5]/60 dark:hover:bg-[#1C6B45]/10' }}">
 
-                  <div class="w-1 rounded-full shrink-0 {{ $isPending ? 'bg-amber-400' : 'bg-purple-400 dark:bg-purple-500' }}"></div>
+                  <div class="w-1 rounded-full shrink-0 {{ $isPending ? 'bg-amber-400' : 'bg-[#7FBF8E]' }}"></div>
 
                   <div class="flex-1 min-w-0">
                     <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                       <div class="flex-1 min-w-0">
                         <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1 sm:mb-1.5">
                           <span class="inline-flex items-center py-0.5 px-2 sm:px-2.5 text-[8px] sm:text-[10px] font-bold rounded-full
-                            {{ $isPending ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' }}">
+                            {{ $isPending ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-[#E8F3EC] text-[#1C6B45] dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]' }}">
                             {{ $isPending ? 'PENDING' : 'APPROVED' }}
                           </span>
                           <span class="inline-flex items-center py-0.5 px-2 sm:px-2.5 text-[8px] sm:text-[10px] font-medium bg-gray-100 text-gray-600 rounded-full dark:bg-neutral-700 dark:text-neutral-300">
@@ -473,7 +473,7 @@
                         <p class="text-[11px] sm:text-xs {{ $key === 'overdue' ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-500 dark:text-neutral-400' }}">
                           Due {{ \Carbon\Carbon::parse($loan->due_back_at)->format('M d, Y') }}{{ $key === 'overdue' ? ' · ' . $late . ' ' . \Illuminate\Support\Str::plural('day', $late) . ' late' : '' }}
                           @if ($loan->return_requested_at)
-                            · <span class="text-teal-700 dark:text-teal-300">sent back, waiting for you to confirm</span>
+                            · <span class="text-[#1C6B45] dark:text-[#9FD3AE]">sent back, waiting for you to confirm</span>
                           @endif
                         </p>
                       </div>

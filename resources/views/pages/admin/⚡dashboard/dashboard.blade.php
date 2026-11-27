@@ -1,73 +1,65 @@
-<div class="select-none">
-<div class="space-y-8 max-w-7xl mx-auto px-6 py-8">
+<div>
+<div class="space-y-5 sm:space-y-6 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+    @php
+        $todo  = $this->todo;
+        $tasks = array_values(array_filter([
+            $todo['requests'] ? ['n' => $todo['requests'], 'text' => \Illuminate\Support\Str::plural('request', $todo['requests']) . ' to approve', 'url' => route('admin.manage-coordinator'), 'tone' => 'amber'] : null,
+            $todo['out']      ? ['n' => $todo['out'],      'text' => 'out of stock',                                                       'url' => route('admin.inventory-stock-material', ['stock' => 'out']), 'tone' => 'red'] : null,
+            $todo['low']      ? ['n' => $todo['low'],      'text' => 'low on stock',                                                       'url' => route('admin.inventory-stock-material', ['stock' => 'low']), 'tone' => 'amber'] : null,
+            $todo['overdue']  ? ['n' => $todo['overdue'],  'text' => \Illuminate\Support\Str::plural('item', $todo['overdue']) . ' overdue',   'url' => route('admin.borrowed-items', ['filter' => 'overdue']), 'tone' => 'red'] : null,
+            $todo['accounts'] ? ['n' => $todo['accounts'], 'text' => \Illuminate\Support\Str::plural('account', $todo['accounts']) . ' to approve', 'url' => route('admin.students'), 'tone' => 'amber'] : null,
+        ]));
+        $chip = [
+            'amber' => 'bg-white text-amber-800 ring-amber-300 hover:bg-amber-50 dark:bg-neutral-900 dark:text-amber-300 dark:ring-amber-500/40',
+            'red'   => 'bg-white text-red-700 ring-red-300 hover:bg-red-50 dark:bg-neutral-900 dark:text-red-300 dark:ring-red-500/40',
+        ];
+    @endphp
 
-    {{-- Stats Cards --}}
-    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-
-        {{-- Total Requests --}}
-        <div class="relative overflow-hidden flex flex-col bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 shadow-sm rounded-2xl p-6">
-            <div class="flex items-center justify-between mb-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-neutral-400">Total Requests</p>
-                <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="size-5 text-blue-500 dark:text-blue-400" viewBox="0 0 16 16">
-                    <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855a.75.75 0 0 0-.124 1.329l4.995 3.178 1.531 2.406a.5.5 0 0 0 .844-.536L6.637 10.07l7.494-7.494-1.895 4.738a.5.5 0 1 0 .928.372zm-2.54 1.183L5.93 9.363 1.591 6.602z"/>
-                    <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1.5a.5.5 0 0 1-1 0V11a.5.5 0 0 1 1 0m0 3a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0"/>
-                    </svg>
-                </div>
+    {{-- ✅ Greeting (Philippine time) + what needs the Admin today --}}
+    @php $greet = now()->hour < 12 ? 'Good morning' : (now()->hour < 18 ? 'Good afternoon' : 'Good evening'); @endphp
+    <div class="rounded-2xl bg-[#E8F3EC] dark:bg-[#1C6B45]/20 ring-1 ring-inset ring-[#1C6B45]/10 dark:ring-[#7FBF8E]/15 px-4 py-4 sm:px-6 sm:py-5">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+            <div class="min-w-0">
+                <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">{{ $greet }}, {{ ucfirst(\Illuminate\Support\Str::of(auth()->user()->name)->trim()->explode(' ')->first()) }}</h1>
+                <p class="mt-1 text-sm text-[#1C6B45]/90 dark:text-[#9FD3AE]">{{ now()->format('l, F j, Y') }} · Administrator</p>
             </div>
-            <h3 class="text-4xl font-bold text-gray-800 dark:text-white">{{ $this->totalRequests }}</h3>
-            <p class="text-xs text-gray-400 dark:text-neutral-500 mt-1">Reached coordinator & above</p>
-            <div class="absolute bottom-0 left-0 right-0 h-1 bg-blue-500 rounded-b-2xl"></div>
+            @if (empty($tasks))
+                <p class="text-sm font-semibold text-[#123524] dark:text-white md:text-right">✓ All caught up — nothing needs you right now</p>
+            @endif
         </div>
 
-        {{-- Total Faculty --}}
-        <div class="relative overflow-hidden flex flex-col bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 shadow-sm rounded-2xl p-6">
-            <div class="flex items-center justify-between mb-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-neutral-400">Total Faculty</p>
-                <div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="size-5 text-purple-500 dark:text-purple-400" viewBox="0 0 16 16">
-                    <path d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.686-.275a.5.5 0 0 0 .025-.917zM8 8.46 1.758 5.965 8 3.052l6.242 2.913z"/>
-                    <path d="M4.176 9.032a.5.5 0 0 0-.656.327l-.5 1.7a.5.5 0 0 0 .294.605l4.5 1.8a.5.5 0 0 0 .372 0l4.5-1.8a.5.5 0 0 0 .294-.605l-.5-1.7a.5.5 0 0 0-.656-.327L8 10.466zm-.068 1.873.22-.748 3.496 1.311a.5.5 0 0 0 .352 0l3.496-1.311.22.748L8 12.46z"/>
-                    </svg>
-                </div>
+        @if (! empty($tasks))
+            <p class="mt-3 text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">Needs your attention today</p>
+            <div class="mt-2 flex flex-wrap gap-2">
+                @foreach ($tasks as $t)
+                    <a href="{{ $t['url'] }}" wire:navigate
+                       class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ring-1 ring-inset transition {{ $chip[$t['tone']] }}">
+                        <span class="text-base font-bold leading-none">{{ $t['n'] }}</span> {{ $t['text'] }} <span aria-hidden="true">→</span>
+                    </a>
+                @endforeach
             </div>
-            <h3 class="text-4xl font-bold text-gray-800 dark:text-white">{{ $this->totalFaculty }}</h3>
-            <p class="text-xs text-gray-400 dark:text-neutral-500 mt-1">Registered users</p>
-            <div class="absolute bottom-0 left-0 right-0 h-1 bg-purple-500 rounded-b-2xl"></div>
-        </div>
+        @endif
+    </div>
 
-        {{-- Total Program Heads --}}
-        <div class="relative overflow-hidden flex flex-col bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 shadow-sm rounded-2xl p-6">
-            <div class="flex items-center justify-between mb-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-neutral-400">Program Heads</p>
-                <div class="w-10 h-10 rounded-full bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="size-5 text-teal-500 dark:text-teal-400" viewBox="0 0 16 16">
-                        <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.24 2.24 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.3 6.3 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/>
-                    </svg>
+    {{-- Stats — 2×2 on a phone, one row on a laptop --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        @foreach ([
+            ['Total requests', $this->totalRequests, 'From Program Heads', route('admin.manage-coordinator'), 'bg-[#123524] dark:bg-[#1C6B45]', 'text-white', 'M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5'],
+            ['Waiting for you', $this->pendingRequests, 'Requests to approve', route('admin.manage-coordinator'), 'bg-amber-50 dark:bg-amber-500/15', 'text-amber-600 dark:text-amber-300', 'M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
+            ['Program Heads', $this->totalProgramHeads, 'Registered', route('admin.users'), 'bg-[#E8F3EC] dark:bg-[#1C6B45]/25', 'text-[#1C6B45] dark:text-[#9FD3AE]', 'M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z'],
+            ['Faculty', $this->totalFaculty, 'Registered', route('admin.users'), 'bg-[#E8F3EC] dark:bg-[#1C6B45]/25', 'text-[#1C6B45] dark:text-[#9FD3AE]', 'M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342'],
+        ] as [$label, $value, $hint, $url, $iconBg, $iconText, $path])
+            <a href="{{ $url }}" wire:navigate class="flex flex-col bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 shadow-sm rounded-2xl p-4 sm:p-5 transition hover:shadow-md {{ $label === 'Waiting for you' && $value ? '!border-amber-300 dark:!border-amber-500/40' : '' }}">
+                <div class="flex items-start justify-between gap-2">
+                    <p class="text-xs sm:text-sm text-gray-500 dark:text-neutral-400">{{ $label }}</p>
+                    <span class="hidden sm:flex size-9 rounded-full items-center justify-center shrink-0 {{ $iconBg }}">
+                        <svg class="size-5 {{ $iconText }}" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $path }}" /></svg>
+                    </span>
                 </div>
-            </div>
-            <h3 class="text-4xl font-bold text-gray-800 dark:text-white">{{ $this->totalProgramHeads }}</h3>
-            <p class="text-xs text-gray-400 dark:text-neutral-500 mt-1">Registered coordinators</p>
-            <div class="absolute bottom-0 left-0 right-0 h-1 bg-teal-500 rounded-b-2xl"></div>
-        </div>
-
-        {{-- Pending --}}
-        <div class="relative overflow-hidden flex flex-col bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 shadow-sm rounded-2xl p-6">
-            <div class="flex items-center justify-between mb-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-neutral-400">Pending Review</p>
-                <div class="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/40 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="size-5 text-yellow-500 dark:text-yellow-400" viewBox="0 0 16 16">
-                    <path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022zm2.004.45a7 7 0 0 0-.985-.299l.219-.976q.576.129 1.126.342zm1.37.71a7 7 0 0 0-.439-.27l.493-.87a8 8 0 0 1 .979.654l-.615.789a7 7 0 0 0-.418-.302zm1.834 1.79a7 7 0 0 0-.653-.796l.724-.69q.406.429.747.91zm.744 1.352a7 7 0 0 0-.214-.468l.893-.45a8 8 0 0 1 .45 1.088l-.95.313a7 7 0 0 0-.179-.483m.53 2.507a7 7 0 0 0-.1-1.025l.985-.17q.1.58.116 1.17zm-.131 1.538q.05-.254.081-.51l.993.123a8 8 0 0 1-.23 1.155l-.964-.267q.069-.247.12-.501m-.952 2.379q.276-.436.486-.908l.914.405q-.24.54-.555 1.038zm-.964 1.205q.183-.183.35-.378l.758.653a8 8 0 0 1-.401.432z"/>
-                    <path d="M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0z"/>
-                    <path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5"/>
-                    </svg>
-                </div>
-            </div>
-            <h3 class="text-4xl font-bold text-gray-800 dark:text-white">{{ $this->pendingRequests }}</h3>
-            <p class="text-xs text-gray-400 dark:text-neutral-500 mt-1">Coordinator & admin level</p>
-            <div class="absolute bottom-0 left-0 right-0 h-1 bg-yellow-400 rounded-b-2xl"></div>
-        </div>
-
+                <p class="mt-1 text-2xl sm:text-3xl font-bold {{ $label === 'Waiting for you' && $value ? 'text-amber-700 dark:text-amber-300' : 'text-[#123524] dark:text-white' }}">{{ $value }}</p>
+                <p class="text-[11px] sm:text-xs text-gray-400 mt-1">{{ $hint }}</p>
+            </a>
+        @endforeach
     </div>
 
     {{-- Monthly Requests Chart --}}
@@ -206,17 +198,17 @@
                                 <button type="button" wire:click="showHistory({{ $request->user_id }})"
                                     title="View request history"
                                     class="group flex items-center gap-3 text-left cursor-pointer">
-                                    <div class="w-8 h-8 rounded-full bg-green-700 text-white flex items-center justify-center text-sm font-bold">
+                                    <div class="w-8 h-8 rounded-full bg-[#0B2418] text-white flex items-center justify-center text-sm font-bold">
                                         {{ strtoupper(substr($request->user->name, 0, 1)) }}
                                     </div>
                                     <div>
-                                        <p class="text-sm font-medium text-gray-800 dark:text-white group-hover:text-green-700 group-hover:underline">{{ $request->user->name }}</p>
+                                        <p class="text-sm font-medium text-gray-800 dark:text-white group-hover:text-[#1C6B45] group-hover:underline">{{ $request->user->name }}</p>
                                         <p class="text-xs text-gray-400 dark:text-neutral-500">{{ $request->user->email }}</p>
                                     </div>
                                 </button>
                             @else
                                 <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full bg-green-700 text-white flex items-center justify-center text-sm font-bold">
+                                    <div class="w-8 h-8 rounded-full bg-[#0B2418] text-white flex items-center justify-center text-sm font-bold">
                                         {{ strtoupper(substr($request->user->name, 0, 1)) }}
                                     </div>
                                     <div>
@@ -228,8 +220,8 @@
                         </td>
                         <td class="px-6 py-4">
                             <span class="px-2 py-1 text-xs font-medium rounded-full
-                                @if($request->request_type_id == \App\Models\RequestType::FACILITY) bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400
-                                @else bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 @endif">
+                                @if($request->request_type_id == \App\Models\RequestType::FACILITY) bg-[#E8F3EC] dark:bg-[#1C6B45]/40 text-[#1C6B45] dark:text-[#7FBF8E]
+                                @else bg-slate-100 dark:bg-slate-900/40 text-slate-700 dark:text-slate-400 @endif">
                                 {{ $request->requestType->type_name ?? 'N/A' }}
                             </span>
                         </td>
@@ -238,8 +230,8 @@
                         </td>
                         <td class="px-6 py-4">
                             <span class="px-2 py-1 text-xs font-medium rounded-full
-                                @if($request->status === 'pending') bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400
-                                @elseif($request->status === 'approved') bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400
+                                @if($request->status === 'pending') bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400
+                                @elseif($request->status === 'approved') bg-green-100 dark:bg-[#1C6B45]/40 text-[#1C6B45] dark:text-green-400
                                 @elseif($request->status === 'rejected') bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400
                                 @elseif($request->status === 'cancelled') bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300
                                 @endif">
@@ -287,9 +279,9 @@
         ])->values();
 
         $statusStyles = [
-            'approved'  => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+            'approved'  => 'bg-green-100 text-[#123524] dark:bg-[#1C6B45]/30 dark:text-green-300',
             'rejected'  => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-            'pending'   => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+            'pending'   => 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
             'cancelled' => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
         ];
     @endphp
@@ -316,7 +308,7 @@
 
         <template x-teleport="body">
             <div @keydown.escape.window="$wire.closeHistory()"
-                 class="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 select-none">
+                 class="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6">
 
                 <div @click="$wire.closeHistory()"
                      x-show="show"
@@ -331,11 +323,11 @@
 
                     <div class="px-6 py-4 border-b border-gray-200 dark:border-neutral-700 flex items-center justify-between gap-4">
                         <div class="flex items-center gap-3 min-w-0">
-                            <div class="w-11 h-11 shrink-0 rounded-full bg-green-700 text-white flex items-center justify-center text-base font-bold">
+                            <div class="w-11 h-11 shrink-0 rounded-full bg-[#0B2418] text-white flex items-center justify-center text-base font-bold">
                                 {{ strtoupper(substr($this->historyUser->name, 0, 1)) }}
                             </div>
                             <div class="min-w-0">
-                                <p class="text-[11px] font-semibold uppercase tracking-wide text-green-700 dark:text-green-400">Request History</p>
+                                <p class="text-[11px] font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-green-400">Request History</p>
                                 <h3 class="text-base font-semibold text-gray-900 dark:text-white truncate leading-tight">{{ $this->historyUser->name }}</h3>
                                 <p class="text-xs text-gray-500 dark:text-neutral-400 truncate">
                                     {{ $this->historyUser->email }}@if ($deptName) · {{ $deptName }}@endif
@@ -344,7 +336,7 @@
                         </div>
 
                         <div class="flex items-center gap-2 shrink-0">
-                            <span class="hidden sm:inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                            <span class="hidden sm:inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-[#1C6B45] dark:bg-[#1C6B45]/30 dark:text-green-300">
                                 <svg class="size-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                 {{ $rate }}% approved
                             </span>
@@ -361,7 +353,7 @@
 
                         <div class="flex flex-wrap gap-3">
                             <button type="button" @click="status = 'all'"
-                                :class="status === 'all' ? 'bg-green-700 text-white' : 'bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-neutral-200'"
+                                :class="status === 'all' ? 'bg-[#0B2418] text-white' : 'bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-neutral-200'"
                                 class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition">
                                 <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -370,7 +362,7 @@
                             </button>
 
                             <button type="button" @click="status = 'approved'"
-                                :class="status === 'approved' ? 'bg-green-400 text-white' : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'"
+                                :class="status === 'approved' ? 'bg-green-400 text-white' : 'bg-green-100 dark:bg-[#1C6B45]/30 text-[#123524] dark:text-green-300'"
                                 class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition">
                                 <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
@@ -379,7 +371,7 @@
                             </button>
 
                             <button type="button" @click="status = 'review'"
-                                :class="status === 'review' ? 'bg-yellow-400 text-white' : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'"
+                                :class="status === 'review' ? 'bg-amber-400 text-white' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300'"
                                 class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition">
                                 <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <circle cx="12" cy="12" r="9" />
@@ -401,7 +393,7 @@
                         @if ($total > 0)
                             <div class="flex h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-neutral-700">
                                 <div class="bg-green-500" style="width: {{ $pct($approvedCount) }}%"></div>
-                                <div class="bg-yellow-400" style="width: {{ $pct($reviewCount) }}%"></div>
+                                <div class="bg-amber-400" style="width: {{ $pct($reviewCount) }}%"></div>
                                 <div class="bg-red-500" style="width: {{ $pct($rejectedCount) }}%"></div>
                             </div>
                         @endif
@@ -416,13 +408,13 @@
                                             <path stroke-linecap="round" d="M21 21l-4.35-4.35" />
                                         </svg>
                                         <input type="text" x-model="search" placeholder="Search purpose or item..."
-                                            class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-[#1C6B45]">
                                     </div>
                                 </div>
                                 <div class="w-full sm:w-48">
                                     <label class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block">Type</label>
                                     <select x-model="type"
-                                        class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-[#1C6B45]">
                                         <option value="all">All</option>
                                         <option value="facility">Facility Reservation</option>
                                         <option value="material">Material Request</option>
@@ -465,8 +457,8 @@
                                             <td class="px-4 py-3 whitespace-nowrap">
                                                 <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full
                                                     {{ $isFacility
-                                                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                                                        : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' }}">
+                                                        ? 'bg-green-100 text-[#1C6B45] dark:bg-[#1C6B45]/30 dark:text-green-300'
+                                                        : 'bg-[#E8F3EC] text-[#1C6B45] dark:bg-[#1C6B45]/30 dark:text-[#9FD3AE]' }}">
                                                     {{ $h->requestType?->type_name ?? '—' }}
                                                 </span>
                                             </td>
@@ -588,25 +580,10 @@
             const tickColor  = isDark ? 'rgba(160,160,160,0.9)'  : 'rgba(100,105,115,0.9)';
             const labelColor = isDark ? '#e5e7eb' : '#1f2937';
 
-            const palette = {
-                GRAY:   '#64748b',
-                BLUE:   '#3b82f6',
-                RED:    '#ef4444',
-                YELLOW: '#eab308',
-                GREEN:  '#22c55e',
-                ORANGE: '#f97316',
-            };
-            const fallback = ['#a855f7', '#14b8a6', '#ec4899'];
-
+            // ✅ School greens, one shade per department (darkest first)
+            const greens = ['#123524', '#1C6B45', '#2F8A5B', '#5FA777', '#7FBF8E', '#A9D6B5', '#3E5C4B', '#8FA99A'];
             function getDeptColor(name, index) {
-                const n = (name || '').toLowerCase();
-                if (n.includes('comput'))   return palette.GRAY;
-                if (n.includes('educ'))     return palette.BLUE;
-                if (n.includes('crim'))     return palette.RED;
-                if (n.includes('business')) return palette.YELLOW;
-                if (/\barts?\b/.test(n))    return palette.GREEN;
-                if (n.includes('engin'))    return palette.ORANGE;
-                return fallback[index % fallback.length];
+                return greens[index % greens.length];
             }
 
             const sortedSeries = [...series]
@@ -747,7 +724,7 @@
 
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'flex items-center gap-2 text-xs select-none transition-opacity hover:opacity-80';
+                btn.className = 'flex items-center gap-2 text-xs transition-opacity hover:opacity-80';
                 btn.style.opacity = hidden ? '0.35' : '1';
 
                 btn.innerHTML = `

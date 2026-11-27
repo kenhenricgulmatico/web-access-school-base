@@ -1,4 +1,4 @@
-<div class="select-none">
+<div>
 <!-- ========== MAIN SIDEBAR ========== -->
 <div id="hs-pro-sidebar" class="hs-overlay [--body-scroll:true] lg:[--overlay-backdrop:false] [--is-layout-affect:true] [--opened:lg] [--auto-close:lg]
 hs-overlay-open:translate-x-0 lg:hs-overlay-layout-open:translate-x-0
@@ -14,14 +14,14 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
 
             {{-- Home --}}
             <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
-                <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">Home</span>
+                <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#1C6B45]/80 dark:text-[#7FBF8E]">Home</span>
                 <ul class="flex flex-col gap-y-1">
                     <li>
                         <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                             {{ request()->routeIs('admin.dashboard')
-                                ? 'bg-[#123524] text-white font-medium shadow-sm'
-                                : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
-                            focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
+                                ? 'bg-[#E8F3EC] text-[#123524] font-semibold dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]'
+                                : 'text-gray-700 dark:text-neutral-300 hover:bg-[#F3F8F5] dark:hover:bg-neutral-800' }}
+                            focus:outline-hidden focus:bg-[#F3F8F5] dark:focus:bg-neutral-800"
                             href="/admin/dashboard">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <rect x="3" y="3" width="7" height="7"/>
@@ -38,15 +38,15 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
             {{-- Manage Request --}}
             @canany(['program-head-requests.view', 'borrowed-items.view'])
             <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
-                <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">Manage Request</span>
+                <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#1C6B45]/80 dark:text-[#7FBF8E]">Manage Request</span>
                 <ul class="flex flex-col gap-y-1">
                     @can('program-head-requests.view')
                     <li>
                         <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                             {{ request()->routeIs('admin.manage-coordinator')
-                                ? 'bg-[#123524] text-white font-medium shadow-sm'
-                                : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
-                            focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
+                                ? 'bg-[#E8F3EC] text-[#123524] font-semibold dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]'
+                                : 'text-gray-700 dark:text-neutral-300 hover:bg-[#F3F8F5] dark:hover:bg-neutral-800' }}
+                            focus:outline-hidden focus:bg-[#F3F8F5] dark:focus:bg-neutral-800"
                             href="/admin/manage-coordinator">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -63,9 +63,9 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
                     <li>
                         <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                             {{ request()->routeIs('admin.borrowed-items')
-                                ? 'bg-[#123524] text-white font-medium shadow-sm'
-                                : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
-                            focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
+                                ? 'bg-[#E8F3EC] text-[#123524] font-semibold dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]'
+                                : 'text-gray-700 dark:text-neutral-300 hover:bg-[#F3F8F5] dark:hover:bg-neutral-800' }}
+                            focus:outline-hidden focus:bg-[#F3F8F5] dark:focus:bg-neutral-800"
                             href="/admin/borrowed-items">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <polyline points="9 14 4 9 9 4"/>
@@ -82,15 +82,15 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
             {{-- Inventory / Stocks --}}
             @canany(['stock-materials.view', 'stock-history.view'])
             <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
-                <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">Inventory</span>
+                <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#1C6B45]/80 dark:text-[#7FBF8E]">Inventory</span>
                 <ul class="flex flex-col gap-y-1">
                     @can('stock-materials.view')
                     <li>
                         <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                             {{ request()->routeIs('admin.inventory-stock-material')
-                                ? 'bg-[#123524] text-white font-medium shadow-sm'
-                                : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
-                            focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
+                                ? 'bg-[#E8F3EC] text-[#123524] font-semibold dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]'
+                                : 'text-gray-700 dark:text-neutral-300 hover:bg-[#F3F8F5] dark:hover:bg-neutral-800' }}
+                            focus:outline-hidden focus:bg-[#F3F8F5] dark:focus:bg-neutral-800"
                             href="/admin/inventory-stock-material">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
@@ -105,9 +105,9 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
                     <li>
                         <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                             {{ request()->routeIs('admin.inventory-stock-history')
-                                ? 'bg-[#123524] text-white font-medium shadow-sm'
-                                : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
-                            focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
+                                ? 'bg-[#E8F3EC] text-[#123524] font-semibold dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]'
+                                : 'text-gray-700 dark:text-neutral-300 hover:bg-[#F3F8F5] dark:hover:bg-neutral-800' }}
+                            focus:outline-hidden focus:bg-[#F3F8F5] dark:focus:bg-neutral-800"
                             href="/admin/inventory-stock-history">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path d="M3 3h18v18H3z"/>
@@ -124,15 +124,15 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
             {{-- Schedule --}}
             @canany(['calendar.view', 'facility-schedule.view'])
             <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
-                <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">Schedule</span>
+                <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#1C6B45]/80 dark:text-[#7FBF8E]">Schedule</span>
                 <ul class="flex flex-col gap-y-1">
                     @can('calendar.view')
                     <li>
                         <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                             {{ request()->routeIs('admin.calendar')
-                                ? 'bg-[#123524] text-white font-medium shadow-sm'
-                                : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
-                            focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
+                                ? 'bg-[#E8F3EC] text-[#123524] font-semibold dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]'
+                                : 'text-gray-700 dark:text-neutral-300 hover:bg-[#F3F8F5] dark:hover:bg-neutral-800' }}
+                            focus:outline-hidden focus:bg-[#F3F8F5] dark:focus:bg-neutral-800"
                             href="/admin/calendar">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -148,9 +148,9 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
                     <li>
                         <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                             {{ request()->routeIs('admin.schedule')
-                                ? 'bg-[#123524] text-white font-medium shadow-sm'
-                                : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
-                            focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
+                                ? 'bg-[#E8F3EC] text-[#123524] font-semibold dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]'
+                                : 'text-gray-700 dark:text-neutral-300 hover:bg-[#F3F8F5] dark:hover:bg-neutral-800' }}
+                            focus:outline-hidden focus:bg-[#F3F8F5] dark:focus:bg-neutral-800"
                             href="/admin/schedule">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -169,15 +169,15 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
             {{-- Management --}}
             @canany(['users.view'])
             <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
-                <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">Management</span>
+                <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#1C6B45]/80 dark:text-[#7FBF8E]">Management</span>
                 <ul class="flex flex-col gap-y-1">
                     @can('users.view')
                     <li>
                         <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                             {{ request()->routeIs('admin.users')
-                                ? 'bg-[#123524] text-white font-medium shadow-sm'
-                                : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
-                            focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
+                                ? 'bg-[#E8F3EC] text-[#123524] font-semibold dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]'
+                                : 'text-gray-700 dark:text-neutral-300 hover:bg-[#F3F8F5] dark:hover:bg-neutral-800' }}
+                            focus:outline-hidden focus:bg-[#F3F8F5] dark:focus:bg-neutral-800"
                             href="/admin/users">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -196,15 +196,15 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
             {{-- System --}}
             @canany(['audit.view-all'])
             <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
-                <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">System</span>
+                <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#1C6B45]/80 dark:text-[#7FBF8E]">System</span>
                 <ul class="flex flex-col gap-y-1">
                     @can('audit.view-all')
                     <li>
                         <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                             {{ request()->routeIs('admin.audit-logs')
-                                ? 'bg-[#123524] text-white font-medium shadow-sm'
-                                : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
-                            focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
+                                ? 'bg-[#E8F3EC] text-[#123524] font-semibold dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]'
+                                : 'text-gray-700 dark:text-neutral-300 hover:bg-[#F3F8F5] dark:hover:bg-neutral-800' }}
+                            focus:outline-hidden focus:bg-[#F3F8F5] dark:focus:bg-neutral-800"
                             href="/admin/audit-logs">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>

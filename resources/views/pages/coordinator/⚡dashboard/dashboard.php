@@ -173,7 +173,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     {
         $slices = [
             ['label' => 'Approved', 'count' => (int) $this->approvedRequests, 'color' => '#1C6B45'],
-            ['label' => 'Pending',  'count' => (int) $this->pendingRequests,  'color' => '#D4A537'],
+            ['label' => 'Pending',  'count' => (int) $this->pendingRequests,  'color' => '#F59E0B'],
             ['label' => 'Rejected', 'count' => (int) $this->rejectedRequests, 'color' => '#B8352A'],
         ];
 

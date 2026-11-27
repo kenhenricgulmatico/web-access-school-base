@@ -21,6 +21,7 @@ Route::middleware(['auth', 'approved', 'admin'])->prefix('admin')->group(functio
     Route::livewire('/dashboard', 'pages::admin.dashboard')->name('admin.dashboard');
     Route::livewire('/students', 'pages::admin.student')->name('admin.students');
     Route::livewire('/audit-logs', 'pages::admin.audit-logs')->name('admin.audit-logs');
+    Route::livewire('/settings', 'pages::admin.settings')->name('admin.settings');
 
     //user
     Route::livewire('/users', 'pages::admin.user.view-user')->name('admin.users');

@@ -1,14 +1,14 @@
 <div>
-<div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto space-y-6">
+<div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6">
 
     {{-- Header --}}
     <div class="flex items-center justify-between flex-wrap gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800 dark:text-neutral-200">Stock History</h2>
+            <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">Stock History</h2>
             <p class="text-sm text-gray-500 dark:text-neutral-400">Every change to the main stock: restocks, materials released on approval, returned borrowed items and stock removed</p>
         </div>
         <a href="{{ route('admin.inventory-stock-material') }}"
-            class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:bg-green-700 disabled:opacity-50 disabled:pointer-events-none">
+            class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#123524] text-white hover:bg-[#0B2418] focus:outline-none focus:bg-[#0B2418] disabled:opacity-50 disabled:pointer-events-none">
             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
             </svg>
@@ -26,12 +26,12 @@
     <div class="grid sm:grid-cols-3 gap-3">
         <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5 dark:bg-neutral-800 dark:border-neutral-700">
             <div class="flex items-center gap-x-2 mb-3">
-                <span class="size-8 inline-flex justify-center items-center rounded-full border-4 border-green-50 bg-green-100 text-green-800 dark:border-green-900 dark:bg-green-800 dark:text-green-300">
+                <span class="size-8 inline-flex justify-center items-center rounded-full border-4 border-green-50 bg-green-100 text-[#123524] dark:border-[#1C6B45/40] dark:bg-[#1C6B45/25] dark:text-green-300">
                     <svg class="shrink-0 size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
                 </span>
                 <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-500">Stock in</p>
             </div>
-            <h3 class="text-xl sm:text-2xl font-medium text-green-700 dark:text-green-400">+{{ number_format($tot['in']) }} <span class="text-sm font-normal text-gray-400">{{ $unit }}</span></h3>
+            <h3 class="text-xl sm:text-2xl font-medium text-[#1C6B45] dark:text-green-400">+{{ number_format($tot['in']) }} <span class="text-sm font-normal text-gray-400">{{ $unit }}</span></h3>
             <p class="mt-1 text-xs text-gray-500 dark:text-neutral-500">{{ $period }} · {{ $tot['inEntries'] }} restocks &amp; returns · {{ $scope }}</p>
         </div>
 
@@ -48,12 +48,12 @@
 
         <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5 dark:bg-neutral-800 dark:border-neutral-700">
             <div class="flex items-center gap-x-2 mb-3">
-                <span class="size-8 inline-flex justify-center items-center rounded-full border-4 border-blue-50 bg-blue-100 text-blue-800 dark:border-blue-900 dark:bg-blue-800 dark:text-blue-300">
+                <span class="size-8 inline-flex justify-center items-center rounded-full border-4 border-[#1C6B45/15] bg-[#E8F3EC] text-[#123524] dark:border-[#1C6B45/40] dark:bg-[#1C6B45/25] dark:text-[#9FD3AE]">
                     <svg class="shrink-0 size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
                 </span>
                 <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-500">Net change</p>
             </div>
-            <h3 class="text-xl sm:text-2xl font-medium {{ $tot['net'] > 0 ? 'text-green-700 dark:text-green-400' : ($tot['net'] < 0 ? 'text-red-700 dark:text-red-400' : 'text-gray-800 dark:text-neutral-200') }}">
+            <h3 class="text-xl sm:text-2xl font-medium {{ $tot['net'] > 0 ? 'text-[#1C6B45] dark:text-green-400' : ($tot['net'] < 0 ? 'text-red-700 dark:text-red-400' : 'text-gray-800 dark:text-neutral-200') }}">
                 {{ $tot['net'] > 0 ? '+' : ($tot['net'] < 0 ? '−' : '') }}{{ number_format(abs($tot['net'])) }} <span class="text-sm font-normal text-gray-400">{{ $unit }}</span>
             </h3>
             <p class="mt-1 text-xs text-gray-500 dark:text-neutral-500">{{ $period }} · in minus out{{ $this->selectedMaterial ? '' : ' (all units together)' }}</p>
@@ -86,7 +86,7 @@
 
                     {{-- ✅ Filters --}}
                     @php
-                        $fld   = 'py-2 px-3 block w-full border border-gray-200 rounded-lg text-sm focus:border-green-600 focus:ring-green-600 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-300';
+                        $fld   = 'py-2 px-3 block w-full border border-gray-200 rounded-lg text-sm focus:border-[#1C6B45] focus:ring-[#1C6B45] dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-300';
                         $range = $this->activeRange();
                         $sum   = $this->summary;
                     @endphp
@@ -145,10 +145,10 @@
                             {{-- ✅ Type chips with counts --}}
                             @php
                                 $chipColors = [
-                                    'restock'  => 'bg-blue-600 border-blue-600',
-                                    'approval' => 'bg-green-600 border-green-600',
-                                    'return'   => 'bg-teal-600 border-teal-600',
-                                    'removal'  => 'bg-orange-600 border-orange-600',
+                                    'restock'  => 'bg-[#123524] border-[#1C6B45]',
+                                    'approval' => 'bg-[#123524] border-[#1C6B45]',
+                                    'return'   => 'bg-[#123524] border-[#1C6B45]',
+                                    'removal'  => 'bg-amber-600 border-amber-600',
                                 ];
                             @endphp
                             <button type="button" wire:click="setType('')"
@@ -217,8 +217,8 @@
                                     {{-- Material --}}
                                     <td class="block @4xl:table-cell px-0 @4xl:px-4 @7xl:px-6 pb-2 @4xl:py-4 @4xl:whitespace-nowrap">
                                         <div class="flex items-center gap-x-3">
-                                            <div class="size-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                                                <svg class="size-4 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <div class="size-8 rounded-full bg-[#E8F3EC] dark:bg-[#1C6B45/25] flex items-center justify-center">
+                                                <svg class="size-4 text-[#1C6B45] dark:text-[#7FBF8E]" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
                                                 </svg>
                                             </div>
@@ -236,28 +236,28 @@
                                     {{-- Type --}}
                                     <td class="inline-block @4xl:table-cell px-0 @4xl:px-4 @7xl:px-6 py-1 @4xl:py-4 @4xl:whitespace-nowrap">
                                         @if($isRestock)
-                                            <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900 dark:text-blue-400">
+                                            <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-[#E8F3EC] text-[#123524] rounded-full dark:bg-[#1C6B45/25] dark:text-[#7FBF8E]">
                                                 <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                                                 </svg>
                                                 Stock In
                                             </span>
                                         @elseif($isRemoval)
-                                            <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full dark:bg-orange-900 dark:text-orange-300">
+                                            <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-amber-100 text-amber-800 rounded-full dark:bg-amber-900 dark:text-amber-300">
                                                 <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/>
                                                 </svg>
                                                 Removed
                                             </span>
                                         @elseif($isReturn)
-                                            <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-900 dark:text-teal-300">
+                                            <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-[#E8F3EC] text-[#123524] rounded-full dark:bg-[#1C6B45/25] dark:text-[#9FD3AE]">
                                                 <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/>
                                                 </svg>
                                                 Returned
                                             </span>
                                         @else
-                                            <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-green-100 text-green-800 rounded-full dark:bg-green-900 dark:text-green-400">
+                                            <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-green-100 text-[#123524] rounded-full dark:bg-[#1C6B45/25] dark:text-green-400">
                                                 <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                                                 </svg>
@@ -269,7 +269,7 @@
                                     {{-- Qty --}}
                                     <td class="inline-block @4xl:table-cell px-0 ps-1 @4xl:px-4 @7xl:px-6 py-1 @4xl:py-4 @4xl:whitespace-nowrap">
                                         @if($isPlus)
-                                            <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-green-100 text-green-800 rounded-full dark:bg-green-900 dark:text-green-400">
+                                            <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-green-100 text-[#123524] rounded-full dark:bg-[#1C6B45/25] dark:text-green-400">
                                                 <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
                                                 </svg>
@@ -333,7 +333,7 @@
                                     {{-- By --}}
                                     <td class="hidden @7xl:table-cell px-4 @7xl:px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center gap-x-2">
-                                            <div class="size-6 rounded-full bg-green-700 text-white flex items-center justify-center text-[10px] font-bold">
+                                            <div class="size-6 rounded-full bg-[#0B2418] text-white flex items-center justify-center text-[10px] font-bold">
                                                 {{ strtoupper(substr($stock->actor_name ?? 'A', 0, 1)) }}
                                             </div>
                                             <span class="text-sm text-gray-800 dark:text-neutral-200">

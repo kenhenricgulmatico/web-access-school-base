@@ -1,11 +1,8 @@
-<div class="select-none">
-    <div class="max-w-4xl mx-auto px-3 py-6 sm:px-6 lg:px-8 lg:py-14">
-        <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
+<div>
+    <div class="max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+        <x-portal.page-header title="Request Materials" subtitle="Fill out the form to request materials" :back="route('portal.material')" back-label="My Material Requests" />
 
-            <div class="px-4 py-4 sm:px-6 border-b border-gray-200 dark:border-neutral-700">
-                <h2 class="text-lg sm:text-xl font-semibold text-gray-800 dark:text-neutral-200">Request Materials</h2>
-                <p class="text-xs sm:text-sm text-gray-600 dark:text-neutral-400">Fill out the form to request materials</p>
-            </div>
+        <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
 
             <div class="p-4 sm:p-6">
                 @if (session()->has('success'))
@@ -20,7 +17,7 @@
                 @endif
 
                 @if(empty($availableResources))
-                    <div class="mb-4 p-3 sm:p-4 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800 text-xs sm:text-sm">
+                    <div class="mb-4 p-3 sm:p-4 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs sm:text-sm">
                         No materials are available for your department right now. Please contact your Program Head.
                     </div>
                 @endif

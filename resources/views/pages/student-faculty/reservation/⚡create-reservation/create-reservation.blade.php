@@ -1,11 +1,8 @@
-<div class="select-none">
-<div class="max-w-4xl mx-auto px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-    <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
+<div>
+<div class="max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+    <x-portal.page-header title="Create Reservation" subtitle="Fill out the form to reserve a facility" :back="route('portal.reservation')" back-label="My Reservations" />
 
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-neutral-700">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">Create Reservation</h2>
-            <p class="text-sm text-gray-600 dark:text-neutral-400">Fill out the form to reserve a facility</p>
-        </div>
+    <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
 
         <div class="p-6">
             @if (session()->has('success'))

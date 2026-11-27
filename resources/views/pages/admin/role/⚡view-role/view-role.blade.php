@@ -1,5 +1,5 @@
-<div class="select-none">
-    <div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+<div>
+    <div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
 
         @include('partials.users-tabs')
 
@@ -17,7 +17,7 @@
                     </p>
 
                     @if(session('success'))
-                        <div class="mt-2 text-green-600 dark:text-green-400 text-sm font-medium">
+                        <div class="mt-2 text-[#1C6B45] dark:text-green-400 text-sm font-medium">
                             {{ session('success') }}
                         </div>
                     @endif
@@ -45,8 +45,8 @@
                     <a href="{{ route('admin.roles.create') }}"
                        wire:navigate
                        class="py-2 px-3.5 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg
-                              border border-transparent bg-blue-600 text-white
-                              hover:bg-blue-700 focus:outline-none focus:bg-blue-700 transition">
+                              border border-transparent bg-[#123524] text-white
+                              hover:bg-[#0B2418] focus:outline-none focus:bg-[#0B2418] transition">
                         <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 5v14" />
                             <path d="M5 12h14" />
@@ -68,10 +68,10 @@
                                     <input type="checkbox"
                                            wire:model.live="selectAll"
                                            id="roles-select-all"
-                                           class="shrink-0 size-4 border-gray-300 rounded text-blue-600
-                                                  focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-0
+                                           class="shrink-0 size-4 border-gray-300 rounded text-[#1C6B45]
+                                                  focus:ring-2 focus:ring-[#1C6B45]/30 focus:ring-offset-0
                                                   dark:bg-neutral-800 dark:border-neutral-600
-                                                  dark:checked:bg-blue-600 dark:checked:border-blue-600">
+                                                  dark:checked:bg-[#123524] dark:checked:border-[#1C6B45]">
                                     <span class="sr-only">Select all roles</span>
                                 </label>
                             </th>
@@ -111,10 +111,10 @@
                                                value="{{ $role->id }}"
                                                wire:model.live="selectedRoles"
                                                id="role-checkbox-{{ $role->id }}"
-                                               class="shrink-0 size-4 border-gray-300 rounded text-blue-600
-                                                      focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-0
+                                               class="shrink-0 size-4 border-gray-300 rounded text-[#1C6B45]
+                                                      focus:ring-2 focus:ring-[#1C6B45]/30 focus:ring-offset-0
                                                       dark:bg-neutral-800 dark:border-neutral-600
-                                                      dark:checked:bg-blue-600 dark:checked:border-blue-600">
+                                                      dark:checked:bg-[#123524] dark:checked:border-[#1C6B45]">
                                         <span class="sr-only">Select {{ $role->name }}</span>
                                     </label>
                                 </td>
@@ -144,8 +144,8 @@
                                         </a>
                                         <a href="{{ route('admin.roles.edit', $role->id) }}"
                                            wire:navigate
-                                           class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline
-                                                  dark:text-blue-400 dark:hover:text-blue-300">
+                                           class="text-sm font-medium text-[#1C6B45] hover:text-[#123524] hover:underline
+                                                  dark:text-[#7FBF8E] dark:hover:text-[#9FD3AE]">
                                             Edit
                                         </a>
                                     </div>
@@ -165,7 +165,7 @@
                                         </p>
                                         <a href="{{ route('admin.roles.create') }}"
                                            wire:navigate
-                                           class="mt-2 inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                                           class="mt-2 inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium bg-[#123524] text-white rounded-lg hover:bg-[#0B2418] transition">
                                             <svg class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
                                             </svg>

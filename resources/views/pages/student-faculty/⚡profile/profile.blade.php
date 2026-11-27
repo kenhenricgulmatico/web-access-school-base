@@ -1,5 +1,7 @@
 <div>
-    <div class="max-w-3xl mx-auto px-3 py-6 sm:px-6 lg:px-8 lg:py-14">
+    <div class="max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+        <x-portal.page-header title="My Profile" subtitle="Your photo, name and school details" />
+
 
         {{-- Profile Header Card with Avatar Upload --}}
         <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl shadow-sm p-4 sm:p-6 mb-6 flex items-center gap-4 text-left">
@@ -10,9 +12,9 @@
                     <img src="{{ asset($currentAvatar) }}"
                          wire:key="avatar-{{ $currentAvatar }}"
                          alt="Profile photo"
-                         class="w-16 h-16 rounded-full object-cover ring-2 ring-green-700/20">
+                         class="w-16 h-16 rounded-full object-cover ring-2 ring-[#7FBF8E]/60">
                 @else
-                    <div class="w-16 h-16 rounded-full bg-green-700 text-white flex items-center justify-center text-2xl font-semibold">
+                    <div class="w-16 h-16 rounded-full bg-[#123524] text-white flex items-center justify-center text-2xl font-semibold">
                         {{ strtoupper(substr($savedName, 0, 1)) }}
                     </div>
                 @endif
@@ -47,7 +49,7 @@
 
                 <div class="flex items-center gap-3 mt-1.5">
                     <label for="avatar-upload"
-                           class="inline-block text-xs font-medium text-green-700 dark:text-green-400 hover:underline cursor-pointer">
+                           class="inline-block text-xs font-medium text-[#1C6B45] dark:text-[#7FBF8E] hover:underline cursor-pointer">
                         <span wire:loading.remove wire:target="avatar">Change photo (JPG, PNG, GIF, WebP · max 5MB)</span>
                         <span wire:loading wire:target="avatar">Uploading...</span>
                     </label>
@@ -91,7 +93,7 @@
                 <p class="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">You can change your name. Email, department and role are managed by the registrar.</p>
             </div>
 
-            <div class="p-4 sm:p-6 space-y-4 sm:space-y-5 select-none">
+            <div class="p-4 sm:p-6 space-y-4 sm:space-y-5">
                 @php
                     $lockIcon = '<svg class="w-4 h-4 text-gray-400 dark:text-neutral-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>';
                     $fieldClass = 'w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900 text-gray-500 dark:text-gray-400 text-xs sm:text-sm flex items-center justify-between';
@@ -103,7 +105,7 @@
                     <label for="profile-name" class="{{ $labelClass }}">Full name</label>
                     <form wire:submit="saveName" class="flex flex-col sm:flex-row gap-2">
                         <input id="profile-name" type="text" wire:model="name" maxlength="100" autocomplete="name"
-                               class="flex-1 min-w-0 px-3 py-2.5 rounded-lg border bg-white dark:bg-neutral-900 text-gray-800 dark:text-neutral-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-green-600/30 focus:border-green-600
+                               class="flex-1 min-w-0 px-3 py-2.5 rounded-lg border bg-white dark:bg-neutral-900 text-gray-800 dark:text-neutral-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#1C6B45]/30 focus:border-[#1C6B45]
                                       @error('name') border-red-400 @else border-gray-300 dark:border-neutral-600 @enderror">
                         <div class="flex gap-2 shrink-0" x-show="$wire.name !== $wire.savedName" x-cloak>
                             <button type="button" wire:click="cancelName"
@@ -111,7 +113,7 @@
                                 Cancel
                             </button>
                             <button type="submit" wire:loading.attr="disabled" wire:target="saveName"
-                                    class="px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-green-700 text-white hover:bg-green-800 disabled:opacity-60 transition">
+                                    class="px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-[#123524] text-white hover:bg-[#0B2418] disabled:opacity-60 transition">
                                 <span wire:loading.remove wire:target="saveName">Save</span>
                                 <span wire:loading wire:target="saveName">Saving…</span>
                             </button>
@@ -150,7 +152,7 @@
         {{-- Link to Settings --}}
         <div class="mt-6 flex justify-end">
             <a href="{{ route('portal.settings') }}"
-               class="text-sm font-medium text-green-700 dark:text-green-400 hover:underline">
+               class="text-sm font-medium text-[#1C6B45] dark:text-[#7FBF8E] hover:underline">
                 Looking to change your password? Go to Settings →
             </a>
         </div>

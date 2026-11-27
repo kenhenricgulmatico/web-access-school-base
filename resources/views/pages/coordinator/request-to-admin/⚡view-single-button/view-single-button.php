@@ -41,7 +41,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     public function statusBadgeClasses(string $status): string
     {
         return match ($status) {
-            'approved'  => 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-400',
+            'approved'  => 'bg-[#E8F3EC] text-[#1C6B45] dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]',
             'rejected'  => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-400',
             default     => 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-300',
         };

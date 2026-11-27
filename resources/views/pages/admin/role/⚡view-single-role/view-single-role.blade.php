@@ -1,5 +1,5 @@
-<div class="select-none">
-<div class="max-w-3xl mx-auto px-4 py-10 sm:px-6 lg:px-8 lg:py-14 space-y-6">
+<div>
+<div class="max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6">
 
     {{-- Back --}}
     <a href="{{ route('admin.roles') }}" wire:navigate
@@ -12,7 +12,7 @@
 
     {{-- Flash --}}
     @if (session('success'))
-        <div class="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 text-sm">
+        <div class="p-3 rounded-lg bg-green-50 dark:bg-[#1C6B45]/20 border border-green-200 dark:border-[#1C6B45/40] text-[#1C6B45] dark:text-green-400 text-sm">
             {{ session('success') }}
         </div>
     @endif
@@ -27,7 +27,7 @@
         <div class="flex items-start justify-between gap-4">
             <div>
                 <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Role</p>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">
                     {{ ucwords($role->name) }}
                 </h1>
                 <p class="text-sm text-gray-500 dark:text-neutral-400 mt-1">
@@ -38,7 +38,7 @@
 
             <div class="flex items-center gap-2 shrink-0">
                 <a href="{{ route('admin.roles.edit', $role->id) }}" wire:navigate
-                   class="px-3.5 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                   class="px-3.5 py-2 text-sm font-medium bg-[#123524] text-white rounded-lg hover:bg-[#0B2418] transition">
                     Edit
                 </a>
                 <button type="button"
@@ -70,7 +70,7 @@
                         <ul class="space-y-1.5">
                             @foreach ($names as $name)
                                 <li class="flex items-start gap-2 text-sm text-gray-600 dark:text-neutral-400">
-                                    <svg class="size-4 mt-0.5 shrink-0 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <svg class="size-4 mt-0.5 shrink-0 text-[#1C6B45] dark:text-green-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                                     </svg>
                                     <span>{{ \App\Support\PermissionCatalog::label($name) }}</span>

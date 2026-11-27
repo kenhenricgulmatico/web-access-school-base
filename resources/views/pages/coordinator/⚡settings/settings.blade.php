@@ -1,10 +1,7 @@
-<div class="select-none">
-    <div class="max-w-3xl mx-auto px-3 py-6 sm:px-6 lg:px-8 lg:py-14">
+<div>
+    <div class="max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
 
-        <div class="mb-6">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
-            <p class="text-sm text-gray-500 dark:text-neutral-400 mt-1">Manage your account security</p>
-        </div>
+        <x-portal.page-header title="Settings" subtitle="Manage your account security" :back="route('coordinator.profile')" back-label="Profile" />
 
         {{-- Success message --}}
         @if (session()->has('password_message'))
@@ -61,7 +58,7 @@
                     <button type="submit"
                         wire:loading.attr="disabled"
                         wire:loading.class="opacity-50 cursor-not-allowed"
-                        class="w-full sm:w-auto px-6 py-2.5 bg-[#123524] hover:bg-[#0d2a1b] dark:bg-green-700 dark:hover:bg-emerald-600 text-white rounded-lg font-medium text-sm shadow-sm transition text-center">
+                        class="w-full sm:w-auto px-6 py-2.5 bg-[#123524] hover:bg-[#0d2a1b] dark:bg-[#1C6B45] dark:hover:bg-emerald-600 text-white rounded-lg font-medium text-sm shadow-sm transition text-center">
                         <span wire:loading.remove wire:target="updatePassword">Update Password</span>
                         <span wire:loading wire:target="updatePassword">Updating...</span>
                     </button>

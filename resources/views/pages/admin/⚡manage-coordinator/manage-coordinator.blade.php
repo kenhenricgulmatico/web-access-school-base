@@ -1,9 +1,9 @@
-<div class="select-none">
-    <div class="max-w-7xl mx-auto px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+<div>
+    <div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
 
         {{-- Header --}}
         <div class="mb-6">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Incoming Requests</h2>
+            <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">Incoming Requests</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400">Review and approve requests from Program Heads</p>
         </div>
 
@@ -11,26 +11,26 @@
         <div class="flex flex-wrap gap-4 mb-6">
             <button wire:click="$set('statusFilter', 'pending')"
                 class="inline-flex items-center gap-2 rounded-full px-4 py-2 transition
-                {{ $statusFilter === 'pending' ? 'bg-yellow-400 text-white' : 'bg-yellow-100 dark:bg-yellow-900/30' }}">
+                {{ $statusFilter === 'pending' ? 'bg-amber-100 ring-2 ring-amber-400 dark:bg-amber-900/40' : 'bg-amber-50 dark:bg-amber-900/20' }}">
                 <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="9" />
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 3" />
                 </svg>
-                <span class="text-sm font-medium text-yellow-800 dark:text-yellow-300">Pending:
+                <span class="text-sm font-medium text-amber-800 dark:text-amber-300">Pending:
                     {{ $this->pendingCount }}</span>
             </button>
             <button wire:click="$set('statusFilter', 'approved')"
                 class="inline-flex items-center gap-2 rounded-full px-4 py-2 transition
-                {{ $statusFilter === 'approved' ? 'bg-green-400 text-white' : 'bg-green-100 dark:bg-green-900/30' }}">
+                {{ $statusFilter === 'approved' ? 'bg-[#E8F3EC] ring-2 ring-[#1C6B45] dark:bg-[#1C6B45]/40' : 'bg-[#E8F3EC]/60 dark:bg-[#1C6B45]/20' }}">
                 <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
-                <span class="text-sm font-medium text-green-800 dark:text-green-300">Approved:
+                <span class="text-sm font-medium text-[#123524] dark:text-green-300">Approved:
                     {{ $this->approvedCount }}</span>
             </button>
             <button wire:click="$set('statusFilter', 'rejected')"
                 class="inline-flex items-center gap-2 rounded-full px-4 py-2 transition
-                {{ $statusFilter === 'rejected' ? 'bg-red-400 text-white' : 'bg-red-100 dark:bg-red-900/30' }}">
+                {{ $statusFilter === 'rejected' ? 'bg-red-100 ring-2 ring-red-400 dark:bg-red-900/40' : 'bg-red-50 dark:bg-red-900/20' }}">
                 <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -41,11 +41,11 @@
                 {{-- ✅ Pending, but the day it was needed has passed --}}
                 <button wire:click="$set('statusFilter', 'overdue')"
                     class="inline-flex items-center gap-2 rounded-full px-4 py-2 transition
-                    {{ $statusFilter === 'overdue' ? 'bg-orange-500 text-white' : 'bg-orange-100 dark:bg-orange-900/30' }}">
+                    {{ $statusFilter === 'overdue' ? 'bg-amber-500 text-white' : 'bg-amber-100 dark:bg-amber-900/30' }}">
                     <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                     </svg>
-                    <span class="text-sm font-medium {{ $statusFilter === 'overdue' ? 'text-white' : 'text-orange-800 dark:text-orange-300' }}">Overdue:
+                    <span class="text-sm font-medium {{ $statusFilter === 'overdue' ? 'text-white' : 'text-amber-800 dark:text-amber-300' }}">Overdue:
                         {{ $this->overdueCount }}</span>
                 </button>
             @endif
@@ -64,13 +64,13 @@
                         </svg>
                         <input type="text" wire:model.live.debounce.300ms="search"
                             placeholder="Search requester, item, room, purpose, department..."
-                            class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-[#1C6B45]">
                     </div>
                 </div>
                 <div class="w-36">
                     <label class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block">Status</label>
                     <select wire:model.live="statusFilter"
-                        class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-[#1C6B45]">
                         <option value="">All</option>
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
@@ -90,24 +90,24 @@
         {{-- ✅ Overdue: clear them in one go --}}
         @if($statusFilter === 'overdue' && $this->overdueCount > 0)
             @can('program-head-requests.reject')
-                <div class="mb-4 p-4 rounded-xl border border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-900 text-sm">
+                <div class="mb-4 p-4 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 text-sm">
                     @if(! $confirmingOverdue)
                         <div class="flex flex-wrap items-center justify-between gap-3">
-                            <p class="text-orange-900 dark:text-orange-200">
+                            <p class="text-amber-900 dark:text-amber-200">
                                 <strong>{{ $this->overdueCount }} pending {{ \Illuminate\Support\Str::plural('request', $this->overdueCount) }}</strong>
                                 {{ $this->overdueCount === 1 ? 'was' : 'were' }} needed on a day that has already passed.
                             </p>
                             <button type="button" wire:click="openRejectOverdue"
-                                class="px-4 py-2 text-sm font-semibold rounded-lg bg-orange-600 text-white hover:bg-orange-700 transition">
+                                class="px-4 py-2 text-sm font-semibold rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition">
                                 Reject all overdue
                             </button>
                         </div>
                     @else
-                        <label for="overdue-reason" class="block font-semibold text-orange-900 dark:text-orange-200 mb-1.5">
+                        <label for="overdue-reason" class="block font-semibold text-amber-900 dark:text-amber-200 mb-1.5">
                             Reason sent to each Program Head
                         </label>
                         <textarea id="overdue-reason" wire:model="overdueReason" rows="2" maxlength="500"
-                            class="w-full px-3 py-2 text-sm rounded-lg border border-orange-200 dark:border-orange-900 bg-white dark:bg-neutral-900 dark:text-neutral-200 focus:ring-2 focus:ring-orange-300"></textarea>
+                            class="w-full px-3 py-2 text-sm rounded-lg border border-amber-200 dark:border-amber-900 bg-white dark:bg-neutral-900 dark:text-neutral-200 focus:ring-2 focus:ring-amber-300"></textarea>
                         <div class="mt-2 flex justify-end gap-2">
                             <button type="button" wire:click="cancelRejectOverdue"
                                 class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-700 dark:text-neutral-200">
@@ -128,7 +128,7 @@
 
         {{-- Flash Messages --}}
         @if (session()->has('message'))
-            <div class="mb-4 p-3 rounded-lg bg-green-100 text-green-800 border border-green-200 text-sm flex items-center gap-2">
+            <div class="mb-4 p-3 rounded-lg bg-green-100 text-[#123524] border border-green-200 text-sm flex items-center gap-2">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
@@ -147,30 +147,30 @@
         @endif
 
         {{-- Table --}}
-        <div class="overflow-x-auto bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 shadow-sm">
-            <table class="min-w-full block md:table divide-y divide-gray-200 dark:divide-neutral-700">
-                <thead class="hidden md:table-header-group bg-gray-50 dark:bg-neutral-900/30">
+        <div class="@container overflow-hidden bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 shadow-sm">
+            <table class="min-w-full block @4xl:table divide-y divide-gray-200 dark:divide-neutral-700">
+                <thead class="hidden @4xl:table-header-group bg-[#F3F8F5] dark:bg-neutral-900/30">
                     <tr>
-                        <th class="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">
+                        <th class="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">
                             Requester</th>
-                        <th class="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">
+                        <th class="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">
                             Request</th>
-                        <th class="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">
+                        <th class="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">
                             Needed on</th>
-                        <th class="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">
+                        <th class="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">
                             Status</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">
+                        <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">
                             Actions</th>
                     </tr>
                 </thead>
-                <tbody class="block md:table-row-group divide-y divide-gray-100 dark:divide-neutral-700">
+                <tbody class="block @4xl:table-row-group divide-y divide-gray-100 dark:divide-neutral-700">
                     @forelse($this->requests as $req)
-                        <tr wire:key="pr-{{ $req->id }}" class="block md:table-row px-4 py-4 md:p-0 hover:bg-gray-50 dark:hover:bg-neutral-700/30 transition">
+                        <tr wire:key="pr-{{ $req->id }}" class="block @4xl:table-row px-4 py-4 @4xl:p-0 hover:bg-gray-50 dark:hover:bg-neutral-700/30 transition">
 
                             {{-- Requester --}}
-                            <td class="block md:table-cell px-0 md:px-4 pb-2 md:py-2.5">
+                            <td class="block @4xl:table-cell px-0 @4xl:px-4 pb-2 @4xl:py-2.5">
                                 <div class="flex items-center gap-2">
-                                    <div class="w-6 h-6 rounded-full bg-green-700 text-white flex items-center justify-center text-[11px] font-bold shrink-0">
+                                    <div class="w-6 h-6 rounded-full bg-[#0B2418] text-white flex items-center justify-center text-[11px] font-bold shrink-0">
                                         {{ strtoupper(substr($req->user->name, 0, 1)) }}
                                     </div>
                                     <div>
@@ -181,7 +181,7 @@
                                         {{-- ✅ Forwarded from a student / faculty request --}}
                                         @if($req->forwarded_from_request_id)
                                             @php $__from = \App\Models\Request::with('user')->find($req->forwarded_from_request_id); @endphp
-                                            <span class="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+                                            <span class="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#E8F3EC] text-[#1C6B45] dark:bg-[#1C6B45]/40 dark:text-[#9FD3AE]">
                                                 Forwarded · {{ $__from?->user?->name ?? 'faculty' }}
                                             </span>
                                         @endif
@@ -191,12 +191,12 @@
 
                             {{-- ✅ What was asked for (no need to open "View") --}}
                             @php $sum = $this->summary($req); @endphp
-                            <td class="block md:table-cell px-0 md:px-4 py-1 md:py-2.5">
+                            <td class="block @4xl:table-cell px-0 @4xl:px-4 py-1 @4xl:py-2.5">
                                 <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded
-                                    {{ $req->request_type_id == \App\Models\RequestType::FACILITY ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' }}">
+                                    {{ $req->request_type_id == \App\Models\RequestType::FACILITY ? 'bg-green-100 text-[#1C6B45] dark:bg-[#1C6B45]/30 dark:text-green-300' : 'bg-[#E8F3EC] text-[#1C6B45] dark:bg-[#1C6B45]/30 dark:text-[#9FD3AE]' }}">
                                     {{ $req->request_type_id == \App\Models\RequestType::FACILITY ? 'Facility' : 'Material' }}
                                 </span>
-                                <p class="mt-1 text-sm font-medium text-gray-800 dark:text-neutral-200 md:max-w-[15rem] truncate" title="{{ $sum['main'] }}">{{ $sum['main'] }}</p>
+                                <p class="mt-1 text-sm font-medium text-gray-800 dark:text-neutral-200 @4xl:max-w-[15rem] truncate" title="{{ $sum['main'] }}">{{ $sum['main'] }}</p>
                                 @if($sum['sub'])
                                     <p class="text-[11px] text-gray-500 dark:text-neutral-400">{{ $sum['sub'] }}</p>
                                 @endif
@@ -213,7 +213,7 @@
                                 $needed = $this->neededOn($req);
                                 $urgent = $req->status === 'pending' && $needed && $needed->lte(today()->addDay());
                             @endphp
-                            <td class="block md:table-cell px-0 md:px-4 py-1 md:py-2.5 md:whitespace-nowrap">
+                            <td class="block @4xl:table-cell px-0 @4xl:px-4 py-1 @4xl:py-2.5 @4xl:whitespace-nowrap">
                                 @if($needed)
                                     <p class="text-xs font-medium {{ $urgent ? 'text-red-700 dark:text-red-300' : 'text-gray-800 dark:text-neutral-200' }}">{{ $needed->format('M d, Y') }}</p>
                                     @if($urgent)
@@ -228,10 +228,10 @@
 
 
                             {{-- Status --}}
-                            <td class="block md:table-cell px-0 md:px-4 py-1 md:py-2.5">
+                            <td class="block @4xl:table-cell px-0 @4xl:px-4 py-1 @4xl:py-2.5">
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-full
-                                    @if ($req->status === 'pending') bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300
-                                    @elseif($req->status === 'approved') bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300
+                                    @if ($req->status === 'pending') bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300
+                                    @elseif($req->status === 'approved') bg-green-100 text-[#123524] dark:bg-[#1C6B45]/30 dark:text-green-300
                                     @else bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 @endif">
                                     @if ($req->status === 'pending')
                                         <svg class="size-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -267,7 +267,7 @@
                                         </p>
                                     @endif
                                     @if(empty($clash) && empty($short))
-                                        <p class="mt-1.5 text-[11px] font-medium text-green-700 dark:text-green-400">
+                                        <p class="mt-1.5 text-[11px] font-medium text-[#1C6B45] dark:text-green-400">
                                             ✓ {{ $req->request_type_id == \App\Models\RequestType::FACILITY ? 'Room free' : 'In stock' }}{{ $req->request_type_id == \App\Models\RequestType::FACILITY && $req->items->whereNotNull('resource_id')->isNotEmpty() ? ' · items in stock' : '' }}
                                         </p>
                                     @endif
@@ -280,7 +280,7 @@
                             </td>
 
                             {{-- Actions --}}
-                            <td class="block md:table-cell px-0 md:px-6 pt-3 md:py-4 md:text-right md:whitespace-nowrap space-x-2">
+                            <td class="block @4xl:table-cell px-0 @4xl:px-6 pt-3 @4xl:py-4 @4xl:text-right @4xl:whitespace-nowrap space-x-2">
 
                                 {{-- ✅ View — new permission name --}}
                                 @can('program-head-requests.view')
@@ -297,7 +297,7 @@
                                         <button wire:click="approve({{ $req->id }})"
                                             wire:confirm="{{ $this->approveConfirm($req) }}"
                                             wire:loading.attr="disabled" wire:target="approve({{ $req->id }})"
-                                            class="px-3 py-1 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                                            class="px-3 py-1 text-xs bg-[#123524] text-white rounded-lg hover:bg-[#0B2418] transition">
                                             Approve
                                         </button>
                                     @endcan
@@ -318,8 +318,8 @@
                         {{-- ✅ Inline Reject Form (also permission-gated) --}}
                         @can('program-head-requests.reject')
                             @if ($rejectingRequestId === $req->id)
-                                <tr class="block md:table-row bg-red-50/40 dark:bg-red-900/10">
-                                    <td colspan="5" class="block md:table-cell px-4 md:px-6 py-4">
+                                <tr class="block @4xl:table-row bg-red-50/40 dark:bg-red-900/10">
+                                    <td colspan="5" class="block @4xl:table-cell px-4 @4xl:px-6 py-4">
                                         <div class="max-w-2xl bg-white dark:bg-neutral-800 border border-red-200 dark:border-red-900/50 rounded-lg p-4 space-y-3">
                                             <div class="flex items-center gap-2">
                                                 <svg class="size-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -360,8 +360,8 @@
                         @endcan
 
                     @empty
-                        <tr class="block md:table-row">
-                            <td colspan="5" class="block md:table-cell px-6 py-14 text-center">
+                        <tr class="block @4xl:table-row">
+                            <td colspan="5" class="block @4xl:table-cell px-6 py-14 text-center">
                                 <svg class="w-10 h-10 text-gray-300 dark:text-neutral-600 mx-auto mb-3" fill="none"
                                     stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                     <path stroke-linecap="round"

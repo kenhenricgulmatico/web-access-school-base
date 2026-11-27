@@ -1,17 +1,15 @@
-<div class="select-none">
-<div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+<div>
+<div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
 
-  {{-- Header --}}
-  <div class="mb-6">
-    <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Borrowed Items</h2>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-      @if($view === 'mine')
-        Items you borrowed from the Admin. Click <strong>Return to Admin</strong> when you give them back — the Admin will confirm it.
-      @else
-        Items your faculty must return. Mark them returned and record their condition.
-      @endif
-    </p>
-  </div>
+  <x-portal.page-header title="Borrowed Items">
+    @if($view === 'mine')
+      Items you borrowed from the Admin. Click <strong class="text-gray-700 dark:text-neutral-200">Return to Admin</strong> when you give them back — the Admin will confirm it.
+    @elseif($view === 'assigned')
+      Items your teachers keep (no return date). Hand them over when a teacher leaves.
+    @else
+      Items your faculty must return. Mark them returned and record their condition.
+    @endif
+  </x-portal.page-header>
 
   {{-- Flash --}}
   @if(session('message'))
@@ -52,20 +50,12 @@
   @endif
 
   {{-- ✅ Switch: Students & Faculty | My borrowed items --}}
-  <div class="flex gap-2 mb-4 border-b border-gray-200 dark:border-neutral-700" role="tablist" aria-label="Whose borrowed items">
-    @foreach(['students' => 'Faculty', 'mine' => 'My borrowed items', 'assigned' => 'Assigned (kept)'] as $key => $label)
-      <button type="button" role="tab" wire:click="$set('view', '{{ $key }}')" aria-selected="{{ $view === $key ? 'true' : 'false' }}"
-        class="min-h-10 px-4 -mb-px border-b-2 text-sm font-semibold transition inline-flex items-center gap-2
-          {{ $view === $key ? 'border-[#123524] text-[#123524] dark:border-green-300 dark:text-green-300' : 'border-transparent text-gray-500 hover:text-[#123524] dark:text-neutral-400' }}">
-        {{ $label }}
-        @if($key === 'mine' && $this->counts['mine'] > 0)
-          <span class="text-xs px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">{{ $this->counts['mine'] }}</span>
-        @endif
-        @if($key === 'assigned' && $this->counts['assigned'] > 0)
-          <span class="text-xs px-1.5 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">{{ $this->counts['assigned'] }}</span>
-        @endif
-      </button>
-    @endforeach
+  <div class="mb-4">
+    <x-portal.tabs label="Whose borrowed items">
+      @foreach(['students' => 'Faculty', 'mine' => 'My borrowed items', 'assigned' => 'Assigned (kept)'] as $key => $label)
+        <x-portal.tab :active="$view === $key" :count="in_array($key, ['mine', 'assigned']) && $this->counts[$key] > 0 ? $this->counts[$key] : null" wire:click="$set('view', '{{ $key }}')">{{ $label }}</x-portal.tab>
+      @endforeach
+    </x-portal.tabs>
   </div>
 
   @if($view === 'assigned')
@@ -76,9 +66,9 @@
          ✅ MY BORROWED ITEMS (from the Admin)
          ============================================================ --}}
     <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl overflow-hidden">
-      <div class="overflow-x-auto">
+      <div>
         <table class="min-w-full text-sm block sm:table">
-          <thead class="hidden sm:table-header-group bg-gray-50 dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-400">
+          <thead class="hidden sm:table-header-group bg-[#F3F8F5] dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">
             <tr>
               <th class="px-4 py-3 font-semibold">Item</th>
               <th class="px-4 py-3 font-semibold">Return by</th>
@@ -95,12 +85,12 @@
                 $facultyItem = $item->returned_at ? null : \App\Support\ReturnTracking::facultyItemFor($item);
                 $withFaculty = $facultyItem && $facultyItem->request?->status === 'approved' && ! $facultyItem->returned_at;
                 $badge   = match (true) {
-                  $item->returned_at && $item->return_condition === 'good' => 'bg-green-100 text-green-800',
-                  (bool) $item->returned_at                                 => 'bg-orange-100 text-orange-800',
-                  (bool) $item->return_requested_at                         => 'bg-blue-100 text-blue-800',
-                  $dueDate->lt(today())                                     => 'bg-red-100 text-red-800',
-                  $dueDate->isToday()                                       => 'bg-amber-100 text-amber-800',
-                  default                                                   => 'bg-gray-100 text-gray-700',
+                  $item->returned_at && $item->return_condition === 'good' => 'returned',
+                  (bool) $item->returned_at                                 => 'damaged',
+                  (bool) $item->return_requested_at                         => 'waiting',
+                  $dueDate->lt(today())                                     => 'overdue',
+                  $dueDate->isToday()                                       => 'soon',
+                  default                                                   => 'borrowed',
                 };
               @endphp
               <tr wire:key="mine-{{ $item->id }}" class="block sm:table-row py-3 sm:py-0">
@@ -113,7 +103,7 @@
                 </td>
                 <td class="block sm:table-cell px-4 py-0.5 sm:py-3 whitespace-nowrap text-gray-700 dark:text-neutral-300"><span class="sm:hidden text-xs text-gray-500">Return by </span>{{ $dueDate->format('M d, Y') }}</td>
                 <td class="block sm:table-cell px-4 py-0.5 sm:py-3">
-                  <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold {{ $badge }}">{{ $label }}</span>
+                  <x-portal.status :status="$badge">{{ $label }}</x-portal.status>
                   @if($item->returned_at)
                     <p class="text-xs text-gray-500 mt-1">
                       {{ $item->returned_at->format('M d, Y') }}@if($item->receiver) · confirmed by {{ $item->receiver->name }}@endif
@@ -169,7 +159,7 @@
               </tr>
             @empty
               <tr>
-                <td colspan="4" class="block sm:table-cell px-4 py-12 text-center text-sm text-gray-500">You have not borrowed any items from the Admin.</td>
+                <td colspan="4" class="block sm:table-cell"><x-portal.empty message="Nothing borrowed from the Admin" hint="Items you borrow through a request to the Admin will show here." /></td>
               </tr>
             @endforelse
           </tbody>
@@ -186,7 +176,7 @@
 
     {{-- ✅ Items faculty gave back that came from the Admin → return them to the Admin --}}
     @if($this->readyForAdminCount > 0)
-      <div class="mb-4 flex flex-wrap items-center gap-2 px-4 py-3 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-800 dark:bg-blue-950/30 dark:border-blue-900 dark:text-blue-300">
+      <div class="mb-4 flex flex-wrap items-center gap-2 px-4 py-3 rounded-lg bg-[#E8F3EC] border border-[#1C6B45]/20 text-sm text-[#123524] dark:bg-[#1C6B45]/15 dark:border-[#7FBF8E]/25 dark:text-[#9FD3AE]">
         <span>
           <strong>{{ $this->readyForAdminCount }} {{ \Illuminate\Support\Str::plural('item', $this->readyForAdminCount) }}</strong>
           borrowed from the Admin {{ $this->readyForAdminCount === 1 ? 'is' : 'are' }} back from faculty — return {{ $this->readyForAdminCount === 1 ? 'it' : 'them' }} to the Admin.
@@ -210,30 +200,22 @@
 
     {{-- Tabs + search --}}
     <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-      <div class="inline-flex p-1 bg-gray-100 dark:bg-neutral-800 rounded-xl gap-1" role="tablist" aria-label="Filter borrowed items">
+      <x-portal.tabs label="Filter borrowed items">
         @foreach(['outstanding' => 'Not returned', 'overdue' => 'Overdue', 'returned' => 'Returned'] as $key => $label)
-          <button type="button" role="tab" wire:click="$set('filter', '{{ $key }}')" aria-selected="{{ $filter === $key ? 'true' : 'false' }}"
-            class="min-h-10 px-4 rounded-lg text-sm font-semibold transition inline-flex items-center gap-2
-              {{ $filter === $key ? 'bg-white dark:bg-neutral-700 text-[#123524] dark:text-white shadow-sm' : 'text-gray-600 dark:text-neutral-400 hover:text-[#123524]' }}">
-            {{ $label }}
-            <span class="text-xs px-1.5 py-0.5 rounded-full
-              {{ $key === 'overdue' && $this->counts['overdue'] > 0 ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:text-neutral-200' }}">
-              {{ $this->counts[$key] }}
-            </span>
-          </button>
+          <x-portal.tab :active="$filter === $key" :count="$this->counts[$key]" wire:click="$set('filter', '{{ $key }}')">{{ $label }}</x-portal.tab>
         @endforeach
-      </div>
+      </x-portal.tabs>
 
       <label class="sr-only" for="borrowed-search">Search</label>
       <input id="borrowed-search" type="search" wire:model.live.debounce.300ms="search" placeholder="Search item or borrower…"
-        class="w-full sm:w-64 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-800 dark:text-neutral-200">
+        class="w-full sm:w-64 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-800 dark:text-neutral-200 focus:ring-2 focus:ring-[#1C6B45]/30 focus:border-[#1C6B45] focus:outline-none">
     </div>
 
     {{-- Table --}}
     <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl overflow-hidden">
-      <div class="overflow-x-auto">
+      <div>
         <table class="min-w-full text-sm block sm:table">
-          <thead class="hidden sm:table-header-group bg-gray-50 dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-400">
+          <thead class="hidden sm:table-header-group bg-[#F3F8F5] dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">
             <tr>
               <th class="px-4 py-3 font-semibold">Item</th>
               <th class="px-4 py-3 font-semibold">Borrower</th>
@@ -253,11 +235,11 @@
                 $adminItem = \App\Support\ReturnTracking::adminItemFor($item);
                 $badge = match (true) {
                   $item->returned_at && $item->return_condition === 'good' => 'bg-green-100 text-green-800',
-                  (bool) $item->returned_at => 'bg-orange-100 text-orange-800',
-                  $sentBack => 'bg-blue-100 text-blue-800',
-                  $item->isOverdue() => 'bg-red-100 text-red-800',
-                  $item->due_back_at->isToday() => 'bg-amber-100 text-amber-800',
-                  default => 'bg-gray-100 text-gray-700',
+                  (bool) $item->returned_at => 'damaged',
+                  $sentBack => 'waiting',
+                  $item->isOverdue() => 'overdue',
+                  $item->due_back_at->isToday() => 'soon',
+                  default => 'borrowed',
                 };
               @endphp
               <tr wire:key="item-{{ $item->id }}" class="block sm:table-row py-3 sm:py-0">
@@ -265,7 +247,7 @@
                   <p class="font-semibold text-gray-900 dark:text-neutral-100">{{ $item->item_name }}</p>
                   <p class="text-xs text-gray-500">Qty {{ $item->quantity }}</p>
                   @if($adminItem)
-                    <span class="inline-flex mt-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">Borrowed from the Admin</span>
+                    <span class="inline-flex mt-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-white text-[#1C6B45] ring-1 ring-inset ring-[#1C6B45]/30 dark:bg-transparent dark:text-[#9FD3AE] dark:ring-[#7FBF8E]/40">Borrowed from the Admin</span>
                   @endif
                 </td>
                 <td class="block sm:table-cell px-4 py-0.5 sm:py-3 text-gray-700 dark:text-neutral-300">
@@ -274,7 +256,7 @@
                 </td>
                 <td class="block sm:table-cell px-4 py-0.5 sm:py-3 whitespace-nowrap text-gray-700 dark:text-neutral-300"><span class="sm:hidden text-xs text-gray-500">Return by </span>{{ $item->due_back_at->format('M d, Y') }}</td>
                 <td class="block sm:table-cell px-4 py-0.5 sm:py-3">
-                  <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold {{ $badge }}">{{ $label }}</span>
+                  <x-portal.status :status="$badge">{{ $label }}</x-portal.status>
                   @if($item->returned_at)
                     <p class="text-xs text-gray-500 mt-1">
                       {{ $item->returned_at->format('M d, Y') }}@if($item->receiver) · by {{ $item->receiver->name }}@endif
@@ -285,15 +267,15 @@
                     {{-- ✅ Next step for items from the Admin --}}
                     @if($adminItem)
                       @if($adminItem->returned_at)
-                        <p class="text-xs font-medium text-green-700 dark:text-green-400 mt-1">✓ Returned to the Admin {{ $adminItem->returned_at->format('M d, Y') }}</p>
+                        <p class="text-xs font-medium text-[#1C6B45] dark:text-[#7FBF8E] mt-1">✓ Returned to the Admin {{ $adminItem->returned_at->format('M d, Y') }}</p>
                       @elseif($adminItem->return_requested_at)
-                        <p class="text-xs font-medium text-blue-700 dark:text-blue-300 mt-1">Sent to the Admin — waiting for them to confirm</p>
+                        <p class="text-xs font-medium text-[#1C6B45] dark:text-[#9FD3AE] mt-1">Sent to the Admin — waiting for them to confirm</p>
                       @else
                         <p class="text-xs font-medium text-amber-700 dark:text-amber-300 mt-1">Next: return it to the Admin</p>
                       @endif
                     @endif
                   @elseif($sentBack)
-                    <p class="text-xs font-medium text-blue-700 dark:text-blue-300 mt-1">
+                    <p class="text-xs font-medium text-[#1C6B45] dark:text-[#9FD3AE] mt-1">
                       {{ $item->request->user->name ?? 'The borrower' }} returned it {{ \Carbon\Carbon::parse($item->return_requested_at)->format('M d, g:i A') }} — please check and confirm
                     </p>
                   @else
@@ -430,10 +412,15 @@
               @endif
             @empty
               <tr>
-                <td colspan="5" class="block sm:table-cell px-4 py-12 text-center text-sm text-gray-500">
-                  @if($filter === 'overdue') No overdue items.
-                  @elseif($filter === 'returned') No returned items yet.
-                  @else Nothing is currently borrowed.
+                <td colspan="5" class="block sm:table-cell">
+                  @if(trim($search) !== '')
+                    <x-portal.empty message="Nothing matches &quot;{{ $search }}&quot;" hint="Try a different item or name." />
+                  @elseif($filter === 'overdue')
+                    <x-portal.empty message="No overdue items" hint="Every borrowed item is still on time." />
+                  @elseif($filter === 'returned')
+                    <x-portal.empty message="No returned items yet" />
+                  @else
+                    <x-portal.empty message="Nothing is borrowed right now" hint="Items your faculty borrow will show here." />
                   @endif
                 </td>
               </tr>

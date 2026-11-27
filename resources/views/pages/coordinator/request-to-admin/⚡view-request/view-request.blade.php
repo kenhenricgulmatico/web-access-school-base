@@ -1,28 +1,17 @@
-<div class="select-none">
-<div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
-    <div class="flex flex-col">
-        <div class="overflow-x-auto">
-            <div class="min-w-full inline-block align-middle">
-                <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
+<div>
+<div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+    <x-portal.page-header title="My Requests to Admin" subtitle="Track the status of your own requests sent to the Admin">
+        @can('program-head-requests.create')
+            <x-slot:actions>
+                <a href="{{ route('coordinator.request-to-admin.create-request') }}" wire:navigate
+                    class="inline-flex items-center gap-x-1.5 px-3.5 py-2 text-sm font-semibold bg-[#123524] text-white rounded-lg hover:bg-[#0B2418] transition">
+                    + New Request
+                </a>
+            </x-slot:actions>
+        @endcan
+    </x-portal.page-header>
 
-                    {{-- Header --}}
-                    <div class="px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-b border-gray-200 dark:border-neutral-700">
-                        <div class="min-w-0">
-                            <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">My Requests to Admin</h2>
-                            <p class="text-sm text-gray-600 dark:text-neutral-400">Track the status of your own requests sent to admin</p>
-                        </div>
-
-                        {{-- ✅ New Request — requires `program-head-requests.create` --}}
-                        @can('program-head-requests.create')
-                            <a href="{{ route('coordinator.request-to-admin.create-request') }}"
-                                class="self-start sm:self-auto shrink-0 inline-flex items-center gap-x-1.5 px-4 py-2 text-sm font-medium bg-[#123524] text-white rounded-lg hover:bg-[#0B2418] transition">
-                                <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
-                                </svg>
-                                New Request
-                            </a>
-                        @endcan
-                    </div>
+    <div class="@container bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
 
                     {{-- Flash Messages --}}
                     @if(session()->has('success'))
@@ -37,54 +26,51 @@
                     @endif
 
                     {{-- Table --}}
-                    <table class="min-w-full block md:table divide-y divide-gray-200 dark:divide-neutral-700">
-                        <thead class="hidden md:table-header-group bg-gray-50 dark:bg-neutral-800">
+                    <table class="min-w-full block @3xl:table divide-y divide-gray-200 dark:divide-neutral-700">
+                        <thead class="hidden @3xl:table-header-group bg-[#F3F8F5] dark:bg-neutral-900/40">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">#</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">Type</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">Status</th>
-                                <th class="px-6 py-3 text-right text-xs font-semibold uppercase text-gray-500">Actions</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">#</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">Status</th>
+                                <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="block md:table-row-group divide-y divide-gray-200 dark:divide-neutral-700">
+                        <tbody class="block @3xl:table-row-group divide-y divide-gray-200 dark:divide-neutral-700">
                             @forelse($this->requests as $index => $request)
-                                <tr class="block md:table-row px-4 py-4 md:p-0 hover:bg-gray-50 dark:hover:bg-neutral-700 transition align-top">
+                                <tr class="block @3xl:table-row px-4 py-4 @3xl:p-0 hover:bg-[#F3F8F5]/60 dark:hover:bg-neutral-700/40 transition align-top">
 
-                                    <td class="hidden md:table-cell px-6 py-4 text-sm text-gray-500">{{ $index + 1 }}</td>
+                                    <td class="hidden @3xl:table-cell px-6 py-4 text-sm text-gray-500">{{ $index + 1 }}</td>
 
                                     {{-- Type --}}
-                                    <td class="inline-block md:table-cell mr-2 md:mr-0 md:px-6 md:py-4">
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full
-                                            @if($request->request_type_id == \App\Models\RequestType::FACILITY) bg-green-100 text-green-700
-                                            @else bg-red-100 text-red-700 @endif">
+                                    <td class="inline-block @3xl:table-cell mr-2 @3xl:mr-0 @3xl:px-6 @3xl:py-4">
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap
+                                            @if($request->request_type_id == \App\Models\RequestType::FACILITY) bg-[#123524]/10 text-[#123524] dark:bg-[#123524]/40 dark:text-[#9FD3AE]
+                                            @else bg-[#E8F3EC] text-[#2F8A5B] dark:bg-[#1C6B45]/25 dark:text-[#7FBF8E] @endif">
                                             {{ $request->requestType->type_name ?? 'N/A' }}
                                         </span>
                                     </td>
 
                                     {{-- Date --}}
-                                    <td class="inline-block md:table-cell mr-2 md:mr-0 md:px-6 md:py-4 text-sm text-gray-400">
+                                    <td class="inline-block @3xl:table-cell mr-2 @3xl:mr-0 @3xl:px-6 @3xl:py-4 text-sm text-gray-400">
                                         {{ $request->created_at->format('M d, Y') }}
                                     </td>
 
                                     {{-- Status --}}
-                                    <td class="inline-block md:table-cell md:px-6 md:py-4">
-                                        @if($request->status === 'pending')
-                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700">Pending</span>
-                                        @elseif($request->status === 'admin_review')
-                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700">Admin Reviewing</span>
-                                        @elseif($request->status === 'coordinator_review')
-                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">Admin Accepted</span>
-                                        @elseif($request->status === 'approved')
-                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Approved</span>
-                                        @elseif($request->status === 'rejected')
-                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700">Rejected</span>
-                                        @endif
+                                    <td class="inline-block @3xl:table-cell @3xl:px-6 @3xl:py-4">
+                                        @php
+                                            [$tone, $text] = match ($request->status) {
+                                                'admin_review'       => ['waiting', 'Admin reviewing'],
+                                                'coordinator_review' => ['approved', 'Admin accepted'],
+                                                default              => [$request->status, ucfirst(str_replace('_', ' ', $request->status))],
+                                            };
+                                        @endphp
+                                        <x-portal.status :status="$tone">{{ $text }}</x-portal.status>
                                     </td>
 
                                     {{-- Actions --}}
-                                    <td class="block md:table-cell pt-3 md:px-6 md:py-4 text-left md:text-right md:whitespace-nowrap">
-                                        <div class="flex md:inline-flex flex-wrap items-center gap-1.5">
+                                    <td class="block @3xl:table-cell pt-3 @3xl:px-6 @3xl:py-4 text-left @3xl:text-right @3xl:whitespace-nowrap">
+                                        <div class="flex @3xl:inline-flex flex-wrap items-center gap-1.5">
 
                                             {{-- ✅ View — requires `program-head-requests.view` --}}
                                             @can('program-head-requests.view')
@@ -102,7 +88,7 @@
                                             @if($request->status === 'pending')
                                                 @can('program-head-requests.update')
                                                     <button wire:click="openEdit({{ $request->id }})"
-                                                        class="inline-flex items-center gap-x-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-transparent bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-400 dark:hover:bg-blue-800 transition">
+                                                        class="inline-flex items-center gap-x-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-transparent bg-[#E8F3EC] text-[#1C6B45] hover:bg-[#D6EBDD] dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE] dark:hover:bg-[#1C6B45]/35 transition">
                                                         <svg class="size-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
                                                         </svg>
@@ -122,7 +108,7 @@
                                                 @endcan
                                             @elseif($request->status === 'approved')
                                                 <a href="{{ route('printable.receipt', ['request_id' => $request->id]) }}" target="_blank"
-                                                    class="inline-flex items-center gap-x-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-transparent bg-gray-700 text-white hover:bg-gray-800 transition">
+                                                    class="inline-flex items-center gap-x-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[#1C6B45]/30 bg-white text-[#123524] hover:bg-[#F3F8F5] dark:bg-neutral-800 dark:text-white dark:border-neutral-600 dark:hover:bg-neutral-700 transition">
                                                     <svg class="size-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z"/>
                                                     </svg>
@@ -134,18 +120,18 @@
 
                                 </tr>
                             @empty
-                                <tr class="block md:table-row">
-                                    <td colspan="5" class="block md:table-cell px-6 py-10 text-center text-gray-500">
-                                        You have not submitted any requests to admin yet.
+                                <tr class="block @3xl:table-row">
+                                    <td colspan="5" class="block @3xl:table-cell">
+                                        @can('program-head-requests.create')
+                                            <x-portal.empty message="No requests to the Admin yet" hint="Need a room or materials for your department? Ask the Admin here." :href="route('coordinator.request-to-admin.create-request')" action="+ New Request" />
+                                        @else
+                                            <x-portal.empty message="No requests to the Admin yet" />
+                                        @endcan
                                     </td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
-
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -182,8 +168,8 @@
                 </div>
 
                 @if($request_type_id == \App\Models\RequestType::FACILITY)
-                <div class="space-y-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-700">
-                    <p class="text-sm font-semibold text-green-700 dark:text-green-300">Facility Details</p>
+                <div class="space-y-4 p-4 bg-[#F3F8F5] dark:bg-[#1C6B45]/10 rounded-xl border border-[#1C6B45]/15 dark:border-[#7FBF8E]/20">
+                    <p class="text-sm font-semibold text-[#1C6B45] dark:text-[#9FD3AE]">Facility Details</p>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">

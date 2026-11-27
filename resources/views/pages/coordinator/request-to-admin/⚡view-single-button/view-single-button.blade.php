@@ -1,9 +1,9 @@
 <div>
-    <div class="max-w-3xl mx-auto px-4 py-10 sm:px-6 lg:px-8 lg:py-14 space-y-6">
+    <div class="max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-5">
 
         {{-- Back --}}
         <button wire:click="back"
-            class="inline-flex items-center gap-x-1.5 text-sm font-medium text-gray-500 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200">
+            class="inline-flex items-center gap-1 text-xs font-semibold text-[#1C6B45] dark:text-[#7FBF8E] hover:underline">
             <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor"
                 stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
@@ -28,9 +28,9 @@
                 @php
                     $status = $requestModel->status;
                     $badgeClasses = match ($status) {
-                        'approved'  => 'bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300',
+                        'approved'  => 'bg-[#E8F3EC] text-[#1C6B45] dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]',
                         'rejected'  => 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
-                        'pending'   => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
+                        'pending'   => 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
                         'cancelled' => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
                         default     => 'bg-gray-100 text-gray-700 dark:bg-neutral-700 dark:text-neutral-300',
                     };
@@ -108,8 +108,8 @@
 
                 {{-- Facility Details --}}
                 @if ($facilityItem)
-                    <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-700">
-                        <p class="text-xs font-semibold uppercase tracking-wide text-green-700 dark:text-green-300 mb-3">
+                    <div class="p-4 bg-[#F3F8F5] dark:bg-[#1C6B45]/10 rounded-xl border border-[#1C6B45]/15 dark:border-[#7FBF8E]/20">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#9FD3AE] mb-3">
                             Facility Reservation
                         </p>
                         <div class="grid sm:grid-cols-3 gap-4">

@@ -1,9 +1,9 @@
 <div>
-<div class="max-w-[85rem] px-4 py-8 sm:px-6 lg:px-8 mx-auto space-y-5">
+<div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-5">
 
     {{-- Flash --}}
     @if(session()->has('success'))
-        <div class="p-3 bg-green-50 border border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400 rounded-lg text-sm font-medium flex items-center gap-2">
+        <div class="p-3 bg-green-50 border border-green-200 text-[#1C6B45] dark:bg-[#1C6B45]/20 dark:border-[#1C6B45/40] dark:text-green-400 rounded-lg text-sm font-medium flex items-center gap-2">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
             {{ session('success') }}
         </div>
@@ -19,7 +19,7 @@
     {{-- Header --}}
     <div class="flex items-center justify-between flex-wrap gap-3">
         <div>
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">Facilities</h2>
+            <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">Facilities</h2>
             <p class="text-sm text-gray-500 dark:text-neutral-400">Rooms that faculty and program heads can reserve</p>
         </div>
         <div class="flex items-center gap-2 w-full sm:w-auto">
@@ -35,7 +35,7 @@
 
             @can('facility-schedule.create')
                 <a href="{{ route('admin.schedule.create') }}"
-                    class="shrink-0 px-3.5 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium flex items-center gap-1.5">
+                    class="shrink-0 px-3.5 py-2 text-sm bg-[#123524] text-white rounded-lg hover:bg-[#0B2418] transition font-medium flex items-center gap-1.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
                     Add Facility
                 </a>
@@ -48,9 +48,9 @@
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
         @foreach ([
             ''             => ['All facilities',     $c['all'],          'text-gray-800 dark:text-neutral-100',  'border-gray-400'],
-            'available'    => ['Available',          $c['available'],    'text-green-700 dark:text-green-400',   'border-green-500'],
+            'available'    => ['Available',          $c['available'],    'text-[#1C6B45] dark:text-green-400',   'border-green-500'],
             'maintenance'  => ['Under maintenance',  $c['maintenance'],  'text-amber-700 dark:text-amber-400',   'border-amber-500'],
-            'booked-today' => ['Booked today',       $c['booked-today'], 'text-blue-700 dark:text-blue-400',     'border-blue-500'],
+            'booked-today' => ['Booked today',       $c['booked-today'], 'text-[#1C6B45] dark:text-[#7FBF8E]',     'border-[#1C6B45]'],
         ] as $key => [$label, $n, $tone, $ring])
             <button type="button" wire:click="filterStatus('{{ $key }}')"
                 class="text-left p-4 rounded-xl border bg-white dark:bg-neutral-800 shadow-sm hover:shadow transition
@@ -140,12 +140,12 @@
                                 @else
                                     <button type="button" wire:click="openMaintenance({{ $facility->id }})"
                                         title="Click to put it under maintenance"
-                                        class="px-2.5 py-1 text-[11px] font-semibold rounded-full bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 transition">
+                                        class="px-2.5 py-1 text-[11px] font-semibold rounded-full bg-green-100 text-[#1C6B45] hover:bg-green-200 dark:bg-[#1C6B45]/30 dark:text-green-400 transition">
                                         Available
                                     </button>
                                 @endif
                             @else
-                                <span class="px-2.5 py-1 text-[11px] font-semibold rounded-full {{ $isMaint ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' }}">
+                                <span class="px-2.5 py-1 text-[11px] font-semibold rounded-full {{ $isMaint ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-green-100 text-[#1C6B45] dark:bg-[#1C6B45]/30 dark:text-green-400' }}">
                                     {{ $isMaint ? 'Under Maintenance' : 'Available' }}
                                 </span>
                             @endcan
@@ -179,14 +179,14 @@
                         {{-- Actions --}}
                         <div class="flex items-center gap-1 @3xl:justify-end">
                             <a href="{{ route('admin.calendar', ['room' => $facility->resource_name]) }}"
-                                class="px-2 py-1.5 inline-flex items-center gap-1 text-xs font-medium text-teal-700 hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-900/30 rounded-md transition"
+                                class="px-2 py-1.5 inline-flex items-center gap-1 text-xs font-medium text-[#1C6B45] hover:bg-[#F3F8F5] dark:text-[#9FD3AE] dark:hover:bg-[#1C6B45]/30 rounded-md transition"
                                 title="See this room on the calendar">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                                 Calendar
                             </a>
                             @can('facility-schedule.update')
                                 <a href="{{ route('admin.schedule.edit', $facility->id) }}" aria-label="Edit {{ $facility->resource_name }}"
-                                    class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition" title="Edit">
+                                    class="p-1.5 text-gray-400 hover:text-[#1C6B45] hover:bg-[#F3F8F5] dark:hover:bg-[#1C6B45]/20 rounded-md transition" title="Edit">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
@@ -235,7 +235,7 @@
                     <p class="text-xs text-gray-400 dark:text-neutral-500 mt-1">Try a different search or filter, or add a facility</p>
                     @can('facility-schedule.create')
                         <a href="{{ route('admin.schedule.create') }}"
-                            class="mt-4 inline-flex items-center gap-1.5 px-3.5 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium">
+                            class="mt-4 inline-flex items-center gap-1.5 px-3.5 py-2 text-sm bg-[#123524] text-white rounded-lg hover:bg-[#0B2418] transition font-medium">
                             Add Facility
                         </a>
                     @endcan

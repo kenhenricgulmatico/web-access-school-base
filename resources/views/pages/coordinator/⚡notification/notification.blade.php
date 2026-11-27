@@ -1,14 +1,14 @@
-<div class="select-none">
-<div class="max-w-7xl mx-auto px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+<div>
+<div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
     <div class="mb-6">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Notifications</h2>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">Notifications</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400">All system notifications and requests</p>
     </div>
 
     {{-- Stats --}}
     <div class="flex flex-wrap gap-4 mb-6">
-        <div class="bg-yellow-100 dark:bg-yellow-900/30 rounded-full px-4 py-2">
-            <span class="text-sm font-medium text-yellow-800 dark:text-yellow-300">Unread: {{ $this->unreadCount }}</span>
+        <div class="bg-amber-100 dark:bg-amber-900/30 rounded-full px-4 py-2">
+            <span class="text-sm font-medium text-amber-800 dark:text-amber-300">Unread: {{ $this->unreadCount }}</span>
         </div>
         <div class="bg-green-100 dark:bg-green-900/30 rounded-full px-4 py-2">
             <span class="text-sm font-medium text-green-800 dark:text-green-300">Read: {{ $this->readCount }}</span>
@@ -40,7 +40,7 @@
             </div>
             @if($this->unreadCount > 0)
                 <div>
-                    <button wire:click="markAllAsRead" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg">Mark all as read</button>
+                    <button wire:click="markAllAsRead" class="px-4 py-2 text-sm font-semibold bg-[#123524] text-white rounded-lg hover:bg-[#0B2418] transition">Mark all as read</button>
                 </div>
             @endif
         </div>
@@ -59,11 +59,11 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($this->notifications as $index => $notif)
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 {{ $notif->status === 'pending' ? 'bg-yellow-50 dark:bg-yellow-900/10' : '' }}">
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 {{ $notif->status === 'pending' ? 'bg-amber-50 dark:bg-amber-900/10' : '' }}">
                     <td class="px-6 py-3 text-sm text-gray-800 dark:text-gray-200 max-w-md">{{ $notif->message }}</td>
                     <td class="px-6 py-3">
                         @if($notif->status === 'pending')
-                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">Unread</span>
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-800">Unread</span>
                         @elseif($notif->status === 'sent')
                             <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Read</span>
                         @else
@@ -78,7 +78,7 @@
                         @if($notif->status === 'pending')
                             <button wire:click="markAsRead({{ $notif->id }})" class="text-green-600 hover:text-green-800 text-xs">Mark read</button>
                         @else
-                            <button wire:click="markAsUnread({{ $notif->id }})" class="text-yellow-600 hover:text-yellow-800 text-xs">Mark unread</button>
+                            <button wire:click="markAsUnread({{ $notif->id }})" class="text-amber-600 hover:text-amber-800 text-xs">Mark unread</button>
                         @endif
                         <button wire:click="deleteNotification({{ $notif->id }})" wire:confirm="Delete this notification?" class="text-red-600 hover:text-red-800 text-xs">Delete</button>
                     </td>

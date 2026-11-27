@@ -1,15 +1,15 @@
 <div>
     @php
         // Shared input style for every popup field
-        $input = 'py-2.5 px-3 block w-full border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:border-green-600 focus:ring-2 focus:ring-green-600/20 focus:outline-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500 transition';
+        $input = 'py-2.5 px-3 block w-full border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:border-[#1C6B45] focus:ring-2 focus:ring-[#1C6B45]/20 focus:outline-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500 transition';
     @endphp
 
-    <div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto space-y-6">
+    <div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6">
 
         {{-- Flash --}}
         @if (session()->has('success'))
             <div
-                class="p-4 bg-teal-100 border border-teal-200 text-teal-800 rounded-xl text-sm font-medium dark:bg-teal-800/30 dark:border-teal-900 dark:text-teal-500">
+                class="p-4 bg-[#E8F3EC] border border-[#1C6B45/25] text-[#123524] rounded-xl text-sm font-medium dark:bg-[#0B2418]/30 dark:border-[#1C6B45/40] dark:text-[#1C6B45]">
                 {{ session('success') }}
             </div>
         @endif
@@ -24,7 +24,7 @@
         {{-- Header --}}
         <div class="flex items-center justify-between flex-wrap gap-4">
             <div>
-                <h2 class="text-2xl font-bold text-gray-800 dark:text-neutral-200">Stock Materials</h2>
+                <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">Stock Materials</h2>
                 <p class="text-sm text-gray-500 dark:text-neutral-400">Manage and monitor material inventory</p>
             </div>
             <div class="flex items-center gap-2">
@@ -41,7 +41,7 @@
                 {{-- ✅ Add Material — requires `stock-materials.create` --}}
                 @can('stock-materials.create')
                     <button wire:click="openAddModal"
-                        class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-green-600 text-white hover:bg-green-700">
+                        class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#123524] text-white hover:bg-[#0B2418]">
                         <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor"
                             stroke-width="2" viewBox="0 0 24 24">
                             <path d="M12 5v14M5 12h14" />
@@ -60,7 +60,7 @@
                 {{ $stockFilter === '' ? 'border-gray-200 dark:border-neutral-700' : 'border-gray-200 dark:border-neutral-700' }}">
                 <div class="flex items-center gap-x-2 mb-3">
                     <span
-                        class="size-8 inline-flex justify-center items-center rounded-full border-4 border-blue-50 bg-blue-100 text-blue-800 dark:border-blue-900 dark:bg-blue-800 dark:text-blue-400">
+                        class="size-8 inline-flex justify-center items-center rounded-full border-4 border-[#1C6B45/15] bg-[#E8F3EC] text-[#123524] dark:border-[#1C6B45/40] dark:bg-[#1C6B45/25] dark:text-[#7FBF8E]">
                         <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none"
                             stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path
@@ -77,7 +77,7 @@
                 class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5 dark:bg-neutral-800 dark:border-neutral-700">
                 <div class="flex items-center gap-x-2 mb-3">
                     <span
-                        class="size-8 inline-flex justify-center items-center rounded-full border-4 border-green-50 bg-green-100 text-green-800 dark:border-green-900 dark:bg-green-800 dark:text-green-400">
+                        class="size-8 inline-flex justify-center items-center rounded-full border-4 border-green-50 bg-green-100 text-[#123524] dark:border-[#1C6B45/40] dark:bg-[#1C6B45/25] dark:text-green-400">
                         <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none"
                             stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <polyline points="20 6 9 17 4 12" />
@@ -92,10 +92,10 @@
 
             <div role="button" tabindex="0" wire:click="filterStock('low')" @keydown.enter="$wire.filterStock('low')"
                 class="flex flex-col bg-white border shadow-sm rounded-xl p-4 md:p-5 cursor-pointer hover:shadow-md transition dark:bg-neutral-800
-                {{ $stockFilter === 'low' ? 'border-yellow-400 ring-2 ring-yellow-300 dark:border-yellow-600 dark:ring-yellow-800' : 'border-gray-200 dark:border-neutral-700' }}">
+                {{ $stockFilter === 'low' ? 'border-amber-400 ring-2 ring-amber-300 dark:border-amber-600 dark:ring-amber-800' : 'border-gray-200 dark:border-neutral-700' }}">
                 <div class="flex items-center gap-x-2 mb-3">
                     <span
-                        class="size-8 inline-flex justify-center items-center rounded-full border-4 border-yellow-50 bg-yellow-100 text-yellow-800 dark:border-yellow-900 dark:bg-yellow-800 dark:text-yellow-400">
+                        class="size-8 inline-flex justify-center items-center rounded-full border-4 border-amber-50 bg-amber-100 text-amber-800 dark:border-amber-900 dark:bg-amber-800 dark:text-amber-400">
                         <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none"
                             stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path
@@ -145,7 +145,7 @@
                                 @if ($stockFilter !== '')
                                     <button type="button" wire:click="filterStock('')"
                                         class="mt-1 inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-full
-                                        {{ $stockFilter === 'low' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300' : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' }}">
+                                        {{ $stockFilter === 'low' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' }}">
                                         Showing {{ $stockFilter === 'low' ? 'low stock' : 'out of stock' }} only · Show all ✕
                                     </button>
                                 @endif
@@ -162,10 +162,10 @@
                                         </svg>
                                     </div>
                                     <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search material..."
-                                        class="py-2 ps-9 pe-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500">
+                                        class="py-2 ps-9 pe-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-[#1C6B45] focus:ring-[#1C6B45] dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500">
                                 </div>
                                 <select wire:model.live="statusFilter"
-                                    class="py-2 px-3 block border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
+                                    class="py-2 px-3 block border border-gray-200 rounded-lg text-sm focus:border-[#1C6B45] focus:ring-[#1C6B45] dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
                                     <option value="">All Status</option>
                                     <option value="available">Available</option>
                                     <option value="unavailable">Unavailable</option>
@@ -219,8 +219,8 @@
                                         <td class="block @4xl:table-cell px-0 @4xl:px-4 @7xl:px-6 pb-2 @4xl:py-4 @4xl:whitespace-nowrap">
                                             <div class="flex items-center gap-x-3">
                                                 <div
-                                                    class="size-9 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                                                    <svg class="size-4 text-blue-600 dark:text-blue-400"
+                                                    class="size-9 rounded-full bg-[#E8F3EC] dark:bg-[#1C6B45/25] flex items-center justify-center">
+                                                    <svg class="size-4 text-[#1C6B45] dark:text-[#7FBF8E]"
                                                         xmlns="http://www.w3.org/2000/svg" fill="none"
                                                         stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                         <path
@@ -262,8 +262,8 @@
                                                 <span
                                                     class="text-sm font-semibold
                                                 @if ($isOut) text-red-600 dark:text-red-400
-                                                @elseif($isLow) text-yellow-600 dark:text-yellow-400
-                                                @else text-green-600 dark:text-green-400 @endif">
+                                                @elseif($isLow) text-amber-600 dark:text-amber-400
+                                                @else text-[#1C6B45] dark:text-green-400 @endif">
                                                     {{ number_format($material->quantity_available) }}
                                                 </span>
                                                 <span class="text-xs text-gray-400 dark:text-neutral-500">
@@ -275,7 +275,7 @@
                                                         of stock</span>
                                                 @elseif($isLow)
                                                     <span
-                                                        class="py-0.5 px-1.5 text-[10px] font-medium bg-yellow-100 text-yellow-800 rounded-full dark:bg-yellow-900 dark:text-yellow-400">Low</span>
+                                                        class="py-0.5 px-1.5 text-[10px] font-medium bg-amber-100 text-amber-800 rounded-full dark:bg-amber-900 dark:text-amber-400">Low</span>
                                                 @endif
                                             </div>
                                             {{-- ✅ Borrowed Material items still out with Program Heads --}}
@@ -320,13 +320,13 @@
                                         <td class="inline-block @4xl:table-cell px-0 @4xl:px-4 @7xl:px-6 py-1 @4xl:py-4 @4xl:whitespace-nowrap">
                                             <span
                                                 class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium rounded-full
-                                                @if ($material->status === 'available') bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-400
-                                                @elseif($material->status === 'maintenance') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-400
+                                                @if ($material->status === 'available') bg-[#E8F3EC] text-[#123524] dark:bg-[#1C6B45/25] dark:text-[#7FBF8E]
+                                                @elseif($material->status === 'maintenance') bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-400
                                                 @else bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-400 @endif">
                                                 <span
                                                     class="size-1.5 rounded-full inline-block
-                                                    @if ($material->status === 'available') bg-teal-500
-                                                    @elseif($material->status === 'maintenance') bg-yellow-500
+                                                    @if ($material->status === 'available') bg-[#1C6B45]
+                                                    @elseif($material->status === 'maintenance') bg-amber-500
                                                     @else bg-red-500 @endif">
                                                 </span>
                                                 {{ ucfirst($material->status) }}
@@ -343,7 +343,7 @@
                                                         @can('stock-materials.create')
                                                             <button type="button" wire:click="openStockModal({{ $material->id }})"
                                                                 title="Add stock (new delivery)"
-                                                                class="h-8 px-2.5 inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-white hover:bg-green-50 dark:bg-neutral-800 dark:text-green-400 dark:hover:bg-green-900/30 transition">
+                                                                class="h-8 px-2.5 inline-flex items-center gap-1 text-xs font-semibold text-[#1C6B45] bg-white hover:bg-green-50 dark:bg-neutral-800 dark:text-green-400 dark:hover:bg-[#1C6B45]/30 transition">
                                                                 <svg class="shrink-0 size-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
                                                                     <path stroke-linecap="round" d="M12 5v14M5 12h14" />
                                                                 </svg>
@@ -353,7 +353,7 @@
                                                         @can('stock-materials.update')
                                                             <button type="button" wire:click="openRemoveModal({{ $material->id }})" @disabled($isOut)
                                                                 title="{{ $isOut ? 'Nothing in stock to remove' : 'Remove stock (used up, damaged, lost, count correction)' }}"
-                                                                class="h-8 px-2.5 inline-flex items-center gap-1 text-xs font-semibold text-orange-700 bg-white hover:bg-orange-50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:bg-neutral-800 dark:text-orange-300 dark:hover:bg-orange-900/30 dark:disabled:hover:bg-neutral-800 transition">
+                                                                class="h-8 px-2.5 inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-white hover:bg-amber-50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:bg-neutral-800 dark:text-amber-300 dark:hover:bg-amber-900/30 dark:disabled:hover:bg-neutral-800 transition">
                                                                 <svg class="shrink-0 size-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
                                                                     <path stroke-linecap="round" d="M5 12h14" />
                                                                 </svg>
@@ -367,7 +367,7 @@
                                                 @can('stock-materials.update')
                                                     <button type="button" wire:click="openEditModal({{ $material->id }})"
                                                         title="Edit details, unit, warn level and status" aria-label="Edit {{ $material->resource_name }}"
-                                                        class="h-8 px-2 @4xl:w-8 @4xl:px-0 inline-flex items-center justify-center gap-1 text-xs font-semibold rounded-lg text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 transition">
+                                                        class="h-8 px-2 @4xl:w-8 @4xl:px-0 inline-flex items-center justify-center gap-1 text-xs font-semibold rounded-lg text-[#1C6B45] hover:bg-[#F3F8F5] dark:text-[#7FBF8E] dark:hover:bg-[#1C6B45]/30 transition">
                                                         <svg class="shrink-0 size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                                                             <path d="M12 20h9" />
                                                             <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
@@ -408,7 +408,7 @@
                                                 {{-- ✅ Add First Material — requires `stock-materials.create` --}}
                                                 @can('stock-materials.create')
                                                     <button wire:click="openAddModal"
-                                                        class="mt-2 py-1.5 px-3 text-xs font-medium rounded-lg bg-green-600 text-white hover:bg-green-700">
+                                                        class="mt-2 py-1.5 px-3 text-xs font-medium rounded-lg bg-[#123524] text-white hover:bg-[#0B2418]">
                                                         + Add First Material
                                                     </button>
                                                 @endcan
@@ -463,7 +463,7 @@
                             {{-- Header --}}
                             <div class="px-6 py-4 border-b border-gray-200 dark:border-neutral-700 flex items-center justify-between gap-4">
                                 <div class="flex items-center gap-3 min-w-0">
-                                    <span class="size-10 shrink-0 inline-flex justify-center items-center rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
+                                    <span class="size-10 shrink-0 inline-flex justify-center items-center rounded-full bg-green-100 text-[#1C6B45] dark:bg-[#1C6B45]/40 dark:text-green-400">
                                         <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
                                         </svg>
@@ -520,7 +520,7 @@
 
                                             <div class="text-right min-w-0">
                                                 <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">After restock</p>
-                                                <p class="text-lg font-semibold leading-tight {{ $addQty > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-800 dark:text-neutral-100' }}">
+                                                <p class="text-lg font-semibold leading-tight {{ $addQty > 0 ? 'text-[#1C6B45] dark:text-green-400' : 'text-gray-800 dark:text-neutral-100' }}">
                                                     {{ number_format($selectedRes->quantity_available + max($addQty, 0)) }}
                                                     <span class="text-xs font-normal text-gray-400 dark:text-neutral-500">{{ $selectedRes->unit ?? 'Ream' }}</span>
                                                 </p>
@@ -540,7 +540,7 @@
                                     <div class="flex flex-wrap gap-2 mt-2">
                                         @foreach ([5, 10, 25, 50, 100] as $q)
                                             <button type="button" @click="$wire.set('quantity_added', {{ $q }})"
-                                                class="px-2.5 py-1 text-xs font-medium rounded-full border border-gray-200 dark:border-neutral-600 text-gray-600 dark:text-neutral-300 hover:bg-green-50 hover:border-green-300 hover:text-green-700 dark:hover:bg-green-900/20 dark:hover:text-green-400 transition">
+                                                class="px-2.5 py-1 text-xs font-medium rounded-full border border-gray-200 dark:border-neutral-600 text-gray-600 dark:text-neutral-300 hover:bg-green-50 hover:border-green-300 hover:text-[#1C6B45] dark:hover:bg-[#1C6B45]/20 dark:hover:text-green-400 transition">
                                                 +{{ $q }}
                                             </button>
                                         @endforeach
@@ -580,7 +580,7 @@
                                 </button>
                                 <button type="button" wire:click="addStock" wire:loading.attr="disabled"
                                     wire:loading.class="opacity-50 cursor-not-allowed"
-                                    class="py-2 px-5 text-sm font-medium rounded-lg border border-transparent bg-green-600 text-white hover:bg-green-700 shadow-sm transition">
+                                    class="py-2 px-5 text-sm font-medium rounded-lg border border-transparent bg-[#123524] text-white hover:bg-[#0B2418] shadow-sm transition">
                                     <span wire:loading.remove wire:target="addStock">Add Stock</span>
                                     <span wire:loading wire:target="addStock">Adding...</span>
                                 </button>
@@ -617,7 +617,7 @@
                             {{-- Header --}}
                             <div class="px-6 py-4 border-b border-gray-200 dark:border-neutral-700 flex items-center justify-between gap-4">
                                 <div class="flex items-center gap-3 min-w-0">
-                                    <span class="size-10 shrink-0 inline-flex justify-center items-center rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
+                                    <span class="size-10 shrink-0 inline-flex justify-center items-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
                                         <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
                                         </svg>
@@ -652,7 +652,7 @@
                                             </svg>
                                             <div class="text-right">
                                                 <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">After removing</p>
-                                                <p class="text-lg font-semibold leading-tight {{ $rmQty > $rmRes->quantity_available ? 'text-red-600 dark:text-red-400' : ($rmQty > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-800 dark:text-neutral-100') }}">
+                                                <p class="text-lg font-semibold leading-tight {{ $rmQty > $rmRes->quantity_available ? 'text-red-600 dark:text-red-400' : ($rmQty > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-800 dark:text-neutral-100') }}">
                                                     {{ $rmQty > $rmRes->quantity_available ? 'Not enough' : number_format($rmRes->quantity_available - max($rmQty, 0)) }}
                                                     <span class="text-xs font-normal text-gray-400 dark:text-neutral-500">{{ $rmUnit }}</span>
                                                 </p>
@@ -682,7 +682,7 @@
                                         @foreach (\App\Models\Stock::REASONS as $value => $label)
                                             <label class="cursor-pointer">
                                                 <input type="radio" wire:model.live="remove_reason" value="{{ $value }}" class="peer sr-only">
-                                                <div class="text-center py-2.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-neutral-700 text-gray-600 dark:text-neutral-300 bg-white dark:bg-neutral-900 peer-checked:bg-orange-600 peer-checked:border-orange-600 peer-checked:text-white transition">
+                                                <div class="text-center py-2.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-neutral-700 text-gray-600 dark:text-neutral-300 bg-white dark:bg-neutral-900 peer-checked:bg-amber-600 peer-checked:border-amber-600 peer-checked:text-white transition">
                                                     {{ $label }}
                                                 </div>
                                             </label>
@@ -715,7 +715,7 @@
                                 </button>
                                 <button type="button" wire:click="removeStock" wire:loading.attr="disabled"
                                     wire:loading.class="opacity-50 cursor-not-allowed"
-                                    class="py-2 px-5 text-sm font-medium rounded-lg border border-transparent bg-orange-600 text-white hover:bg-orange-700 shadow-sm transition">
+                                    class="py-2 px-5 text-sm font-medium rounded-lg border border-transparent bg-amber-600 text-white hover:bg-amber-700 shadow-sm transition">
                                     <span wire:loading.remove wire:target="removeStock">Remove Stock</span>
                                     <span wire:loading wire:target="removeStock">Removing...</span>
                                 </button>
@@ -748,7 +748,7 @@
                             {{-- Header --}}
                             <div class="px-6 py-4 border-b border-gray-200 dark:border-neutral-700 flex items-center justify-between gap-4">
                                 <div class="flex items-center gap-3 min-w-0">
-                                    <span class="size-10 shrink-0 inline-flex justify-center items-center rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400">
+                                    <span class="size-10 shrink-0 inline-flex justify-center items-center rounded-full bg-[#E8F3EC] text-[#1C6B45] dark:bg-[#1C6B45]/40 dark:text-[#7FBF8E]">
                                         <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                 d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
@@ -788,15 +788,15 @@
                                         Type <span class="text-red-500">*</span>
                                     </label>
                                     <div class="grid sm:grid-cols-2 gap-2">
-                                        <label class="flex items-start gap-2.5 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-neutral-700 has-[:checked]:border-green-500 has-[:checked]:bg-green-50 dark:has-[:checked]:bg-green-900/20">
-                                            <input type="radio" wire:model="type_name" value="Supplies" class="mt-0.5 size-4 text-green-600">
+                                        <label class="flex items-start gap-2.5 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-neutral-700 has-[:checked]:border-green-500 has-[:checked]:bg-green-50 dark:has-[:checked]:bg-[#1C6B45]/20">
+                                            <input type="radio" wire:model="type_name" value="Supplies" class="mt-0.5 size-4 text-[#1C6B45]">
                                             <span>
                                                 <span class="block text-sm font-semibold text-gray-800 dark:text-neutral-200">Supplies</span>
                                                 <span class="block text-xs text-gray-500 dark:text-neutral-400">Used up, never returned — bond paper, markers…</span>
                                             </span>
                                         </label>
-                                        <label class="flex items-start gap-2.5 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-neutral-700 has-[:checked]:border-green-500 has-[:checked]:bg-green-50 dark:has-[:checked]:bg-green-900/20">
-                                            <input type="radio" wire:model="type_name" value="Material" class="mt-0.5 size-4 text-green-600">
+                                        <label class="flex items-start gap-2.5 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-neutral-700 has-[:checked]:border-green-500 has-[:checked]:bg-green-50 dark:has-[:checked]:bg-[#1C6B45]/20">
+                                            <input type="radio" wire:model="type_name" value="Material" class="mt-0.5 size-4 text-[#1C6B45]">
                                             <span>
                                                 <span class="block text-sm font-semibold text-gray-800 dark:text-neutral-200">Material</span>
                                                 <span class="block text-xs text-gray-500 dark:text-neutral-400">Borrowed and must be returned — chairs, projectors…</span>
@@ -821,7 +821,7 @@
                                                     <input type="radio" wire:model="unit" value="{{ $u }}"
                                                         class="peer sr-only">
                                                     <div
-                                                        class="text-center py-2.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-neutral-700 text-gray-600 dark:text-neutral-300 bg-white dark:bg-neutral-900 peer-checked:bg-green-600 peer-checked:border-green-600 peer-checked:text-white transition">
+                                                        class="text-center py-2.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-neutral-700 text-gray-600 dark:text-neutral-300 bg-white dark:bg-neutral-900 peer-checked:bg-[#123524] peer-checked:border-[#1C6B45] peer-checked:text-white transition">
                                                         {{ $u }}
                                                     </div>
                                                 </label>
@@ -877,7 +877,7 @@
                                 </button>
                                 <button type="button" wire:click="addMaterial" wire:loading.attr="disabled"
                                     wire:loading.class="opacity-50 cursor-not-allowed"
-                                    class="py-2 px-5 text-sm font-medium rounded-lg border border-transparent bg-green-600 text-white hover:bg-green-700 shadow-sm transition">
+                                    class="py-2 px-5 text-sm font-medium rounded-lg border border-transparent bg-[#123524] text-white hover:bg-[#0B2418] shadow-sm transition">
                                     <span wire:loading.remove wire:target="addMaterial">Save Material</span>
                                     <span wire:loading wire:target="addMaterial">Saving...</span>
                                 </button>
@@ -910,7 +910,7 @@
                             {{-- Header --}}
                             <div class="px-6 py-4 border-b border-gray-200 dark:border-neutral-700 flex items-center justify-between gap-4">
                                 <div class="flex items-center gap-3 min-w-0">
-                                    <span class="size-10 shrink-0 inline-flex justify-center items-center rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400">
+                                    <span class="size-10 shrink-0 inline-flex justify-center items-center rounded-full bg-[#E8F3EC] text-[#1C6B45] dark:bg-[#1C6B45]/40 dark:text-[#7FBF8E]">
                                         <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 20h9" />
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
@@ -960,15 +960,15 @@
                                         Type <span class="text-red-500">*</span>
                                     </label>
                                     <div class="grid sm:grid-cols-2 gap-2">
-                                        <label class="flex items-start gap-2.5 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-neutral-700 has-[:checked]:border-green-500 has-[:checked]:bg-green-50 dark:has-[:checked]:bg-green-900/20">
-                                            <input type="radio" wire:model="edit_type_name" value="Supplies" class="mt-0.5 size-4 text-green-600">
+                                        <label class="flex items-start gap-2.5 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-neutral-700 has-[:checked]:border-green-500 has-[:checked]:bg-green-50 dark:has-[:checked]:bg-[#1C6B45]/20">
+                                            <input type="radio" wire:model="edit_type_name" value="Supplies" class="mt-0.5 size-4 text-[#1C6B45]">
                                             <span>
                                                 <span class="block text-sm font-semibold text-gray-800 dark:text-neutral-200">Supplies</span>
                                                 <span class="block text-xs text-gray-500 dark:text-neutral-400">Used up, never returned — bond paper, markers…</span>
                                             </span>
                                         </label>
-                                        <label class="flex items-start gap-2.5 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-neutral-700 has-[:checked]:border-green-500 has-[:checked]:bg-green-50 dark:has-[:checked]:bg-green-900/20">
-                                            <input type="radio" wire:model="edit_type_name" value="Material" class="mt-0.5 size-4 text-green-600">
+                                        <label class="flex items-start gap-2.5 p-3 rounded-lg border cursor-pointer transition border-gray-200 dark:border-neutral-700 has-[:checked]:border-green-500 has-[:checked]:bg-green-50 dark:has-[:checked]:bg-[#1C6B45]/20">
+                                            <input type="radio" wire:model="edit_type_name" value="Material" class="mt-0.5 size-4 text-[#1C6B45]">
                                             <span>
                                                 <span class="block text-sm font-semibold text-gray-800 dark:text-neutral-200">Material</span>
                                                 <span class="block text-xs text-gray-500 dark:text-neutral-400">Borrowed and must be returned — chairs, projectors…</span>
@@ -992,7 +992,7 @@
                                                 <input type="radio" wire:model="edit_unit" value="{{ $u }}"
                                                     class="peer sr-only">
                                                 <div
-                                                    class="text-center py-2.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-neutral-700 text-gray-600 dark:text-neutral-300 bg-white dark:bg-neutral-900 peer-checked:bg-green-600 peer-checked:border-green-600 peer-checked:text-white transition">
+                                                    class="text-center py-2.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-neutral-700 text-gray-600 dark:text-neutral-300 bg-white dark:bg-neutral-900 peer-checked:bg-[#123524] peer-checked:border-[#1C6B45] peer-checked:text-white transition">
                                                     {{ $u }}
                                                 </div>
                                             </label>
@@ -1023,9 +1023,9 @@
                                     <div class="grid grid-cols-3 gap-2">
                                         @php
                                             $statusOptions = [
-                                                'available'   => ['Available',   'peer-checked:bg-teal-600 peer-checked:border-teal-600'],
+                                                'available'   => ['Available',   'peer-checked:bg-[#123524] peer-checked:border-[#1C6B45]'],
                                                 'unavailable' => ['Unavailable', 'peer-checked:bg-red-600 peer-checked:border-red-600'],
-                                                'maintenance' => ['Maintenance', 'peer-checked:bg-yellow-500 peer-checked:border-yellow-500'],
+                                                'maintenance' => ['Maintenance', 'peer-checked:bg-amber-500 peer-checked:border-amber-500'],
                                             ];
                                         @endphp
                                         @foreach ($statusOptions as $value => [$label, $checkedClasses])
@@ -1047,12 +1047,12 @@
 
 
                                 {{-- Note --}}
-                                <div class="flex items-start gap-2.5 rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/20 px-3.5 py-3">
-                                    <svg class="size-4 shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <div class="flex items-start gap-2.5 rounded-lg border border-[#1C6B45/25] dark:border-[#1C6B45]/50 bg-[#F3F8F5] dark:bg-[#1C6B45]/20 px-3.5 py-3">
+                                    <svg class="size-4 shrink-0 mt-0.5 text-[#1C6B45] dark:text-[#7FBF8E]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <circle cx="12" cy="12" r="10" />
                                         <path stroke-linecap="round" d="M12 16v-4m0-4h.01" />
                                     </svg>
-                                    <p class="text-xs text-blue-800 dark:text-blue-300">
+                                    <p class="text-xs text-[#123524] dark:text-[#9FD3AE]">
                                         Quantity is not edited here. Use <strong>Add Stock</strong> or <strong>Remove</strong> so every change is recorded in Stock History.
                                     </p>
                                 </div>
@@ -1066,7 +1066,7 @@
                                 </button>
                                 <button type="button" wire:click="updateMaterial" wire:loading.attr="disabled"
                                     wire:loading.class="opacity-50 cursor-not-allowed"
-                                    class="py-2 px-5 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition">
+                                    class="py-2 px-5 text-sm font-medium rounded-lg border border-transparent bg-[#123524] text-white hover:bg-[#0B2418] shadow-sm transition">
                                     <span wire:loading.remove wire:target="updateMaterial">Save Changes</span>
                                     <span wire:loading wire:target="updateMaterial">Saving...</span>
                                 </button>

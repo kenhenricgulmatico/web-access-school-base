@@ -1,9 +1,9 @@
-<div class="select-none">
-<div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+<div>
+<div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
 
   {{-- Header --}}
   <div class="mb-6">
-    <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Borrowed Items</h2>
+    <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">Borrowed Items</h2>
     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
       <strong>Material</strong> items that Program Heads borrow and must return — like chairs and projectors. (Supplies such as bond paper are used up and not listed here.)
       Accept a request with a <strong>return deadline</strong>. When the Program Head clicks <strong>Return to Admin</strong>, check the items and confirm the return.
@@ -13,7 +13,7 @@
 
   {{-- Flash --}}
   @if(session('message'))
-    <div class="mb-4 px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-sm text-green-800 dark:bg-green-950/30 dark:border-green-900 dark:text-green-300">{{ session('message') }}</div>
+    <div class="mb-4 px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-sm text-[#123524] dark:bg-[#1C6B45]/30 dark:border-[#1C6B45/40] dark:text-green-300">{{ session('message') }}</div>
   @endif
   @if(session('error'))
     <div class="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800 dark:bg-red-950/30 dark:border-red-900 dark:text-red-300">{{ session('error') }}</div>
@@ -21,7 +21,7 @@
 
   {{-- ✅ Program Heads waiting for the Admin to confirm a return --}}
   @if($this->counts['sentBack'] > 0)
-    <div class="mb-4 px-4 py-3 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-800 dark:bg-blue-950/30 dark:border-blue-900 dark:text-blue-300">
+    <div class="mb-4 px-4 py-3 rounded-lg bg-[#F3F8F5] border border-[#1C6B45/25] text-sm text-[#123524] dark:bg-[#1C6B45]/30 dark:border-[#1C6B45/40] dark:text-[#9FD3AE]">
       {{ $this->counts['sentBack'] }} {{ \Illuminate\Support\Str::plural('item', $this->counts['sentBack']) }} returned by Program Heads {{ $this->counts['sentBack'] === 1 ? 'is' : 'are' }} waiting for you to confirm.
       <button type="button" wire:click="$set('filter', 'outstanding')" class="font-semibold underline ml-1">View</button>
     </div>
@@ -73,9 +73,9 @@
        ============================================================ --}}
   @if($filter === 'pending')
   <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="min-w-full text-sm block md:table">
-        <thead class="hidden md:table-header-group bg-gray-50 dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-400">
+    <div class="@container">
+      <table class="min-w-full text-sm block @3xl:table">
+        <thead class="hidden @3xl:table-header-group bg-[#F3F8F5] dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-[#1C6B45] dark:text-neutral-400">
           <tr>
             <th class="px-4 py-3 font-semibold">Requested items</th>
             <th class="px-4 py-3 font-semibold">Requested by</th>
@@ -84,7 +84,7 @@
             <th class="px-4 py-3 font-semibold text-right">Action</th>
           </tr>
         </thead>
-        <tbody class="block md:table-row-group divide-y divide-gray-100 dark:divide-neutral-700">
+        <tbody class="block @3xl:table-row-group divide-y divide-gray-100 dark:divide-neutral-700">
           @forelse($this->pendingRequests as $req)
             @php
               $neededOn = $req->items->min('request_date');
@@ -92,8 +92,8 @@
                 ? \Carbon\Carbon::parse($neededOn)->format('Y-m-d')
                 : today()->format('Y-m-d');
             @endphp
-            <tr wire:key="pending-{{ $req->id }}" class="block md:table-row align-top px-4 py-4 md:p-0">
-              <td class="block md:table-cell px-0 md:px-4 py-1 md:py-3">
+            <tr wire:key="pending-{{ $req->id }}" class="block @3xl:table-row align-top px-4 py-4 @3xl:p-0">
+              <td class="block @3xl:table-cell px-0 @3xl:px-4 py-1 @3xl:py-3">
                 <ul class="space-y-1">
                   @foreach($req->items as $ri)
                     <li class="flex items-center gap-2">
@@ -117,19 +117,19 @@
                 {{-- ✅ Is there enough in the main stock? --}}
                 @php $short = $this->shortItems($req); @endphp
                 @if(empty($short))
-                  <p class="mt-1.5 text-xs font-medium text-green-700 dark:text-green-400">✓ In stock — {{ $this->stockLine($req) }}</p>
+                  <p class="mt-1.5 text-xs font-medium text-[#1C6B45] dark:text-green-400">✓ In stock — {{ $this->stockLine($req) }}</p>
                 @else
                   <p class="mt-1.5 max-w-sm text-xs text-red-700 dark:text-red-300"><span class="font-semibold">Not enough:</span> {{ implode(', ', $short) }}</p>
                 @endif
               </td>
-              <td class="block md:table-cell px-0 md:px-4 py-1 md:py-3 text-gray-700 dark:text-neutral-300">
+              <td class="block @3xl:table-cell px-0 @3xl:px-4 py-1 @3xl:py-3 text-gray-700 dark:text-neutral-300">
                 {{ $req->user->name ?? '—' }}
                 <p class="text-xs text-gray-500">{{ $req->department->department_name ?? ($req->user->department->department_name ?? '') }}</p>
               </td>
-              <td class="block md:table-cell px-0 md:px-4 py-1 md:py-3 md:whitespace-nowrap text-gray-700 dark:text-neutral-300">
-                <span class="md:hidden text-xs text-gray-500">Needed on </span>{{ $neededOn ? \Carbon\Carbon::parse($neededOn)->format('M d, Y') : '—' }}
+              <td class="block @3xl:table-cell px-0 @3xl:px-4 py-1 @3xl:py-3 @3xl:whitespace-nowrap text-gray-700 dark:text-neutral-300">
+                <span class="@3xl:hidden text-xs text-gray-500">Needed on </span>{{ $neededOn ? \Carbon\Carbon::parse($neededOn)->format('M d, Y') : '—' }}
               </td>
-              <td class="block md:table-cell px-0 md:px-4 py-1 md:py-3">
+              <td class="block @3xl:table-cell px-0 @3xl:px-4 py-1 @3xl:py-3">
                 {{-- ✅ Borrow (return by a date) or Assign (they keep it — e.g. furniture for a faculty room) --}}
                 @php $mode = $modes[$req->id] ?? 'borrow'; @endphp
                 <div class="inline-flex p-0.5 mb-1.5 rounded-lg bg-gray-100 dark:bg-neutral-700 text-xs font-semibold" role="radiogroup" aria-label="Borrow or assign">
@@ -151,11 +151,11 @@
                   <p class="text-xs text-red-500 mt-1 max-w-56">{{ $message }}</p>
                 @enderror
               </td>
-              <td class="block md:table-cell px-0 md:px-4 pt-3 md:py-3 md:text-right md:whitespace-nowrap">
+              <td class="block @3xl:table-cell px-0 @3xl:px-4 pt-3 @3xl:py-3 @3xl:text-right @3xl:whitespace-nowrap">
                 @can('borrowed-items.manage')
                 <button type="button" wire:click="accept({{ $req->id }})" wire:loading.attr="disabled" wire:target="accept({{ $req->id }})"
                   wire:confirm="{{ $this->acceptConfirm($req) }}"
-                  class="min-h-10 px-4 rounded-lg bg-green-600 text-white text-xs font-semibold hover:bg-green-700 disabled:opacity-60 transition">
+                  class="min-h-10 px-4 rounded-lg bg-[#123524] text-white text-xs font-semibold hover:bg-[#0B2418] disabled:opacity-60 transition">
                   Accept
                 </button>
                 @endcan
@@ -170,8 +170,8 @@
 
             {{-- ✅ Inline "reject" form --}}
             @if($rejectingRequestId === $req->id)
-              <tr wire:key="reject-{{ $req->id }}" class="block md:table-row bg-red-50/50 dark:bg-red-950/20">
-                <td colspan="5" class="block md:table-cell px-4 py-4">
+              <tr wire:key="reject-{{ $req->id }}" class="block @3xl:table-row bg-red-50/50 dark:bg-red-950/20">
+                <td colspan="5" class="block @3xl:table-cell px-4 py-4">
                   <form wire:submit="confirmReject" class="flex flex-col sm:flex-row sm:items-end gap-3">
                     <div class="flex-1">
                       <label for="reject-reason-{{ $req->id }}" class="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1">Reason for rejecting (optional)</label>
@@ -188,8 +188,8 @@
               </tr>
             @endif
           @empty
-            <tr class="block md:table-row">
-              <td colspan="5" class="block md:table-cell px-4 py-12 text-center text-sm text-gray-500">No borrow requests waiting for approval.</td>
+            <tr class="block @3xl:table-row">
+              <td colspan="5" class="block @3xl:table-cell px-4 py-12 text-center text-sm text-gray-500">No borrow requests waiting for approval.</td>
             </tr>
           @endforelse
         </tbody>
@@ -205,9 +205,9 @@
 
   {{-- Table --}}
   <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="min-w-full text-sm block md:table">
-        <thead class="hidden md:table-header-group bg-gray-50 dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-400">
+    <div class="@container">
+      <table class="min-w-full text-sm block @3xl:table">
+        <thead class="hidden @3xl:table-header-group bg-[#F3F8F5] dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-[#1C6B45] dark:text-neutral-400">
           <tr>
             <th class="px-4 py-3 font-semibold">Item</th>
             <th class="px-4 py-3 font-semibold">Borrowed by</th>
@@ -216,7 +216,7 @@
             <th class="px-4 py-3 font-semibold text-right">Action</th>
           </tr>
         </thead>
-        <tbody class="block md:table-row-group divide-y divide-gray-100 dark:divide-neutral-700">
+        <tbody class="block @3xl:table-row-group divide-y divide-gray-100 dark:divide-neutral-700">
           @forelse($this->items as $item)
             @php
               $dueDate      = \Carbon\Carbon::parse($item->due_date);
@@ -227,27 +227,27 @@
               $facultyItem  = ($item->returned_at || $item->return_requested_at) ? null : \App\Support\ReturnTracking::facultyItemFor($item);
               $withFaculty  = $facultyItem && $facultyItem->request?->status === 'approved' && ! $facultyItem->returned_at;
               $badge        = match (true) {
-                $item->returned_at && $item->return_condition === 'good' => 'bg-green-100 text-green-800',
-                (bool) $item->returned_at                                 => 'bg-orange-100 text-orange-800',
-                (bool) $item->return_requested_at                         => 'bg-blue-100 text-blue-800',
+                $item->returned_at && $item->return_condition === 'good' => 'bg-green-100 text-[#123524]',
+                (bool) $item->returned_at                                 => 'bg-amber-100 text-amber-800',
+                (bool) $item->return_requested_at                         => 'bg-[#E8F3EC] text-[#123524]',
                 $dueDate->lt(today())                                     => 'bg-red-100 text-red-800',
                 $dueDate->lte(today()->addDay())                          => 'bg-amber-100 text-amber-800',
                 default                                                   => 'bg-gray-100 text-gray-700',
               };
             @endphp
-            <tr wire:key="item-{{ $item->id }}" class="block md:table-row px-4 py-4 md:p-0">
-              <td class="block md:table-cell px-0 md:px-4 py-1 md:py-3">
+            <tr wire:key="item-{{ $item->id }}" class="block @3xl:table-row px-4 py-4 @3xl:p-0">
+              <td class="block @3xl:table-cell px-0 @3xl:px-4 py-1 @3xl:py-3">
                 <p class="font-semibold text-gray-900 dark:text-neutral-100">{{ $item->item_name }}</p>
                 <p class="text-xs text-gray-500">{{ number_format($item->quantity) }} pcs</p>
               </td>
-              <td class="block md:table-cell px-0 md:px-4 py-1 md:py-3 text-gray-700 dark:text-neutral-300">
+              <td class="block @3xl:table-cell px-0 @3xl:px-4 py-1 @3xl:py-3 text-gray-700 dark:text-neutral-300">
                 {{ $item->request->user->name ?? '—' }}
                 <p class="text-xs text-gray-500">
                   {{ $item->request->department->department_name ?? ($item->request->user->department->department_name ?? '') }}
                 </p>
               </td>
-              <td class="block md:table-cell px-0 md:px-4 py-1 md:py-3 md:whitespace-nowrap text-gray-700 dark:text-neutral-300"><span class="md:hidden text-xs text-gray-500">Return by </span>{{ $dueDate->format('M d, Y') }}</td>
-              <td class="block md:table-cell px-0 md:px-4 py-1 md:py-3">
+              <td class="block @3xl:table-cell px-0 @3xl:px-4 py-1 @3xl:py-3 @3xl:whitespace-nowrap text-gray-700 dark:text-neutral-300"><span class="@3xl:hidden text-xs text-gray-500">Return by </span>{{ $dueDate->format('M d, Y') }}</td>
+              <td class="block @3xl:table-cell px-0 @3xl:px-4 py-1 @3xl:py-3">
                 <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold {{ $badge }}">{{ $label }}</span>
                 @if($item->returned_at)
                   <p class="text-xs text-gray-500 mt-1">
@@ -258,7 +258,7 @@
                   @endif
                 @elseif($item->return_requested_at)
                   {{-- ✅ Program Head clicked "Return to Admin" --}}
-                  <p class="text-xs font-medium text-blue-700 dark:text-blue-300 mt-1">
+                  <p class="text-xs font-medium text-[#1C6B45] dark:text-[#9FD3AE] mt-1">
                     Program Head returned it {{ \Carbon\Carbon::parse($item->return_requested_at)->format('M d, g:i A') }} — please check and confirm
                   </p>
                 @else
@@ -278,7 +278,7 @@
                   @endif
                 @endif
               </td>
-              <td class="block md:table-cell px-0 md:px-4 pt-3 md:py-3 md:text-right md:whitespace-nowrap">
+              <td class="block @3xl:table-cell px-0 @3xl:px-4 pt-3 @3xl:py-3 @3xl:text-right @3xl:whitespace-nowrap">
                 @if(! $item->returned_at)
                   @if($item->return_requested_at)
                     {{-- ✅ Program Head returned it → the Admin checks and confirms --}}
@@ -295,7 +295,7 @@
                       <button type="button" wire:click="confirmAllGood({{ $item->request_id }})"
                         wire:confirm="Confirm all {{ $sentBackHere }} items from {{ $item->request->user->name ?? 'this Program Head' }} as returned in GOOD condition? They go back to the main stock. (Use “Confirm return” for anything damaged or lost.)"
                         wire:loading.attr="disabled" wire:target="confirmAllGood({{ $item->request_id }})"
-                        class="block md:ml-auto mt-1.5 text-xs font-medium text-[#1C6B45] dark:text-green-300 hover:underline disabled:opacity-60">
+                        class="block @3xl:ml-auto mt-1.5 text-xs font-medium text-[#1C6B45] dark:text-green-300 hover:underline disabled:opacity-60">
                         Confirm all {{ $sentBackHere }} as Good
                       </button>
                       @endcan
@@ -332,7 +332,7 @@
                     {{-- ✅ They keep it (e.g. faculty room furniture): no return date, no overdue --}}
                     <button type="button" wire:click="convertToAssigned({{ $item->id }})"
                       wire:confirm="Change to ASSIGNED? {{ $item->item_name }} ×{{ $item->quantity }} stays with the borrower with no return date (no overdue, no reminders) and can be handed over to the next teacher."
-                      class="block md:ml-auto mt-1.5 text-xs font-medium text-[#1C6B45] dark:text-green-300 hover:underline">
+                      class="block @3xl:ml-auto mt-1.5 text-xs font-medium text-[#1C6B45] dark:text-green-300 hover:underline">
                       Assign instead (keep)
                     </button>
                   @endcan
@@ -342,8 +342,8 @@
 
             {{-- Inline "mark returned" form --}}
             @if($returningId === $item->id)
-              <tr wire:key="form-{{ $item->id }}" class="block md:table-row bg-gray-50 dark:bg-neutral-900/40">
-                <td colspan="5" class="block md:table-cell px-4 py-4">
+              <tr wire:key="form-{{ $item->id }}" class="block @3xl:table-row bg-gray-50 dark:bg-neutral-900/40">
+                <td colspan="5" class="block @3xl:table-cell px-4 py-4">
                   @can('borrowed-items.manage')
                   <form wire:submit="confirmReturn" class="flex flex-col sm:flex-row sm:items-end gap-3">
                     <div>
@@ -372,8 +372,8 @@
               </tr>
             @endif
           @empty
-            <tr class="block md:table-row">
-              <td colspan="5" class="block md:table-cell px-4 py-12 text-center text-sm text-gray-500">
+            <tr class="block @3xl:table-row">
+              <td colspan="5" class="block @3xl:table-cell px-4 py-12 text-center text-sm text-gray-500">
                 @if($filter === 'overdue') No overdue items.
                 @elseif($filter === 'returned') No returned items yet.
                 @else Nothing is currently borrowed.

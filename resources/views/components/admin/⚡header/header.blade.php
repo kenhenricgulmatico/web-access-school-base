@@ -1,4 +1,4 @@
-<div class="select-none">
+<div>
 <!-- ========== HEADER ========== -->
 <header class="fixed top-0 inset-x-0 flex flex-wrap md:justify-start md:flex-nowrap z-48 lg:z-61 w-full bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-700 text-sm py-2.5">
     <nav class="px-4 sm:px-5.5 flex basis-full items-center w-full mx-auto">
@@ -8,16 +8,17 @@
             <ul class="flex items-center gap-1.5">
                 <li class="inline-flex items-center gap-1 relative pe-1.5 last:pe-0 last:after:hidden after:absolute after:top-1/2 after:end-0 after:inline-block after:w-px after:h-3.5 after:bg-gray-200 dark:after:bg-neutral-700 after:rounded-full after:-translate-y-1/2 after:rotate-12">
 
-                    <a href="/admin/dashboard"
-                        class="shrink-0 inline-flex justify-center items-center rounded-full bg-white ring-2 ring-[#D4A537]/60 p-1 shadow-sm hover:ring-[#D4A537] transition focus:outline-hidden focus:opacity-80"
+                    <a href="{{ route('admin.dashboard') }}" wire:navigate
+                        class="shrink-0 inline-flex justify-center items-center rounded-full bg-white ring-2 ring-[#7FBF8E]/70 p-1 shadow-sm hover:ring-[#1C6B45] transition focus:outline-hidden focus:opacity-80"
                         aria-label="CSAV">
                         <img src="{{ asset('images/csav-logo.png') }}"
                             alt="CSAV Logo" class="h-5 w-5 sm:h-6 sm:w-6 object-contain" />
                     </a>
 
-                    <span class="hidden sm:block text-sm font-semibold text-gray-900 dark:text-white ms-1">
-                        Colegio de Sta. Ana de Victorias
-                    </span>
+                    <div class="hidden sm:flex flex-col leading-tight ms-1 min-w-0">
+                        <span class="text-sm font-semibold text-gray-900 dark:text-white truncate">Colegio de Sta. Ana de Victorias</span>
+                        <span class="text-[10px] uppercase tracking-[0.15em] text-[#1C6B45] dark:text-[#7FBF8E] font-medium">Admin Portal</span>
+                    </div>
 
                     <button type="button"
                         class="p-1.5 size-7.5 inline-flex items-center gap-x-1 text-xs rounded-md border border-transparent text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800 disabled:opacity-50 disabled:pointer-events-none focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
@@ -56,7 +57,7 @@
                     <button @click="open = !open"
                         class="relative flex justify-center items-center size-9 text-sm text-gray-600 dark:text-neutral-300 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800 transition"
                         aria-label="Notifications">
-                        <svg class="shrink-0 size-5 dark:text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        <svg class="shrink-0 size-5 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none"
                             stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
@@ -93,7 +94,7 @@
                             </div>
                             <button x-show="unreadCount > 0"
                                 @click="markAllAsRead()"
-                                class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium hover:underline transition">
+                                class="text-xs text-[#1C6B45] hover:text-[#1C6B45] dark:text-[#7FBF8E] font-medium hover:underline transition">
                                 Mark all read
                             </button>
                         </div>
@@ -106,14 +107,14 @@
                                 <div @click="openNotification(notification.id)"
                                     class="px-4 py-3 flex items-start gap-3 transition-colors cursor-pointer"
                                     :class="notification.status === 'pending'
-                                        ? 'bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                                        ? 'bg-[#F3F8F5] dark:bg-[#1C6B45]/20 hover:bg-[#E8F3EC] dark:hover:bg-[#1C6B45]/30'
                                         : 'hover:bg-gray-50 dark:hover:bg-neutral-800/50'">
 
                                     {{-- Avatar --}}
                                     <div class="shrink-0 mt-0.5">
                                         <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm text-white"
                                             :class="notification.status === 'unread'
-                                                ? 'bg-green-700'
+                                                ? 'bg-[#0B2418]'
                                                 : 'bg-gray-400'">
                                             <span x-text="notification.user ? notification.user.charAt(0).toUpperCase() : '?'"></span>
                                         </div>
@@ -124,7 +125,7 @@
                                         <div class="flex items-center gap-2 mb-0.5">
                                             <span class="text-xs font-medium px-1.5 py-0.5 rounded-md"
                                                 :class="notification.status === 'unread'
-                                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                                                    ? 'bg-[#E8F3EC] text-[#1C6B45] dark:bg-[#1C6B45/25] dark:text-[#9FD3AE]'
                                                     : 'bg-gray-100 text-gray-500 dark:bg-neutral-800 dark:text-neutral-400'"
                                                 x-text="notification.status === 'unread' ? 'New' : 'Read'">
                                             </span>
@@ -157,7 +158,7 @@
                         <div x-show="totalCount > 10"
                             class="px-4 py-3 bg-gray-50 dark:bg-neutral-800 border-t border-gray-200 dark:border-neutral-700 text-center">
                             <button type="button" @click="toggleAll()"
-                                class="text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline transition"
+                                class="text-xs font-medium text-[#1C6B45] hover:text-[#1C6B45] dark:text-[#7FBF8E] hover:underline transition"
                                 x-text="showAll ? 'Show less ↑' : 'View all notifications →'">
                             </button>
                         </div>
@@ -175,7 +176,7 @@
                             aria-haspopup="menu" aria-expanded="false" aria-label="User Dropdown">
 
                             {{-- Avatar Circle --}}
-                            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#123524] dark:bg-green-700 text-white flex items-center justify-center text-xs sm:text-sm font-bold ring-3 ring-[#D4A537]/50 dark:ring-[#D4A537]/50 shrink-0">
+                            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#123524] dark:bg-[#0B2418] text-white flex items-center justify-center text-xs sm:text-sm font-bold ring-3 ring-[#7FBF8E]/60 dark:ring-[#7FBF8E]/60 shrink-0">
                                 {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                             </div>
 
@@ -196,7 +197,7 @@
 
                             <div class="py-3 px-3.5 border-b border-gray-200 dark:border-neutral-700">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-9 h-9 rounded-full bg-green-700 text-white flex items-center justify-center text-sm font-bold">
+                                    <div class="w-9 h-9 rounded-full bg-[#0B2418] text-white flex items-center justify-center text-sm font-bold">
                                         {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                                     </div>
                                     <div>
@@ -246,7 +247,7 @@
 
                             <div class="p-1">
                                 <a class="flex items-center gap-x-3 py-2 px-3 rounded-lg text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800 focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
-                                    href="/admin/settings">
+                                    href="{{ route('admin.settings') }}" wire:navigate>
                                     <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
                                         <circle cx="12" cy="12" r="3"/>

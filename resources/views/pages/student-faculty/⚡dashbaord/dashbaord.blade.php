@@ -1,80 +1,92 @@
-<div class="select-none">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        {{-- Stats Grid --}}
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mb-6 sm:mb-8">
+<div>
+    <div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+        @php
+            $me    = auth()->user();
+            $local = now();  // ✅ the app runs on Philippine time (config/app.php)
+            $greet = $local->hour < 12 ? 'Good morning' : ($local->hour < 18 ? 'Good afternoon' : 'Good evening');
+            $first = \Illuminate\Support\Str::of($me->name)->trim()->explode(' ')->first();
+        @endphp
+
+        {{-- ✅ Welcome + the two things faculty do most --}}
+        <div class="mb-5 sm:mb-6 rounded-2xl bg-[#E8F3EC] dark:bg-[#1C6B45]/20 ring-1 ring-inset ring-[#1C6B45]/10 dark:ring-[#7FBF8E]/15 px-4 py-4 sm:px-6 sm:py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="min-w-0">
+                <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">{{ $greet }}, {{ ucfirst($first) }}</h1>
+                <p class="mt-1 text-sm text-[#1C6B45]/90 dark:text-[#9FD3AE]">
+                    {{ $local->format('l, F j, Y') }}@if($me->department) · {{ $me->department->department_name }}@endif
+                </p>
+            </div>
+            <div class="flex flex-wrap gap-2 shrink-0">
+                @can('facility-requests.create')
+                    <a href="{{ route('portal.create-reservation') }}" wire:navigate
+                       class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold bg-[#123524] text-white hover:bg-[#0B2418] dark:bg-[#1C6B45] dark:hover:bg-[#23855A] transition">
+                        <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                        New reservation
+                    </a>
+                @endcan
+                @can('material-requests.create')
+                    <a href="{{ route('portal.create-material') }}" wire:navigate
+                       class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold bg-white text-[#123524] ring-1 ring-inset ring-[#1C6B45]/25 hover:bg-[#F3F8F5] dark:bg-neutral-800 dark:text-white dark:ring-neutral-600 dark:hover:bg-neutral-700 transition">
+                        Request materials
+                    </a>
+                @endcan
+            </div>
+        </div>
+
+        {{-- Stats — one row of three, even on a phone --}}
+        <div class="grid grid-cols-3 gap-2 sm:gap-5 mb-5 sm:mb-8">
 
             {{-- Approved Facility Reservations --}}
-            <div class="bg-white dark:bg-[#16281F] rounded-2xl shadow-sm border border-[#E4E1D8] dark:border-[#2A4B3A] p-3 sm:p-5 hover:shadow-md transition">
-                <div class="flex items-center justify-between gap-2">
+            <div class="bg-white dark:bg-[#16281F] rounded-2xl shadow-sm border border-gray-200 dark:border-[#2A4B3A] p-3 sm:p-5">
+                <div class="flex items-start justify-between gap-2">
                     <div class="min-w-0">
-                        <p class="text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 truncate">Approved Facility</p>
-                        <p class="text-lg sm:text-2xl font-bold text-[#123524] dark:text-white mt-1">{{ $this->totalFacilityReservations }}</p>
+                        <p class="text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 truncate"><span class="sm:hidden">Rooms</span><span class="hidden sm:inline">Approved Facility</span></p>
+                        <p class="text-xl sm:text-2xl font-bold text-[#123524] dark:text-white mt-0.5 sm:mt-1">{{ $this->totalFacilityReservations }}</p>
                     </div>
-                    <div class="p-2 sm:p-3 bg-[#123524]/8 dark:bg-[#123524]/25 rounded-full shrink-0">
-                        <svg class="w-4 h-4 sm:w-6 sm:h-6 text-[#1C6B45] dark:text-[#7FBF8E]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <div class="hidden sm:block p-3 bg-[#123524] dark:bg-[#1C6B45] rounded-full shrink-0">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m4.5 0v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21" />
                         </svg>
                     </div>
                 </div>
-                <div class="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[10px] sm:text-xs">
-                    <span class="flex items-center gap-1 text-[#1C6B45] dark:text-[#7FBF8E]">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                        </svg>
-                        {{ $this->approvedFacilityReservations }} approved
-                    </span>
-                    <span class="flex items-center gap-1 text-[#B8862A]">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                        </svg>
-                        {{ $this->pendingFacilityReservations }} pending
-                    </span>
+                <div class="mt-1 sm:mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[10px] sm:text-xs">
+                    <span class="hidden sm:inline text-[#1C6B45] dark:text-[#7FBF8E]">{{ $this->approvedFacilityReservations }} approved</span>
+                    <span class="{{ $this->pendingFacilityReservations ? 'text-amber-700 dark:text-amber-300' : 'text-gray-400' }}">{{ $this->pendingFacilityReservations }} pending</span>
                 </div>
             </div>
 
             {{-- Approved Material Requests --}}
-            <div class="bg-white dark:bg-[#16281F] rounded-2xl shadow-sm border border-[#E4E1D8] dark:border-[#2A4B3A] p-3 sm:p-5 hover:shadow-md transition">
-                <div class="flex items-center justify-between gap-2">
+            <div class="bg-white dark:bg-[#16281F] rounded-2xl shadow-sm border border-gray-200 dark:border-[#2A4B3A] p-3 sm:p-5">
+                <div class="flex items-start justify-between gap-2">
                     <div class="min-w-0">
-                        <p class="text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 truncate">Approved Material</p>
-                        <p class="text-lg sm:text-2xl font-bold text-[#123524] dark:text-white mt-1">{{ $this->totalMaterialRequests }}</p>
+                        <p class="text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 truncate"><span class="sm:hidden">Materials</span><span class="hidden sm:inline">Approved Material</span></p>
+                        <p class="text-xl sm:text-2xl font-bold text-[#123524] dark:text-white mt-0.5 sm:mt-1">{{ $this->totalMaterialRequests }}</p>
                     </div>
-                    <div class="p-2 sm:p-3 bg-[#D4A537]/12 dark:bg-[#D4A537]/20 rounded-full shrink-0">
-                        <svg class="w-4 h-4 sm:w-6 sm:h-6 text-[#B8862A]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <div class="hidden sm:block p-3 bg-[#E8F3EC] dark:bg-[#1C6B45]/25 rounded-full shrink-0">
+                        <svg class="w-6 h-6 text-[#1C6B45] dark:text-[#9FD3AE]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
                         </svg>
                     </div>
                 </div>
-                <div class="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[10px] sm:text-xs">
-                    <span class="flex items-center gap-1 text-[#1C6B45] dark:text-[#7FBF8E]">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                        </svg>
-                        {{ $this->approvedMaterialRequests }} approved
-                    </span>
-                    <span class="flex items-center gap-1 text-[#B8862A]">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                        </svg>
-                        {{ $this->pendingMaterialRequests }} pending
-                    </span>
+                <div class="mt-1 sm:mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[10px] sm:text-xs">
+                    <span class="hidden sm:inline text-[#1C6B45] dark:text-[#7FBF8E]">{{ $this->approvedMaterialRequests }} approved</span>
+                    <span class="{{ $this->pendingMaterialRequests ? 'text-amber-700 dark:text-amber-300' : 'text-gray-400' }}">{{ $this->pendingMaterialRequests }} pending</span>
                 </div>
             </div>
 
-            {{-- Active Pending --}}
-            <div class="bg-white dark:bg-[#16281F] rounded-2xl shadow-sm border border-[#E4E1D8] dark:border-[#2A4B3A] p-3 sm:p-5 hover:shadow-md transition">
-                <div class="flex items-center justify-between gap-2">
+            {{-- Waiting for approval --}}
+            <div class="bg-white dark:bg-[#16281F] rounded-2xl shadow-sm border p-3 sm:p-5 {{ $this->totalPendingRequests ? 'border-amber-200 dark:border-amber-500/30' : 'border-gray-200 dark:border-[#2A4B3A]' }}">
+                <div class="flex items-start justify-between gap-2">
                     <div class="min-w-0">
-                        <p class="text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 truncate">Active (Pending)</p>
-                        <p class="text-lg sm:text-2xl font-bold text-[#123524] dark:text-white mt-1">{{ $this->totalPendingRequests }}</p>
+                        <p class="text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 truncate"><span class="sm:hidden">Waiting</span><span class="hidden sm:inline">Waiting for approval</span></p>
+                        <p class="text-xl sm:text-2xl font-bold mt-0.5 sm:mt-1 {{ $this->totalPendingRequests ? 'text-amber-700 dark:text-amber-300' : 'text-[#123524] dark:text-white' }}">{{ $this->totalPendingRequests }}</p>
                     </div>
-                    <div class="p-2 sm:p-3 bg-[#B8352A]/8 dark:bg-[#B8352A]/20 rounded-full shrink-0">
-                        <svg class="w-4 h-4 sm:w-6 sm:h-6 text-[#B8352A]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <div class="hidden sm:block p-3 bg-amber-50 dark:bg-amber-500/15 rounded-full shrink-0">
+                        <svg class="w-6 h-6 text-amber-600 dark:text-amber-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                         </svg>
                     </div>
                 </div>
-                <p class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-2">Awaiting coordinator approval</p>
+                <p class="mt-1 sm:mt-3 text-[10px] sm:text-xs text-gray-400 dark:text-gray-400"><span class="sm:hidden">to approve</span><span class="hidden sm:inline">Waiting for your Program Head</span></p>
             </div>
         </div>
 
@@ -82,21 +94,15 @@
         @php
             $toReturn = $this->itemsToReturn;
             $upcoming = $this->upcomingReservations;
-            $stateCls = [
-                'overdue' => 'bg-[#B8352A]/10 text-[#B8352A] dark:bg-[#B8352A]/25 dark:text-red-300',
-                'soon'    => 'bg-[#D4A537]/15 text-[#8A6A1F] dark:bg-[#D4A537]/25 dark:text-[#E8C877]',
-                'waiting' => 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-                'ok'      => 'bg-[#1C6B45]/10 text-[#1C6B45] dark:bg-[#1C6B45]/25 dark:text-green-300',
-            ];
         @endphp
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5 mb-6 sm:mb-8">
 
             {{-- Items to return --}}
             <div class="bg-white dark:bg-[#16281F] rounded-2xl shadow-sm border overflow-hidden
-                        {{ $toReturn['overdue'] ? 'border-[#B8352A]/50 ring-1 ring-[#B8352A]/30' : 'border-[#E4E1D8] dark:border-[#2A4B3A]' }}">
-                <div class="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-[#E4E1D8] dark:border-[#2A4B3A]">
+                        {{ $toReturn['overdue'] ? 'border-[#B8352A]/50 ring-1 ring-[#B8352A]/30' : 'border-gray-200 dark:border-[#2A4B3A]' }}">
+                <div class="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-gray-200 dark:border-[#2A4B3A]">
                     <div>
-                        <h3 class="text-base font-semibold text-[#123524] dark:text-white" style="font-family: 'Fraunces', serif;">Items to return</h3>
+                        <h3 class="text-base font-semibold text-[#123524] dark:text-white">Items to return</h3>
                         <p class="text-xs text-gray-500 dark:text-gray-400">
                             @if ($toReturn['overdue'])
                                 <span class="font-semibold text-[#B8352A]">{{ $toReturn['overdue'] }} overdue</span> ·
@@ -107,14 +113,14 @@
                     <a href="{{ route('portal.borrowed-items') }}" wire:navigate class="text-xs font-semibold text-[#1C6B45] hover:underline whitespace-nowrap">View all →</a>
                 </div>
 
-                <ul class="divide-y divide-[#EEF1EE] dark:divide-[#2A4B3A]">
+                <ul class="divide-y divide-gray-100 dark:divide-[#2A4B3A]">
                     @forelse ($toReturn['items'] as $item)
                         <li class="flex items-center justify-between gap-3 px-4 sm:px-5 py-3">
                             <div class="min-w-0">
                                 <p class="text-sm font-medium text-[#1F2A24] dark:text-white truncate">{{ $item['name'] }} <span class="text-gray-400 font-normal">×{{ $item['qty'] }}</span></p>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">Return by {{ $item['due'] }}</p>
                             </div>
-                            <span class="shrink-0 px-2 py-0.5 rounded-full text-[11px] font-semibold {{ $stateCls[$item['state']] }}">{{ $item['label'] }}</span>
+                            <x-portal.status class="shrink-0" :status="$item['state']">{{ $item['label'] }}</x-portal.status>
                         </li>
                     @empty
                         <li class="px-4 sm:px-5 py-8 text-center text-sm text-gray-400 dark:text-gray-500">Nothing to return — you're all set.</li>
@@ -123,20 +129,20 @@
             </div>
 
             {{-- Upcoming reservations --}}
-            <div class="bg-white dark:bg-[#16281F] rounded-2xl shadow-sm border border-[#E4E1D8] dark:border-[#2A4B3A] overflow-hidden">
-                <div class="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-[#E4E1D8] dark:border-[#2A4B3A]">
+            <div class="bg-white dark:bg-[#16281F] rounded-2xl shadow-sm border border-gray-200 dark:border-[#2A4B3A] overflow-hidden">
+                <div class="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-gray-200 dark:border-[#2A4B3A]">
                     <div>
-                        <h3 class="text-base font-semibold text-[#123524] dark:text-white" style="font-family: 'Fraunces', serif;">Upcoming reservations</h3>
+                        <h3 class="text-base font-semibold text-[#123524] dark:text-white">Upcoming reservations</h3>
                         <p class="text-xs text-gray-500 dark:text-gray-400">Your next approved room bookings</p>
                     </div>
                     <a href="{{ route('portal.calendar') }}" wire:navigate class="text-xs font-semibold text-[#1C6B45] hover:underline whitespace-nowrap">Calendar →</a>
                 </div>
 
-                <ul class="divide-y divide-[#EEF1EE] dark:divide-[#2A4B3A]">
+                <ul class="divide-y divide-gray-100 dark:divide-[#2A4B3A]">
                     @forelse ($upcoming as $r)
                         <li class="flex items-center gap-3 px-4 sm:px-5 py-3">
                             <span class="shrink-0 w-20 text-center px-2 py-1 rounded-lg text-[11px] font-semibold
-                                {{ $r['day'] === 'Today' ? 'bg-[#123524] text-white' : 'bg-[#EEF1EE] text-[#33403A] dark:bg-[#0E1A14] dark:text-neutral-300' }}">
+                                {{ $r['day'] === 'Today' ? 'bg-[#123524] text-white' : 'bg-[#E8F3EC] text-[#1C6B45] dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]' }}">
                                 {{ $r['day'] }}
                             </span>
                             <div class="min-w-0">
@@ -178,23 +184,23 @@
         @endphp
 
         {{-- Analytics Chart (Facility vs Material) --}}
-        <div class="bg-white dark:bg-[#16281F] rounded-2xl shadow-sm border border-[#E4E1D8] dark:border-[#2A4B3A] p-4 sm:p-6 mb-6 sm:mb-8">
-            <h3 class="text-base sm:text-lg font-semibold text-[#123524] dark:text-white mb-1" style="font-family: 'Fraunces', serif;">Analytics</h3>
+        <div class="bg-white dark:bg-[#16281F] rounded-2xl shadow-sm border border-gray-200 dark:border-[#2A4B3A] p-4 sm:p-6 mb-6 sm:mb-8">
+            <h3 class="text-base sm:text-lg font-semibold text-[#123524] dark:text-white mb-1">Analytics</h3>
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-5">Approved requests for the last 6 months — facility vs material</p>
 
             {{-- Summary numbers --}}
             <div class="grid grid-cols-3 gap-3 mb-6">
-                <div class="text-center p-2 bg-[#FAF7EF] dark:bg-[#0E1A14] rounded-xl">
+                <div class="text-center p-2 bg-gray-50 dark:bg-[#0E1A14] rounded-xl">
                     <p class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total</p>
                     <p class="text-sm sm:text-xl font-bold text-[#123524] dark:text-white">{{ $grandTotal }}</p>
                 </div>
-                <div class="text-center p-2 bg-[#123524]/5 dark:bg-[#123524]/20 rounded-xl">
+                <div class="text-center p-2 bg-[#123524]/[0.06] dark:bg-[#123524]/30 rounded-xl">
                     <p class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Facility</p>
-                    <p class="text-sm sm:text-xl font-bold text-[#1C6B45] dark:text-[#7FBF8E]">{{ $totalFacility }}</p>
+                    <p class="text-sm sm:text-xl font-bold text-[#123524] dark:text-[#9FD3AE]">{{ $totalFacility }}</p>
                 </div>
-                <div class="text-center p-2 bg-[#D4A537]/8 dark:bg-[#D4A537]/15 rounded-xl">
+                <div class="text-center p-2 bg-[#E8F3EC] dark:bg-[#1C6B45]/20 rounded-xl">
                     <p class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Material</p>
-                    <p class="text-sm sm:text-xl font-bold text-[#B8862A]">{{ $totalMaterial }}</p>
+                    <p class="text-sm sm:text-xl font-bold text-[#2F8A5B] dark:text-[#7FBF8E]">{{ $totalMaterial }}</p>
                 </div>
             </div>
 
@@ -204,67 +210,62 @@
 
             <div class="flex items-center justify-center gap-4 mt-4 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                 <span class="flex items-center gap-1.5">
-                    <span class="w-3 h-3 rounded-full bg-[#1C6B45]"></span>
+                    <span class="w-3 h-3 rounded-full bg-[#123524] dark:bg-[#9FD3AE]"></span>
                     Facility
                 </span>
                 <span class="flex items-center gap-1.5">
-                    <span class="w-3 h-3 rounded-full bg-[#D4A537]"></span>
+                    <span class="w-3 h-3 rounded-full bg-[#7FBF8E]"></span>
                     Material
                 </span>
             </div>
         </div>
 
         {{-- Recent Activities --}}
-        <div class="bg-white dark:bg-[#16281F] rounded-2xl shadow-sm border border-[#E4E1D8] dark:border-[#2A4B3A] overflow-hidden">
-            <div class="px-4 sm:px-6 py-4 border-b border-[#E4E1D8] dark:border-[#2A4B3A]">
-                <h3 class="text-base sm:text-lg font-semibold text-[#123524] dark:text-white" style="font-family: 'Fraunces', serif;">Recent Activities</h3>
+        <div class="@container bg-white dark:bg-[#16281F] rounded-2xl shadow-sm border border-gray-200 dark:border-[#2A4B3A] overflow-hidden">
+            <div class="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-[#2A4B3A]">
+                <h3 class="text-base sm:text-lg font-semibold text-[#123524] dark:text-white">Recent Activities</h3>
                 <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Your latest facility reservations and material requests</p>
             </div>
 
             {{-- Mobile: stacked cards --}}
-            <div class="md:hidden divide-y divide-[#E4E1D8] dark:divide-[#2A4B3A]">
+            <div class="@3xl:hidden divide-y divide-gray-200 dark:divide-[#2A4B3A]">
                 @forelse($this->recentActivities as $activity)
                     @php $status = $activity['status']; @endphp
                     <div class="px-4 py-3.5">
                         <div class="flex items-center justify-between gap-2 mb-1.5">
                             <span class="inline-flex px-2.5 py-1 text-xs font-medium rounded-full
-                                {{ $activity['type'] === 'Facility' ? 'bg-[#123524]/8 text-[#1C6B45] dark:bg-[#123524]/25 dark:text-[#7FBF8E]' : 'bg-[#D4A537]/12 text-[#B8862A]' }}">
+                                {{ $activity['type'] === 'Facility' ? 'bg-[#123524]/10 text-[#123524] dark:bg-[#123524]/40 dark:text-[#9FD3AE]' : 'bg-[#E8F3EC] text-[#2F8A5B] dark:bg-[#1C6B45]/25 dark:text-[#7FBF8E]' }}">
                                 {{ $activity['type'] }}
                             </span>
-                            <span class="px-2.5 py-1 text-xs font-medium rounded-full shrink-0
-                                {{ $status === 'approved' ? 'bg-[#1C6B45]/10 text-[#1C6B45] dark:bg-[#1C6B45]/25 dark:text-[#7FBF8E]' : '' }}
-                                {{ $status === 'pending' ? 'bg-[#D4A537]/15 text-[#B8862A]' : '' }}
-                                {{ $status === 'rejected' ? 'bg-[#B8352A]/10 text-[#B8352A]' : '' }}">
-                                {{ ucfirst($status) }}
-                            </span>
+                            <x-portal.status class="shrink-0" :status="$status" />
                         </div>
                         <p class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ $activity['name'] }}</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ $activity['details'] }}</p>
                         <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1">{{ $activity['time_ago'] }}</p>
                     </div>
                 @empty
-                    <div class="px-4 py-8 text-center text-xs text-gray-400 dark:text-gray-500">No activities yet. Start by creating a reservation or request.</div>
+                    <x-portal.empty message="No activities yet" hint="Start by booking a room or requesting materials." />
                 @endforelse
             </div>
 
             {{-- Desktop: table --}}
-            <div class="hidden md:block overflow-x-auto">
-                <table class="min-w-full divide-y divide-[#E4E1D8] dark:divide-[#2A4B3A]">
-                    <thead class="bg-[#FAF7EF] dark:bg-[#0E1A14]">
+            <div class="hidden @3xl:block">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-[#2A4B3A]">
+                    <thead class="bg-[#F3F8F5] dark:bg-[#0E1A14]">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#B8862A] whitespace-nowrap">Type</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#B8862A] whitespace-nowrap">Name / Item</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#B8862A] whitespace-nowrap">Details</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#B8862A] whitespace-nowrap">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#B8862A] whitespace-nowrap">When</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E] whitespace-nowrap">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E] whitespace-nowrap">Name / Item</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E] whitespace-nowrap">Details</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E] whitespace-nowrap">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E] whitespace-nowrap">When</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-[#E4E1D8] dark:divide-[#2A4B3A]">
+                    <tbody class="divide-y divide-gray-200 dark:divide-[#2A4B3A]">
                         @forelse($this->recentActivities as $activity)
-                            <tr class="hover:bg-[#FAF7EF] dark:hover:bg-[#0E1A14]/50 transition">
+                            <tr class="hover:bg-[#F3F8F5]/70 dark:hover:bg-[#0E1A14]/50 transition">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex px-2.5 py-1 text-xs font-medium rounded-full
-                                        {{ $activity['type'] === 'Facility' ? 'bg-[#123524]/8 text-[#1C6B45] dark:bg-[#123524]/25 dark:text-[#7FBF8E]' : 'bg-[#D4A537]/12 text-[#B8862A]' }}">
+                                        {{ $activity['type'] === 'Facility' ? 'bg-[#123524]/10 text-[#123524] dark:bg-[#123524]/40 dark:text-[#9FD3AE]' : 'bg-[#E8F3EC] text-[#2F8A5B] dark:bg-[#1C6B45]/25 dark:text-[#7FBF8E]' }}">
                                         {{ $activity['type'] }}
                                     </span>
                                 </td>
@@ -272,18 +273,12 @@
                                 <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ $activity['details'] }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @php $status = $activity['status']; @endphp
-                                    <span class="px-2.5 py-1 text-xs font-medium rounded-full
-                                        {{ $status === 'approved' ? 'bg-[#1C6B45]/10 text-[#1C6B45] dark:bg-[#1C6B45]/25 dark:text-[#7FBF8E]' : '' }}
-                                        {{ $status === 'pending' ? 'bg-[#D4A537]/15 text-[#B8862A]' : '' }}
-                                        {{ $status === 'submitted' ? 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300' : '' }}
-                                        {{ $status === 'rejected' ? 'bg-[#B8352A]/10 text-[#B8352A]' : '' }}">
-                                        {{ ucfirst($status) }}
-                                    </span>
+                                    <x-portal.status :status="$status" />
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ $activity['time_ago'] }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="px-6 py-12 text-center text-sm text-gray-400 dark:text-gray-500">No activities yet. Start by creating a reservation or request.</td></tr>
+                            <tr><td colspan="5"><x-portal.empty message="No activities yet" hint="Start by booking a room or requesting materials." /></td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -320,10 +315,10 @@
                     {
                         label: 'Facility',
                         data: facilityData,
-                        borderColor: '#1C6B45',
-                        backgroundColor: 'rgba(28, 107, 69, 0.08)',
+                        borderColor: isDark ? '#9FD3AE' : '#123524',
+                        backgroundColor: isDark ? 'rgba(159, 211, 174, 0.08)' : 'rgba(18, 53, 36, 0.06)',
                         borderWidth: 2.5,
-                        pointBackgroundColor: '#1C6B45',
+                        pointBackgroundColor: isDark ? '#9FD3AE' : '#123524',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 1.5,
                         pointRadius: 4,
@@ -334,10 +329,10 @@
                     {
                         label: 'Material',
                         data: materialData,
-                        borderColor: '#D4A537',
-                        backgroundColor: 'rgba(212, 165, 55, 0.08)',
+                        borderColor: '#7FBF8E',
+                        backgroundColor: 'rgba(127, 191, 142, 0.14)',
                         borderWidth: 2.5,
-                        pointBackgroundColor: '#D4A537',
+                        pointBackgroundColor: '#7FBF8E',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 1.5,
                         pointRadius: 4,
@@ -357,7 +352,7 @@
                         backgroundColor: isDark ? '#16281F' : '#fff',
                         titleColor: isDark ? '#fff' : '#123524',
                         bodyColor: isDark ? '#D1D5DB' : '#4B5563',
-                        borderColor: isDark ? '#2A4B3A' : '#E4E1D8',
+                        borderColor: isDark ? '#2A4B3A' : '#DDE9E1',
                         borderWidth: 1,
                         padding: 10,
                         cornerRadius: 8,

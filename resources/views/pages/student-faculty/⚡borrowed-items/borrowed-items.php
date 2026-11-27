@@ -132,15 +132,15 @@ new #[Layout('layouts.student-faculty')] class extends Component
         return [
             'label'     => $this->statusLabel($item),
             'isOverdue' => $isOverdue,
-            'reminder'  => $isOverdue ? $this->reminder($item) : null,
-            'badge'     => match (true) {
-                $item->returned_at && $item->return_condition === 'good' => 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
-                (bool) $item->returned_at                                 => 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300',
-                (bool) $item->return_requested_at                         => 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
-                $isOverdue                                                => 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
-                $item->due_back_at->lte(today()->addDay())                => 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-                default                                                   => 'bg-gray-100 text-gray-700 dark:bg-neutral-700 dark:text-neutral-200',
+            'tone'      => match (true) {
+                $item->returned_at && $item->return_condition === 'good' => 'returned',
+                (bool) $item->returned_at                                 => 'damaged',
+                (bool) $item->return_requested_at                         => 'waiting',
+                $isOverdue                                                => 'overdue',
+                $item->due_back_at->lte(today()->addDay())                => 'soon',
+                default                                                   => 'borrowed',
             },
+            'reminder'  => $isOverdue ? $this->reminder($item) : null,
             // "Return all" only when this request still has 2+ items I can send back
             'returnAll' => ! $item->returned_at && ! $item->return_requested_at
                 ? (int) ($this->returnableCounts[$item->request_id] ?? 0)

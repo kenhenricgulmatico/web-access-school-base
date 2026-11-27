@@ -74,6 +74,14 @@ new class extends Component
             $notification->update(['status' => 'sent']);
         }
 
+        // ✅ A Program Head returning an item ("…please check and confirm it in Borrowed Items")
+        //    → Borrowed Items, where the Admin confirms it — even when the item came from an endorsed
+        //    request (that request's own link would open Request Details instead).
+        if (self::isReturnNotice($notification)) {
+            $this->redirect(route('admin.borrowed-items', ['filter' => 'outstanding']));
+            return;
+        }
+
         // ✅ Linked to a request → open that request (or Borrowed Items for a Pcs borrowing)
         $url = $notification->request_id
             ? \App\Support\AdminRequestNotice::adminUrl((int) $notification->request_id)
@@ -89,6 +97,19 @@ new class extends Component
             ->update(['status' => 'sent']);
 
         $this->loadNotifications();
+    }
+
+    /** Item-return notices (by type, or by wording for older notices already in the bell). */
+    private static function isReturnNotice(Notification $notification): bool
+    {
+        if (in_array($notification->type, ['Return', 'Overdue'], true)) {
+            return true;
+        }
+
+        $message = Str::lower((string) $notification->message);
+
+        return Str::contains($message, 'in borrowed items')
+            || (Str::contains($message, 'is returning') && Str::contains($message, 'pcs of'));
     }
 
     /**

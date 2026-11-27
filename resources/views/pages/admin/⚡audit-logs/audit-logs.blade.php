@@ -1,10 +1,10 @@
 <div>
-    <div class="max-w-7xl mx-auto px-4 py-10 sm:px-6 lg:px-8 lg:py-14 space-y-5">
+    <div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-5">
 
         {{-- Header --}}
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Audit Logs</h2>
+                <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">Audit Logs</h2>
                 <p class="text-sm text-gray-500 dark:text-neutral-400 mt-1">
                     Who did what — Admin, Program Heads and Faculty
                 </p>
@@ -21,9 +21,9 @@
         {{-- ✅ Stats --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             @foreach ([
-                ['Requests this week', $this->requestsThisWeek, 'text-blue-700 dark:text-blue-300'],
-                ['Approved / rejected this week', $this->decisionsThisWeek, 'text-green-700 dark:text-green-300'],
-                ['Sign-ins today', $this->signInsToday, 'text-purple-700 dark:text-purple-300'],
+                ['Requests this week', $this->requestsThisWeek, 'text-[#1C6B45] dark:text-[#9FD3AE]'],
+                ['Approved / rejected this week', $this->decisionsThisWeek, 'text-[#1C6B45] dark:text-green-300'],
+                ['Sign-ins today', $this->signInsToday, 'text-slate-700 dark:text-slate-300'],
                 ['Active people this week', $this->activePeople, 'text-amber-700 dark:text-amber-300'],
             ] as [$label, $value, $tone])
                 <div class="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 shadow-sm p-4">
@@ -37,7 +37,7 @@
 
             {{-- ✅ Filters --}}
             @php
-                $fld     = 'py-2 px-3 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-gray-800 dark:text-neutral-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none';
+                $fld     = 'py-2 px-3 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-gray-800 dark:text-neutral-200 focus:border-[#1C6B45] focus:ring-2 focus:ring-[#1C6B45]/20 focus:outline-none';
                 $chipOn  = 'bg-gray-900 border-gray-900 text-white dark:bg-neutral-100 dark:border-neutral-100 dark:text-neutral-900';
                 $chipOff = 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700';
                 $range   = $this->activeRange();
@@ -119,7 +119,7 @@
                             $role     = $log->user?->roles->first()?->name;
                             $roleTone = match ($role) {
                                 'admin'        => 'bg-gray-800 text-white dark:bg-neutral-200 dark:text-neutral-900',
-                                'program head' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
+                                'program head' => 'bg-[#E8F3EC] text-[#123524] dark:bg-[#1C6B45]/40 dark:text-[#9FD3AE]',
                                 'faculty'      => 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
                                 default        => 'bg-gray-100 text-gray-600 dark:bg-neutral-700 dark:text-neutral-300',
                             };
@@ -127,13 +127,13 @@
                             $canOpen = $reqId && isset($this->openableRequests[$reqId]);
                             $summary = \App\Support\AuditLogDetails::summary($log);
                             [$badge, $badgeText] = match (true) {
-                                $log->action === 'login'  => ['bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300', 'Signed in'],
+                                $log->action === 'login'  => ['bg-[#E8F3EC] text-[#1C6B45] dark:bg-[#1C6B45]/40 dark:text-[#9FD3AE]', 'Signed in'],
                                 $log->action === 'logout' => ['bg-gray-100 text-gray-600 dark:bg-neutral-700 dark:text-neutral-300', 'Signed out'],
                                 $log->action === 'deleted' => ['bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300', 'Deleted'],
-                                $log->table_name === 'requests' && $log->action === 'updated' && str_contains($summary, '· Approved') => ['bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', 'Approved'],
+                                $log->table_name === 'requests' && $log->action === 'updated' && str_contains($summary, '· Approved') => ['bg-green-100 text-[#1C6B45] dark:bg-[#1C6B45]/40 dark:text-green-300', 'Approved'],
                                 $log->table_name === 'requests' && $log->action === 'updated' && str_contains($summary, '· Rejected') => ['bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300', 'Rejected'],
-                                $log->action === 'created' => ['bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', match ($log->table_name) { 'requests' => 'New request', 'request_items' => 'Item added', 'users' => 'New account', 'resources' => 'Added', default => 'Added' }],
-                                default => ['bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', match ($log->table_name) { 'requests' => 'Request changed', 'request_items' => 'Item changed', 'users' => 'Account', 'resources' => 'Room / material', 'departments' => 'Department', 'roles' => 'Roles', default => 'Changed' }],
+                                $log->action === 'created' => ['bg-green-100 text-[#1C6B45] dark:bg-[#1C6B45]/40 dark:text-green-300', match ($log->table_name) { 'requests' => 'New request', 'request_items' => 'Item added', 'users' => 'New account', 'resources' => 'Added', default => 'Added' }],
+                                default => ['bg-[#E8F3EC] text-[#1C6B45] dark:bg-[#1C6B45]/40 dark:text-[#9FD3AE]', match ($log->table_name) { 'requests' => 'Request changed', 'request_items' => 'Item changed', 'users' => 'Account', 'resources' => 'Room / material', 'departments' => 'Department', 'roles' => 'Roles', default => 'Changed' }],
                             };
                         @endphp
                         <tr wire:key="alog-{{ $log->id }}" class="block @3xl:table-row px-4 py-3 @3xl:p-0 hover:bg-gray-50 dark:hover:bg-neutral-700/30 transition">
@@ -179,7 +179,7 @@
                             <td class="block @3xl:table-cell @3xl:pe-5 @3xl:ps-3 pt-2 @3xl:py-3 @3xl:text-right @3xl:whitespace-nowrap">
                                 <button type="button"
                                     @click="$dispatch('open-modal', {{ \Illuminate\Support\Js::from(\App\Support\AuditLogDetails::for($log)) }})"
-                                    class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">Details</button>
+                                    class="text-sm font-medium text-[#1C6B45] hover:underline dark:text-[#7FBF8E]">Details</button>
                                 @if ($canOpen)
                                     <span class="text-gray-300 dark:text-neutral-600 mx-1">·</span>
                                     <a href="{{ route('admin.view-request', $reqId) }}" class="text-sm font-medium text-[#1C6B45] hover:underline dark:text-green-300">Open request</a>

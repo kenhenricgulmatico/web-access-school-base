@@ -1,96 +1,100 @@
-<div class="select-none">
-<div class="space-y-5 sm:space-y-6 max-w-7xl mx-auto px-3 sm:px-6 py-5 sm:py-8">
+<div>
+<div class="space-y-5 sm:space-y-6 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+    @php
+        $me       = auth()->user();
+        $local    = now();  // ✅ the app runs on Philippine time (config/app.php)
+        $greet    = $local->hour < 12 ? 'Good morning' : ($local->hour < 18 ? 'Good afternoon' : 'Good evening');
+        $first    = \Illuminate\Support\Str::of($me->name)->trim()->explode(' ')->first();
+        $mine     = $this->waitingForMe;
+        $mineLink = $mine['facility'] === 0 && $mine['material'] > 0
+            ? route('coordinator.material')
+            : route('coordinator.facility');
+    @endphp
 
-    {{-- Page Title --}}
-    <div class="flex items-center gap-3">
-        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#123524] flex items-center justify-center ring-2 ring-[#D4A537]/40 shrink-0">
-            <svg class="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
-            </svg>
-        </div>
+    {{-- ✅ Welcome + what needs the Program Head right now --}}
+    <div class="rounded-2xl bg-[#E8F3EC] dark:bg-[#1C6B45]/20 ring-1 ring-inset ring-[#1C6B45]/10 dark:ring-[#7FBF8E]/15 px-4 py-4 sm:px-6 sm:py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div class="min-w-0">
-            <h1 class="text-xl sm:text-2xl font-bold text-[#123524] dark:text-neutral-200 truncate" style="font-family: 'Fraunces', serif;">Program Head Dashboard</h1>
-            <p class="text-xs sm:text-sm text-gray-500 dark:text-neutral-400 truncate">Overview of all faculty requests</p>
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">{{ $greet }}, {{ ucfirst($first) }}</h1>
+            <p class="mt-1 text-sm text-[#1C6B45]/90 dark:text-[#9FD3AE]">
+                {{ $local->format('l, F j, Y') }}@if($me->department) · Program Head, {{ $me->department->department_name }}@endif
+            </p>
+            <p class="mt-2 text-sm font-semibold {{ $mine['total'] ? 'text-amber-800 dark:text-amber-300' : 'text-[#123524] dark:text-white' }}">
+                @if ($mine['total'])
+                    {{ $mine['total'] }} {{ \Illuminate\Support\Str::plural('request', $mine['total']) }} waiting for you
+                    <span class="font-normal text-gray-600 dark:text-neutral-300">· {{ $mine['facility'] }} facility, {{ $mine['material'] }} material</span>
+                @else
+                    ✓ All caught up — nothing waiting for you
+                @endif
+            </p>
+        </div>
+        <div class="flex flex-wrap gap-2 shrink-0">
+            @if ($mine['total'])
+                <a href="{{ $mineLink }}" wire:navigate
+                   class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold bg-[#123524] text-white hover:bg-[#0B2418] dark:bg-[#1C6B45] dark:hover:bg-[#23855A] transition">
+                    Review requests →
+                </a>
+            @endif
+            @can('program-head-requests.create')
+                <a href="{{ route('coordinator.request-to-admin.create-request') }}" wire:navigate
+                   class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold transition
+                          {{ $mine['total'] ? 'bg-white text-[#123524] ring-1 ring-inset ring-[#1C6B45]/25 hover:bg-[#F3F8F5] dark:bg-neutral-800 dark:text-white dark:ring-neutral-600 dark:hover:bg-neutral-700' : 'bg-[#123524] text-white hover:bg-[#0B2418] dark:bg-[#1C6B45] dark:hover:bg-[#23855A]' }}">
+                    + New request to Admin
+                </a>
+            @endcan
         </div>
     </div>
 
-    {{-- Stats Cards --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+    {{-- Stats — 2×2 on a phone, one row on a laptop --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+
+        {{-- Waiting for you --}}
+        <a href="{{ $mineLink }}" wire:navigate
+           class="flex flex-col bg-white border shadow-sm rounded-2xl p-4 sm:p-5 dark:bg-[#16281F] dark:border-[#2A4B3A] transition hover:shadow-md {{ $mine['total'] ? 'border-amber-300 dark:border-amber-500/40' : 'border-gray-200' }}">
+            <div class="flex items-start justify-between gap-2">
+                <p class="text-xs sm:text-sm text-gray-500 dark:text-neutral-400">Waiting for you</p>
+                <span class="hidden sm:flex size-9 rounded-full bg-amber-50 dark:bg-amber-500/15 items-center justify-center shrink-0">
+                    <svg class="size-5 text-amber-600 dark:text-amber-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                </span>
+            </div>
+            <p class="mt-1 text-2xl sm:text-3xl font-bold {{ $mine['total'] ? 'text-amber-700 dark:text-amber-300' : 'text-[#123524] dark:text-white' }}">{{ $mine['total'] }}</p>
+            <p class="text-[11px] sm:text-xs text-gray-400 mt-1">{{ $mine['total'] ? 'Tap to review' : 'Nothing to review' }}</p>
+        </a>
+
+        {{-- Waiting for Admin --}}
+        <a href="{{ route('coordinator.request-to-admin.view-request') }}" wire:navigate
+           class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-2xl p-4 sm:p-5 dark:bg-[#16281F] dark:border-[#2A4B3A] transition hover:shadow-md">
+            <div class="flex items-start justify-between gap-2">
+                <p class="text-xs sm:text-sm text-gray-500 dark:text-neutral-400">Waiting for Admin</p>
+                <span class="hidden sm:flex size-9 rounded-full bg-[#E8F3EC] dark:bg-[#1C6B45]/25 items-center justify-center shrink-0">
+                    <svg class="size-5 text-[#1C6B45] dark:text-[#9FD3AE]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" /></svg>
+                </span>
+            </div>
+            <p class="mt-1 text-2xl sm:text-3xl font-bold text-[#123524] dark:text-white">{{ $this->waitingForAdmin }}</p>
+            <p class="text-[11px] sm:text-xs text-gray-400 mt-1">Your requests to the Admin</p>
+        </a>
 
         {{-- Total Requests --}}
-        <div class="relative overflow-hidden flex flex-col bg-white border border-[#E4E1D8] shadow-sm rounded-2xl p-4 sm:p-6 dark:bg-[#16281F] dark:border-[#2A4B3A]">
-            <div class="flex items-center justify-between mb-2 sm:mb-4">
-                <p class="text-xs sm:text-sm font-medium text-gray-500 dark:text-neutral-400">Total Requests</p>
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-mortarboard size-5 text-blue-400 dark:text-blue-400" viewBox="0 0 16 16">
-                    <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855a.75.75 0 0 0-.124 1.329l4.995 3.178 1.531 2.406a.5.5 0 0 0 .844-.536L6.637 10.07l7.494-7.494-1.895 4.738a.5.5 0 1 0 .928.372zm-2.54 1.183L5.93 9.363 1.591 6.602z"/>
-                    <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1.5a.5.5 0 0 1-1 0V11a.5.5 0 0 1 1 0m0 3a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0"/>
-                    </svg>
-                </div>
+        <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-2xl p-4 sm:p-5 dark:bg-[#16281F] dark:border-[#2A4B3A]">
+            <div class="flex items-start justify-between gap-2">
+                <p class="text-xs sm:text-sm text-gray-500 dark:text-neutral-400">Total requests</p>
+                <span class="hidden sm:flex size-9 rounded-full bg-[#123524] dark:bg-[#1C6B45] items-center justify-center shrink-0">
+                    <svg class="size-5 text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" /></svg>
+                </span>
             </div>
-            <h3 class="text-4xl font-bold text-gray-800 dark:text-white">{{ $this->totalRequests }}</h3>
-            <p class="text-xs text-gray-400 mt-1">All time</p>
-            <div class="absolute bottom-0 left-0 right-0 h-1 bg-blue-500 rounded-b-2xl"></div>
+            <p class="mt-1 text-2xl sm:text-3xl font-bold text-[#123524] dark:text-white">{{ $this->totalRequests }}</p>
+            <p class="text-[11px] sm:text-xs text-gray-400 mt-1">All time</p>
         </div>
 
-        {{-- ✅ Waiting for you (faculty / student requests the Program Head must act on) --}}
-        @php
-            $mine     = $this->waitingForMe;
-            $mineLink = $mine['facility'] === 0 && $mine['material'] > 0
-                ? route('coordinator.material')
-                : route('coordinator.facility');
-        @endphp
-        <a href="{{ $mineLink }}" wire:navigate
-           class="relative overflow-hidden flex flex-col bg-white border shadow-sm rounded-2xl p-4 sm:p-6 transition hover:shadow-md dark:bg-[#16281F]
-                  {{ $mine['total'] ? 'border-[#D4A537] ring-1 ring-[#D4A537]/40' : 'border-[#E4E1D8] dark:border-[#2A4B3A]' }}">
-            <div class="flex items-center justify-between mb-2 sm:mb-4">
-                <p class="text-xs sm:text-sm font-medium text-gray-500 dark:text-neutral-400">Waiting for you</p>
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#D4A537]/12 dark:bg-[#D4A537]/20 flex items-center justify-center shrink-0">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-[#B8862A]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                    </svg>
-                </div>
-            </div>
-            <h3 class="text-2xl sm:text-4xl font-bold text-[#123524] dark:text-neutral-200">{{ $mine['total'] }}</h3>
-            <p class="text-xs text-gray-400 mt-1">
-                @if ($mine['total'])
-                    {{ $mine['facility'] }} facility · {{ $mine['material'] }} material
-                @else
-                    Nothing to review
-                @endif
-            </p>
-            <div class="absolute bottom-0 left-0 right-0 h-1 bg-[#D4A537] rounded-b-2xl"></div>
-        </a>
-
-        {{-- ✅ Waiting for Admin (the Program Head's own requests) --}}
-        <a href="{{ route('coordinator.request-to-admin.view-request') }}" wire:navigate
-           class="relative overflow-hidden flex flex-col bg-white border border-[#E4E1D8] shadow-sm rounded-2xl p-4 sm:p-6 transition hover:shadow-md dark:bg-[#16281F] dark:border-[#2A4B3A]">
-            <div class="flex items-center justify-between mb-2 sm:mb-4">
-                <p class="text-xs sm:text-sm font-medium text-gray-500 dark:text-neutral-400">Waiting for Admin</p>
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center shrink-0">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-teal-600 dark:text-teal-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-                    </svg>
-                </div>
-            </div>
-            <h3 class="text-2xl sm:text-4xl font-bold text-[#123524] dark:text-neutral-200">{{ $this->waitingForAdmin }}</h3>
-            <p class="text-xs text-gray-400 mt-1">Your requests sent to the Admin</p>
-            <div class="absolute bottom-0 left-0 right-0 h-1 bg-teal-500 rounded-b-2xl"></div>
-        </a>
-
         {{-- Total Faculty --}}
-        <div class="relative overflow-hidden flex flex-col bg-white border border-[#E4E1D8] shadow-sm rounded-2xl p-4 sm:p-6 dark:bg-[#16281F] dark:border-[#2A4B3A]">
-            <div class="flex items-center justify-between mb-2 sm:mb-4">
-                <p class="text-xs sm:text-sm font-medium text-gray-500 dark:text-neutral-400">Total Faculty</p>
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center shrink-0">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 dark:text-purple-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                    </svg>
-                </div>
+        <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-2xl p-4 sm:p-5 dark:bg-[#16281F] dark:border-[#2A4B3A]">
+            <div class="flex items-start justify-between gap-2">
+                <p class="text-xs sm:text-sm text-gray-500 dark:text-neutral-400">Faculty</p>
+                <span class="hidden sm:flex size-9 rounded-full bg-[#E8F3EC] dark:bg-[#1C6B45]/25 items-center justify-center shrink-0">
+                    <svg class="size-5 text-[#1C6B45] dark:text-[#9FD3AE]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+                </span>
             </div>
-            <h3 class="text-2xl sm:text-4xl font-bold text-[#123524] dark:text-neutral-200">{{ $this->totalFaculty }}</h3>
-            <p class="text-xs text-gray-400 mt-1">Registered faculty</p>
-            <div class="absolute bottom-0 left-0 right-0 h-1 bg-purple-500 rounded-b-2xl"></div>
+            <p class="mt-1 text-2xl sm:text-3xl font-bold text-[#123524] dark:text-white">{{ $this->totalFaculty }}</p>
+            <p class="text-[11px] sm:text-xs text-gray-400 mt-1">In your department</p>
         </div>
 
     </div>
@@ -99,10 +103,10 @@
     @php $borrowed = $this->borrowedItems; @endphp
     @if ($borrowed['out'] > 0)
         <a href="{{ route('coordinator.borrowed-items', $borrowed['overdue'] ? ['filter' => 'overdue'] : []) }}" wire:navigate
-           class="flex items-center justify-between gap-4 px-4 sm:px-5 py-3.5 rounded-2xl border transition hover:shadow-sm
+           class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 px-4 sm:px-5 py-3.5 rounded-2xl border transition hover:shadow-sm
                   {{ $borrowed['overdue']
                       ? 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-900/50 dark:text-red-300'
-                      : 'bg-white border-[#E4E1D8] text-[#123524] dark:bg-[#16281F] dark:border-[#2A4B3A] dark:text-neutral-200' }}">
+                      : 'bg-white border-gray-200 text-[#123524] dark:bg-[#16281F] dark:border-[#2A4B3A] dark:text-neutral-200' }}">
             <span class="flex items-center gap-3 min-w-0">
                 <svg class="size-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
@@ -124,13 +128,13 @@
     <div class="grid lg:grid-cols-2 gap-4 sm:gap-6">
 
         {{-- Bar Chart - Request Types --}}
-        <div class="bg-white border border-[#E4E1D8] shadow-sm rounded-2xl p-4 sm:p-6 dark:bg-[#16281F] dark:border-[#2A4B3A]">
+        <div class="bg-white border border-gray-200 shadow-sm rounded-2xl p-4 sm:p-6 dark:bg-[#16281F] dark:border-[#2A4B3A]">
             <div class="mb-4">
-                <h2 class="text-base sm:text-lg font-semibold text-[#123524] dark:text-neutral-200" style="font-family: 'Fraunces', serif;">Request Types</h2>
+                <h2 class="text-base sm:text-lg font-semibold text-[#123524] dark:text-neutral-200">Request Types</h2>
                 <p class="text-xs sm:text-sm text-gray-400">Facility vs Material Requests</p>
             </div>
             <div class="flex flex-wrap gap-3 sm:gap-4 mb-4">
-                <div class="inline-flex rounded-full border border-[#E4E1D8] dark:border-[#2A4B3A] p-0.5 text-xs font-medium" id="lineFilters">
+                <div class="inline-flex rounded-full border border-gray-200 dark:border-[#2A4B3A] p-0.5 text-xs font-medium" id="lineFilters">
                     <button type="button" data-filter="faculty" class="px-3 py-1 rounded-full bg-[#123524] text-white">Faculty</button>
                 </div>
             </div>
@@ -141,9 +145,9 @@
 
         {{-- ✅ Request Status (department) — drawn in SVG, no extra script --}}
         @php $status = $this->statusBreakdown; @endphp
-        <div class="bg-white border border-[#E4E1D8] shadow-sm rounded-2xl p-4 sm:p-6 dark:bg-[#16281F] dark:border-[#2A4B3A]">
+        <div class="bg-white border border-gray-200 shadow-sm rounded-2xl p-4 sm:p-6 dark:bg-[#16281F] dark:border-[#2A4B3A]">
             <div class="mb-4">
-                <h2 class="text-base sm:text-lg font-semibold text-[#123524] dark:text-neutral-200" style="font-family: 'Fraunces', serif;">Request Status</h2>
+                <h2 class="text-base sm:text-lg font-semibold text-[#123524] dark:text-neutral-200">Request Status</h2>
                 <p class="text-xs sm:text-sm text-gray-400">Approved, pending and rejected — your department</p>
             </div>
 
@@ -155,7 +159,7 @@
                     <div class="relative size-40 shrink-0">
                         <svg viewBox="0 0 42 42" class="size-full -rotate-90" role="img"
                              aria-label="Request status: {{ collect($status['slices'])->map(fn ($s) => $s['label'] . ' ' . $s['count'])->implode(', ') }}">
-                            <circle cx="21" cy="21" r="15.9155" fill="none" stroke-width="6" stroke="#F1EEE6"></circle>
+                            <circle cx="21" cy="21" r="15.9155" fill="none" stroke-width="6" stroke="#EEF3EF"></circle>
                             @php $offset = 0; @endphp
                             @foreach ($status['slices'] as $slice)
                                 @if ($slice['count'] > 0)
@@ -195,27 +199,27 @@
     </div>
 
     {{-- Faculty Request History --}}
-    <div class="bg-white border border-[#E4E1D8] rounded-2xl shadow-sm overflow-hidden dark:bg-[#16281F] dark:border-[#2A4B3A]">
-        <div class="px-4 sm:px-6 py-4 border-b border-[#E4E1D8] dark:border-[#2A4B3A]">
-            <h2 class="text-base sm:text-lg font-semibold text-[#123524] dark:text-neutral-200" style="font-family: 'Fraunces', serif;">
+    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden dark:bg-[#16281F] dark:border-[#2A4B3A]">
+        <div class="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-[#2A4B3A]">
+            <h2 class="text-base sm:text-lg font-semibold text-[#123524] dark:text-neutral-200">
                 Request History
             </h2>
             <p class="text-xs sm:text-sm text-gray-400">How many reservations and material requests each person has made</p>
         </div>
         <div class="overflow-x-auto">
-            <table class="min-w-[640px] w-full divide-y divide-[#E4E1D8] dark:divide-[#2A4B3A]">
-                <thead class="bg-[#FAF7EF] dark:bg-[#0E1A14]">
+            <table class="min-w-[640px] w-full divide-y divide-gray-200 dark:divide-[#2A4B3A]">
+                <thead class="bg-[#F3F8F5] dark:bg-[#0E1A14]">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#B8862A]">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#B8862A]">Role</th>
-                        <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#B8862A]">Facility Reservations</th>
-                        <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#B8862A]">Material Requests</th>
-                        <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#B8862A]">Total</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">Role</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">Facility Reservations</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">Material Requests</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">Total</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-[#E4E1D8] dark:divide-[#2A4B3A]">
+                <tbody class="divide-y divide-gray-200 dark:divide-[#2A4B3A]">
                     @forelse($this->userRequestHistory as $user)
-                        <tr wire:key="history-{{ $user->id }}" class="hover:bg-[#FAF7EF] dark:hover:bg-[#0E1A14]/50 transition">
+                        <tr wire:key="history-{{ $user->id }}" class="hover:bg-[#F3F8F5] dark:hover:bg-[#0E1A14]/50 transition">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
 
@@ -223,9 +227,9 @@
                                     @if ($user->avatar)
                                         <img src="{{ asset($user->avatar) }}"
                                              alt="{{ $user->name }}"
-                                             class="w-8 h-8 rounded-full object-cover ring-2 ring-[#D4A537]/40 shrink-0">
+                                             class="w-8 h-8 rounded-full object-cover ring-2 ring-[#7FBF8E]/60 shrink-0">
                                     @else
-                                        <div class="w-8 h-8 rounded-full bg-[#123524] text-white flex items-center justify-center text-sm font-bold ring-2 ring-[#D4A537]/40 shrink-0">
+                                        <div class="w-8 h-8 rounded-full bg-[#123524] text-white flex items-center justify-center text-sm font-bold ring-2 ring-[#7FBF8E]/60 shrink-0">
                                             {{ strtoupper(substr($user->name, 0, 1)) }}
                                         </div>
                                     @endif
@@ -238,7 +242,7 @@
                             </td>
                             <td class="px-6 py-4">
                                 <span class="px-2.5 py-1 text-xs font-medium rounded-full whitespace-nowrap
-                                    {{ 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-300' }}">
+                                    {{ 'bg-[#E8F3EC] text-[#1C6B45] dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]' }}">
                                     {{ ucfirst($user->getRoleNames()->first() ?? 'N/A') }}
                                 </span>
                             </td>
@@ -254,9 +258,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-10 text-center text-gray-400">
-                                No request history yet.
-                            </td>
+                            <td colspan="5"><x-portal.empty message="No request history yet" hint="Requests from your faculty will be counted here." /></td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -284,7 +286,7 @@
                 data: requestData.faculty,
                 backgroundColor: [
                     'rgba(18, 53, 36, 0.85)',
-                    'rgba(212, 165, 55, 0.85)',
+                    'rgba(127, 191, 142, 0.9)',
                 ],
                 borderRadius: 8,
                 barThickness: 60,

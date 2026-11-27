@@ -1,5 +1,5 @@
-<div class="select-none">
-<div class="max-w-4xl mx-auto px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+<div>
+<div class="max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
 
     {{-- Back --}}
     <a href="javascript:history.back()" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200 mb-6">
@@ -12,12 +12,12 @@
     {{-- Header --}}
     <div class="mb-6 flex items-center justify-between">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Request Details</h2>
+            <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">Request Details</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400">Full breakdown of what was reserved or requested</p>
         </div>
         <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full
-            @if($reservation->status === 'pending') bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300
-            @elseif($reservation->status === 'approved') bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300
+            @if($reservation->status === 'pending') bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300
+            @elseif($reservation->status === 'approved') bg-green-100 text-[#123524] dark:bg-[#1C6B45]/30 dark:text-green-300
             @else bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 @endif">
             {{ ucfirst($reservation->status) }}
         </span>
@@ -29,7 +29,7 @@
             <div>
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 dark:text-neutral-500 mb-1">Requester</p>
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-full bg-green-700 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                    <div class="w-8 h-8 rounded-full bg-[#0B2418] text-white flex items-center justify-center text-xs font-bold shrink-0">
                         {{ strtoupper(substr($reservation->user->name, 0, 1)) }}
                     </div>
                     <div>
@@ -45,7 +45,7 @@
             <div>
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 dark:text-neutral-500 mb-1">Type</p>
                 <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full
-                    {{ $reservation->request_type_id == \App\Models\RequestType::FACILITY ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' }}">
+                    {{ $reservation->request_type_id == \App\Models\RequestType::FACILITY ? 'bg-green-100 text-[#1C6B45] dark:bg-[#1C6B45]/30 dark:text-green-300' : 'bg-[#E8F3EC] text-[#1C6B45] dark:bg-[#1C6B45]/30 dark:text-[#9FD3AE]' }}">
                     {{ $reservation->requestType?->type_name ?? '—' }}
                 </span>
             </div>
@@ -96,7 +96,7 @@
 
     {{-- Flash Messages --}}
     @if (session()->has('message'))
-        <div class="mb-4 p-3 rounded-lg bg-green-100 text-green-800 border border-green-200 text-sm flex items-center gap-2">
+        <div class="mb-4 p-3 rounded-lg bg-green-100 text-[#123524] border border-green-200 text-sm flex items-center gap-2">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
             </svg>
@@ -128,7 +128,7 @@
                     wire:confirm="Approve this request?"
                     wire:loading.attr="disabled"
                     wire:loading.class="opacity-50 cursor-not-allowed"
-                    class="px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                    class="px-4 py-2 text-sm font-medium bg-[#123524] text-white rounded-lg hover:bg-[#0B2418] transition">
                     <span wire:loading.remove wire:target="approveRequest">Approve</span>
                     <span wire:loading wire:target="approveRequest">Approving...</span>
                 </button>

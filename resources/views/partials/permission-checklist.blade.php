@@ -31,7 +31,7 @@
                             {{-- tick / untick the whole group --}}
                             @php $allOn = $freeNames->diff($selectedPermissions)->isEmpty(); @endphp
                             <button type="button" wire:click="toggleGroup('{{ $group }}')"
-                                class="text-[11px] font-semibold text-blue-600 hover:underline dark:text-blue-400">
+                                class="text-[11px] font-semibold text-[#1C6B45] hover:underline dark:text-[#7FBF8E]">
                                 {{ $allOn ? 'None' : 'All' }}
                             </button>
                         @endif
@@ -49,7 +49,7 @@
                                 id="perm-{{ $permission->id }}"
                                 @if ($locked) checked disabled @else wire:model.live="selectedPermissions" @checked(in_array($permission->name, $selectedPermissions, true)) @endif
                                 value="{{ $permission->name }}"
-                                class="mt-0.5 shrink-0 size-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-0 dark:bg-neutral-800 dark:border-neutral-600 dark:checked:bg-blue-600 dark:checked:border-blue-600">
+                                class="mt-0.5 shrink-0 size-4 rounded border-gray-300 text-[#1C6B45] focus:ring-2 focus:ring-[#1C6B45]/30 focus:ring-offset-0 dark:bg-neutral-800 dark:border-neutral-600 dark:checked:bg-[#123524] dark:checked:border-[#1C6B45]">
                             <span class="text-sm text-gray-700 dark:text-neutral-300 leading-snug">
                                 {{ \App\Support\PermissionCatalog::label($permission->name) }}
                                 @if ($locked)

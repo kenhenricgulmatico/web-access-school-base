@@ -1,12 +1,8 @@
-<div class="select-none">
-<div class="max-w-3xl mx-auto px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-    <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
+<div>
+<div class="max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+    <x-portal.page-header title="Edit Request to Admin" subtitle="Update your facility reservation or material request" :back="route('coordinator.request-to-admin.view-request')" back-label="My Requests to Admin" />
 
-        {{-- Header --}}
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-neutral-700">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">Edit Request to Admin</h2>
-            <p class="text-sm text-gray-600 dark:text-neutral-400">Update your facility reservation or material request</p>
-        </div>
+    <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
 
         <div class="p-6">
 
@@ -61,8 +57,8 @@
 
                 {{-- Facility Fields --}}
                 @if($request_type_id == \App\Models\RequestType::FACILITY)
-                <div class="space-y-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-700">
-                    <p class="text-sm font-semibold text-green-700 dark:text-green-300">Facility Details</p>
+                <div class="space-y-4 p-4 bg-[#F3F8F5] dark:bg-[#1C6B45]/10 rounded-xl border border-[#1C6B45]/15 dark:border-[#7FBF8E]/20">
+                    <p class="text-sm font-semibold text-[#1C6B45] dark:text-[#9FD3AE]">Facility Details</p>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">

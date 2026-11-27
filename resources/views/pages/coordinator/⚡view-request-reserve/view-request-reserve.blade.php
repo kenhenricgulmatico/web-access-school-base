@@ -1,9 +1,9 @@
-<div class="select-none">
-<div class="max-w-3xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+<div>
+<div class="max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
 
   {{-- Back --}}
   <a href="{{ route('coordinator.facility') }}" wire:navigate
-     class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-800 dark:text-neutral-400 dark:hover:text-neutral-200 transition mb-5">
+     class="inline-flex items-center gap-1 text-xs font-semibold text-[#1C6B45] dark:text-[#7FBF8E] hover:underline mb-3">
     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
       <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
     </svg>
@@ -28,19 +28,19 @@
     <div class="px-6 py-5 flex justify-between items-start gap-4 border-b border-gray-100 dark:border-neutral-700">
       <div>
         <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Request</p>
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-neutral-100">{{ $requestModel->purpose }}</h2>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">{{ $requestModel->purpose }}</h1>
         <p class="text-sm text-gray-500 dark:text-neutral-400 mt-1">
           Submitted {{ $requestModel->created_at->format('M d, Y · h:i A') }}
         </p>
       </div>
 
       <span class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full
-        @if($requestModel->status === 'pending') bg-yellow-100 text-yellow-800
+        @if($requestModel->status === 'pending') bg-amber-100 text-amber-800
         @elseif($requestModel->status === 'approved') bg-green-100 text-green-800
         @elseif($requestModel->status === 'rejected') bg-red-100 text-red-800
         @endif">
         <span class="w-1.5 h-1.5 rounded-full
-          @if($requestModel->status === 'pending') bg-yellow-500
+          @if($requestModel->status === 'pending') bg-amber-500
           @elseif($requestModel->status === 'approved') bg-green-500
           @elseif($requestModel->status === 'rejected') bg-red-500
           @endif"></span>
@@ -134,7 +134,7 @@
 
     {{-- ✅ Forwarded → waiting for the Admin --}}
     @if($requestModel->status === 'pending' && \App\Support\ForwardedRequests::isWaitingForAdmin($requestModel))
-      <div class="px-6 py-4 bg-indigo-50 dark:bg-indigo-950/30 border-t border-indigo-100 dark:border-indigo-900 text-sm text-indigo-900 dark:text-indigo-200">
+      <div class="px-6 py-4 bg-[#E8F3EC] dark:bg-[#1C6B45]/15 border-t border-[#1C6B45]/15 dark:border-[#7FBF8E]/20 text-sm text-[#123524] dark:text-[#9FD3AE]">
         <p class="font-semibold">Forwarded to the Admin — waiting for approval.</p>
         <p class="text-xs mt-0.5">When the Admin approves your Request to Admin, this request is approved automatically.</p>
       </div>
@@ -161,7 +161,7 @@
         <button type="button" wire:click="forwardToAdmin"
                                   wire:confirm="Forward this request to the Admin?"
                                   wire:loading.attr="disabled" wire:target="forwardToAdmin"
-                                  class="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition disabled:opacity-60">
+                                  class="px-4 py-2 text-sm font-medium bg-[#123524] text-white rounded-lg hover:bg-[#0B2418] transition disabled:opacity-60">
                             Forward to Admin
                           </button>
       @endcan

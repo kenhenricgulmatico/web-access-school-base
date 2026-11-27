@@ -1,6 +1,6 @@
-<div class="select-none">
-    <div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
-        <div class="mt-12 max-w-full mx-auto">
+<div>
+    <div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+        <div class="max-w-full mx-auto">
             <div class="flex flex-col border border-gray-200 rounded-xl p-4 sm:p-6 lg:p-8 dark:border-neutral-700">
 
                 {{-- Header with Back button --}}
@@ -25,7 +25,7 @@
                 </div>
 
                 @if (session('success'))
-                    <div class="mb-4 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 text-sm font-medium">
+                    <div class="mb-4 p-3 rounded-lg bg-green-50 dark:bg-[#1C6B45]/20 border border-green-200 dark:border-[#1C6B45/40] text-[#1C6B45] dark:text-green-400 text-sm font-medium">
                         {{ session('success') }}
                     </div>
                 @endif
@@ -53,7 +53,7 @@
                                     id="department-select"
                                     wire:model="department_id"
                                     class="py-2.5 ps-10 pe-10 block w-full border-gray-200 rounded-lg sm:text-sm appearance-none
-                                           focus:border-blue-500 focus:ring-blue-500
+                                           focus:border-[#1C6B45] focus:ring-[#1C6B45]
                                            dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-300
                                            @error('department_id') border-red-300 dark:border-red-700 @enderror">
                                 <option value="" disabled>Select Department</option>
@@ -95,7 +95,7 @@
                                     id="role-select"
                                     wire:model.live="role"
                                     class="py-2.5 ps-10 pe-10 block w-full border-gray-200 rounded-lg sm:text-sm appearance-none
-                                           focus:border-blue-500 focus:ring-blue-500
+                                           focus:border-[#1C6B45] focus:ring-[#1C6B45]
                                            dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-300
                                            @error('role') border-red-300 dark:border-red-700 @enderror">
 
@@ -126,7 +126,7 @@
                                     Name <span class="text-red-500">*</span>
                                 </label>
                                 <input wire:model.defer="name" type="text" placeholder="Juan Dela Cruz"
-                                    class="py-2.5 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500">
+                                    class="py-2.5 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-[#1C6B45] focus:ring-[#1C6B45] dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500">
                                 @error('name') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                             </div>
 
@@ -135,7 +135,7 @@
                                     Email <span class="text-red-500">*</span>
                                 </label>
                                 <input wire:model.defer="email" type="email" placeholder="user@csav.edu.ph"
-                                    class="py-2.5 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500">
+                                    class="py-2.5 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-[#1C6B45] focus:ring-[#1C6B45] dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500">
                                 @error('email') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                             </div>
                         </div>
@@ -149,14 +149,14 @@
                                     </label>
                                     <button type="button"
                                         wire:click="useDefaultPassword"
-                                        class="text-[11px] font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline">
+                                        class="text-[11px] font-semibold text-[#1C6B45] hover:text-[#123524] dark:text-[#7FBF8E] dark:hover:text-[#9FD3AE] hover:underline">
                                         Use default ({{ $this->defaultPassword }})
                                     </button>
                                 </div>
                                 <div class="relative" x-data="{ show: false }">
                                     <input :type="show ? 'text' : 'password'" wire:model.defer="password"
                                         placeholder="Min. 6 characters"
-                                        class="py-2.5 px-4 pr-12 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500">
+                                        class="py-2.5 px-4 pr-12 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-[#1C6B45] focus:ring-[#1C6B45] dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500">
                                     <button type="button" @click="show = !show"
                                         class="absolute inset-y-0 right-0 px-3 flex items-center text-xs text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200"
                                         :aria-label="show ? 'Hide password' : 'Show password'">
@@ -172,17 +172,17 @@
                                 </label>
                                 <input type="password" wire:model.defer="password_confirmation"
                                     placeholder="Re-enter password"
-                                    class="py-2.5 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500">
+                                    class="py-2.5 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-[#1C6B45] focus:ring-[#1C6B45] dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500">
                             </div>
                         </div>
 
                         {{-- Info note --}}
-                        <div class="flex items-start gap-2.5 rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/20 px-3.5 py-3">
-                            <svg class="size-4 shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <div class="flex items-start gap-2.5 rounded-lg border border-[#1C6B45/25] dark:border-[#1C6B45]/50 bg-[#F3F8F5] dark:bg-[#1C6B45]/20 px-3.5 py-3">
+                            <svg class="size-4 shrink-0 mt-0.5 text-[#1C6B45] dark:text-[#7FBF8E]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <circle cx="12" cy="12" r="10" />
                                 <path stroke-linecap="round" d="M12 16v-4m0-4h.01" />
                             </svg>
-                            <p class="text-xs text-blue-800 dark:text-blue-300">
+                            <p class="text-xs text-[#123524] dark:text-[#9FD3AE]">
                                 The account will be created with status <strong>Approved</strong> and can log in immediately with the password you set.
                             </p>
                         </div>
@@ -193,7 +193,7 @@
                         <button type="submit"
                             wire:loading.attr="disabled"
                             wire:loading.class="opacity-50 cursor-not-allowed"
-                            class="py-3 px-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden transition">
+                            class="py-3 px-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg bg-[#123524] text-white hover:bg-[#0B2418] focus:outline-hidden transition">
                             <span wire:loading.remove wire:target="save">Create User</span>
                             <span wire:loading wire:target="save">Creating...</span>
                         </button>

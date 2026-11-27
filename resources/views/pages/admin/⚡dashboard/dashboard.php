@@ -69,6 +69,13 @@ new #[Layout('layouts.admin')] class extends Component
             });
     }
 
+    /** ✅ What needs the Admin today (welcome strip) */
+    #[Computed]
+    public function todo(): array
+    {
+        return \App\Support\AdminTodo::counts();
+    }
+
     #[Computed]
     public function totalRequests()
     {
@@ -282,15 +289,15 @@ new #[Layout('layouts.admin')] class extends Component
         return [
             'total'  => $total,
             'status' => $slices([
-                ['key' => 'approved',  'label' => 'Approved',  'color' => '#10B981'],
-                ['key' => 'pending',   'label' => 'Pending',   'color' => '#FBBF24'],
-                ['key' => 'rejected',  'label' => 'Rejected',  'color' => '#EF4444'],
+                ['key' => 'approved',  'label' => 'Approved',  'color' => '#1C6B45'],
+                ['key' => 'pending',   'label' => 'Pending',   'color' => '#F59E0B'],
+                ['key' => 'rejected',  'label' => 'Rejected',  'color' => '#B8352A'],
                 ['key' => 'cancelled', 'label' => 'Cancelled', 'color' => '#9CA3AF', 'optional' => true],
             ], fn ($key) => $rows->where('status', $key)->count()),
-            // Same colors as the Admin calendar: facility green, material purple
+            // Same colors as the other portals: facility dark green, material light green
             'type'   => $slices([
-                ['key' => RequestType::FACILITY, 'label' => 'Facility reservations', 'color' => '#22C55E'],
-                ['key' => RequestType::MATERIAL, 'label' => 'Material requests',     'color' => '#A855F7'],
+                ['key' => RequestType::FACILITY, 'label' => 'Facility reservations', 'color' => '#123524'],
+                ['key' => RequestType::MATERIAL, 'label' => 'Material requests',     'color' => '#7FBF8E'],
             ], fn ($key) => $rows->where('request_type_id', $key)->count()),
         ];
     }

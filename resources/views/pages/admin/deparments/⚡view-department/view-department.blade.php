@@ -1,11 +1,11 @@
-<div class="select-none">
-<div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+<div>
+<div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
 
     @include('partials.users-tabs')
 
     {{-- Flash --}}
     @if(session()->has('success'))
-        <div class="mb-4 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 text-sm">
+        <div class="mb-4 p-3 rounded-lg bg-green-50 dark:bg-[#1C6B45]/20 border border-green-200 dark:border-[#1C6B45/40] text-[#1C6B45] dark:text-green-400 text-sm">
             {{ session('success') }}
         </div>
     @endif
@@ -20,19 +20,19 @@
         {{-- Header --}}
         <div class="px-6 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-b border-gray-200 dark:border-neutral-700">
             <div>
-                <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">Departments</h2>
+                <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">Departments</h2>
                 <p class="text-sm text-gray-500 dark:text-neutral-400 mt-0.5">List of all school departments</p>
             </div>
 
             <div class="flex items-center gap-2">
-                <span class="px-3 py-1 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-full">
+                <span class="px-3 py-1 text-xs font-medium bg-green-100 text-[#1C6B45] dark:bg-[#1C6B45]/30 dark:text-green-300 rounded-full">
                     {{ $this->departments->count() }} Total
                 </span>
 
                 @can('users.create')
                     <a href="{{ route('admin.departments.create') }}" wire:navigate
                        class="py-2 px-3.5 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg
-                              bg-blue-600 text-white hover:bg-blue-700 transition">
+                              bg-[#123524] text-white hover:bg-[#0B2418] transition">
                         <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
                         </svg>
@@ -72,7 +72,7 @@
                             {{-- Members --}}
                             <td class="px-6 py-3.5">
                                 <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full
-                                             bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                             bg-[#E8F3EC] text-[#1C6B45] dark:bg-[#1C6B45]/30 dark:text-[#9FD3AE]">
                                     {{ $dept->users_count }} {{ \Illuminate\Support\Str::plural('member', $dept->users_count) }}
                                 </span>
                             </td>
@@ -86,7 +86,7 @@
                                     </a>
                                     @can('users.update')
                                         <a href="{{ route('admin.departments.edit', $dept->id) }}" wire:navigate
-                                           class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-500">
+                                           class="text-sm font-medium text-[#1C6B45] hover:underline dark:text-[#1C6B45]">
                                             Edit
                                         </a>
                                     @endcan
@@ -105,7 +105,7 @@
                                     <p class="text-sm font-medium text-gray-500 dark:text-neutral-400">No departments found</p>
                                     @can('users.create')
                                         <a href="{{ route('admin.departments.create') }}" wire:navigate
-                                           class="mt-2 inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                                           class="mt-2 inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium bg-[#123524] text-white rounded-lg hover:bg-[#0B2418] transition">
                                             <svg class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
                                             </svg>

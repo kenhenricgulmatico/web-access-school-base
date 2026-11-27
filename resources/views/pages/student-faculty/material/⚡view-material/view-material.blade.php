@@ -1,22 +1,15 @@
-<div class="select-none">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        {{-- Header and Create Button --}}
-        <div class="mb-5 flex items-center justify-between gap-4">
-            <div class="min-w-0">
-                <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">My Material Requests</h2>
-                <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">View and manage your requested materials</p>
-            </div>
-
+<div>
+    <div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+        <x-portal.page-header title="My Material Requests" subtitle="View and manage your requested materials">
             @can('material-requests.create')
-                <a href="{{ route('portal.create-material') }}" wire:navigate
-                   class="inline-flex items-center shrink-0 px-3 py-2 sm:px-4 sm:py-2 bg-[#123524] hover:bg-[#0B2418] text-white rounded-lg text-xs sm:text-sm font-semibold transition">
-                    <svg class="w-4 h-4 mr-1.5 sm:mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    <span>Create Material Request</span>
-                </a>
+                <x-slot:actions>
+                    <a href="{{ route('portal.create-material') }}" wire:navigate
+                       class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#123524] hover:bg-[#0B2418] text-white rounded-lg text-sm font-semibold transition">
+                        + Request Materials
+                    </a>
+                </x-slot:actions>
             @endcan
-        </div>
+        </x-portal.page-header>
 
         {{-- Flash Messages --}}
         @if (session()->has('message'))
@@ -31,23 +24,20 @@
         @endif
 
         {{-- ✅ Tabs --}}
-        <div class="mb-4 inline-flex flex-wrap p-1 bg-gray-100 dark:bg-gray-800 rounded-xl gap-1" role="tablist" aria-label="Filter material requests">
-            @foreach(['pending' => 'Pending', 'approved' => 'Approved', 'closed' => 'Cancelled & Rejected'] as $key => $label)
-                <button type="button" role="tab" wire:click="$set('tab', '{{ $key }}')" aria-selected="{{ $tab === $key ? 'true' : 'false' }}"
-                    class="min-h-9 px-3 rounded-lg text-sm font-semibold transition inline-flex items-center gap-2
-                        {{ $tab === $key ? 'bg-white dark:bg-gray-700 text-[#123524] dark:text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-[#123524] dark:hover:text-white' }}">
-                    {{ $label }}
-                    <span class="text-xs px-1.5 py-0.5 rounded-full bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200">{{ $this->counts[$key] }}</span>
-                </button>
-            @endforeach
+        <div class="mb-4">
+            <x-portal.tabs label="Filter material requests">
+                @foreach(['pending' => 'Pending', 'approved' => 'Approved', 'closed' => 'Cancelled & Rejected'] as $key => $label)
+                    <x-portal.tab :active="$tab === $key" :count="$this->counts[$key]" wire:click="$set('tab', '{{ $key }}')">{{ $label }}</x-portal.tab>
+                @endforeach
+            </x-portal.tabs>
         </div>
 
         @php $rows = $this->materialRequests; @endphp
 
-        <div wire:loading.class="opacity-60" wire:target="tab">
+        <div class="@container" wire:loading.class="opacity-60" wire:target="tab">
 
         {{-- Mobile Cards View --}}
-        <div class="block md:hidden space-y-4">
+        <div class="block @3xl:hidden space-y-3">
             @forelse($rows as $request)
                 @php $info = $this->rowInfo($request); @endphp
                 <div wire:key="m-card-{{ $request->id }}" class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm space-y-3">
@@ -58,7 +48,7 @@
                             @endif
                             <p class="text-xs text-gray-500 dark:text-gray-400">Requested {{ $request->created_at->format('M d, Y g:i A') }}</p>
                         </div>
-                        <span class="shrink-0 px-2.5 py-0.5 text-xs font-medium rounded-full {{ $info['badge'] }}">{{ $info['label'] }}</span>
+                        <x-portal.status class="shrink-0" :status="$info['tone']">{{ $info['label'] }}</x-portal.status>
                     </div>
 
                     <div>
@@ -81,28 +71,28 @@
                     </div>
                 </div>
             @empty
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 text-center text-gray-500 border border-gray-200 dark:border-gray-700 text-xs sm:text-sm">
+                <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
                     @include('partials.material-request-empty')
                 </div>
             @endforelse
         </div>
 
         {{-- Desktop Table View --}}
-        <div class="hidden md:block bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="overflow-x-auto">
+        <div class="hidden @3xl:block bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div>
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-900/50">
+                    <thead class="bg-[#F3F8F5] dark:bg-gray-900/50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Needed On</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items (Qty)</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-[#1C6B45] dark:text-[#7FBF8E] uppercase tracking-wide">Needed On</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-[#1C6B45] dark:text-[#7FBF8E] uppercase tracking-wide">Items (Qty)</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-[#1C6B45] dark:text-[#7FBF8E] uppercase tracking-wide">Status</th>
+                            <th class="px-6 py-3 text-right text-xs font-semibold text-[#1C6B45] dark:text-[#7FBF8E] uppercase tracking-wide">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                         @forelse($rows as $request)
                             @php $info = $this->rowInfo($request); @endphp
-                            <tr wire:key="m-row-{{ $request->id }}" class="align-top hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                            <tr wire:key="m-row-{{ $request->id }}" class="align-top hover:bg-[#F3F8F5]/60 dark:hover:bg-gray-700/50">
                                 {{-- ✅ The date the materials are needed (the date it was sent is underneath) --}}
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <p class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ $info['needed'] ?? '—' }}</p>
@@ -118,7 +108,7 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap {{ $info['badge'] }}">{{ $info['label'] }}</span>
+                                    <x-portal.status :status="$info['tone']">{{ $info['label'] }}</x-portal.status>
                                     @include('partials.material-request-notes')
                                 </td>
                                 <td class="px-6 py-4 text-right whitespace-nowrap">
@@ -129,7 +119,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                <td colspan="4">
                                     @include('partials.material-request-empty')
                                 </td>
                             </tr>
@@ -143,7 +133,7 @@
         </div>
 
         {{-- Mobile Pagination --}}
-        <div class="mt-4 md:hidden">
+        <div class="mt-4 @3xl:hidden">
             {{ $rows->links() }}
         </div>
 

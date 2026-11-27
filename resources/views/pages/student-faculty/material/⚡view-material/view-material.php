@@ -89,13 +89,13 @@ new #[Layout('layouts.student-faculty')] class extends Component
         $endorsed = $request->status === 'pending' && $this->isEndorsed($request);
         $needed   = $request->items->pluck('request_date')->filter()->min();
 
-        [$label, $badge] = match (true) {
-            $endorsed                         => ['Endorsed — waiting for Admin', 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'],
-            $request->status === 'pending'    => ['Pending', 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300'],
-            $request->status === 'approved'   => ['Approved', 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'],
-            $request->status === 'rejected'   => ['Rejected', 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'],
-            $request->status === 'cancelled'  => ['Cancelled', 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'],
-            default                           => [ucfirst($request->status), 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'],
+        $label = match (true) {
+            $endorsed                         => 'Endorsed — waiting for Admin',
+            $request->status === 'pending'    => 'Pending',
+            $request->status === 'approved'   => 'Approved',
+            $request->status === 'rejected'   => 'Rejected',
+            $request->status === 'cancelled'  => 'Cancelled',
+            default                           => ucfirst($request->status),
         };
 
         // Approved borrowed (Pcs) items still with me
@@ -106,7 +106,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
         return [
             'endorsed' => $endorsed,
             'label'    => $label,
-            'badge'    => $badge,
+            'tone'     => $endorsed ? 'endorsed' : $request->status,
             'needed'   => $needed ? Carbon::parse($needed)->format('M d, Y') : null,
             'reason'   => $request->status === 'rejected'
                 ? $request->approvals->where('status', 'rejected')->sortByDesc('id')->first()?->remarks

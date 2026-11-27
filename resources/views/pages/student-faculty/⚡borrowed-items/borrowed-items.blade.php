@@ -1,19 +1,15 @@
-<div class="select-none">
-<div class="max-w-5xl mx-auto px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+<div>
+<div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
 
-  {{-- Header --}}
-  <div class="mb-5">
-    <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Borrowed Items</h2>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-      Items you borrowed that must be given back. When you return an item, click
-      <strong>Return to Program Head</strong> — your Program Head will check and confirm it.
-    </p>
-  </div>
+  <x-portal.page-header title="Borrowed Items">
+    Items you borrowed that must be given back. When you return an item, click
+    <strong class="text-gray-700 dark:text-neutral-200">Return to Program Head</strong> — your Program Head will check and confirm it.
+  </x-portal.page-header>
 
   {{-- ✅ Who to give the items back to --}}
   @php $heads = $this->programHeads; @endphp
   <div class="mb-4 flex items-start gap-3 px-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700">
-    <span class="shrink-0 inline-flex items-center justify-center size-9 rounded-full bg-[#123524]/10 text-[#123524] dark:bg-green-900/40 dark:text-green-300">
+    <span class="shrink-0 inline-flex items-center justify-center size-9 rounded-full bg-[#E8F3EC] text-[#1C6B45] dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]">
       <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
     </span>
     <div class="text-sm">
@@ -32,7 +28,7 @@
   {{-- ✅ What I keep (no return date) — e.g. a table and chair for my faculty room --}}
   @if ($this->keptCount > 0)
     <div class="mb-5">
-      <h3 class="mb-2 text-sm font-semibold text-gray-800 dark:text-neutral-100">Assigned to me · {{ $this->keptCount }}</h3>
+      <h3 class="mb-2 text-sm font-semibold text-[#123524] dark:text-neutral-100">Assigned to me · {{ $this->keptCount }}</h3>
       <livewire:assigned-items scope="me" :key="'assigned-me'" />
     </div>
   @endif
@@ -72,18 +68,12 @@
   @endif
 
   {{-- Tabs --}}
-  <div class="inline-flex p-1 mt-1 mb-4 bg-gray-100 dark:bg-neutral-800 rounded-xl gap-1" role="tablist" aria-label="Filter borrowed items">
-    @foreach(['outstanding' => 'Not returned', 'returned' => 'Returned'] as $key => $label)
-      <button type="button" role="tab" wire:click="$set('filter', '{{ $key }}')" aria-selected="{{ $filter === $key ? 'true' : 'false' }}"
-        class="min-h-10 px-4 rounded-lg text-sm font-semibold transition inline-flex items-center gap-2
-          {{ $filter === $key ? 'bg-white dark:bg-neutral-700 text-[#123524] dark:text-white shadow-sm' : 'text-gray-600 dark:text-neutral-400 hover:text-[#123524]' }}">
-        {{ $label }}
-        <span class="text-xs px-1.5 py-0.5 rounded-full
-          {{ $key === 'outstanding' && $this->counts['overdue'] > 0 ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-700 dark:bg-neutral-600 dark:text-neutral-200' }}">
-          {{ $this->counts[$key] }}
-        </span>
-      </button>
-    @endforeach
+  <div class="mt-1 mb-4">
+    <x-portal.tabs label="Filter borrowed items">
+      @foreach(['outstanding' => 'Not returned', 'returned' => 'Returned'] as $key => $label)
+        <x-portal.tab :active="$filter === $key" :count="$this->counts[$key]" wire:click="$set('filter', '{{ $key }}')">{{ $label }}</x-portal.tab>
+      @endforeach
+    </x-portal.tabs>
   </div>
 
   @php $rows = $this->items; @endphp
@@ -109,8 +99,8 @@
         <div class="mt-3">@include('partials.borrowed-item-actions')</div>
       </div>
     @empty
-      <div class="px-4 py-12 rounded-2xl bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 text-center text-sm text-gray-500">
-        @if($filter === 'returned') No returned items yet. @else You have no borrowed items to return. @endif
+      <div class="rounded-2xl bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700">
+        @include('partials.borrowed-items-empty')
       </div>
     @endforelse
   </div>
@@ -119,7 +109,7 @@
   <div class="hidden sm:block bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl overflow-hidden">
     <div class="overflow-x-auto">
       <table class="min-w-full text-sm">
-        <thead class="bg-gray-50 dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-400">
+        <thead class="bg-[#F3F8F5] dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E]">
           <tr>
             <th class="px-4 py-3 font-semibold">Item</th>
             <th class="px-4 py-3 font-semibold">Return by</th>
@@ -130,7 +120,7 @@
         <tbody class="divide-y divide-gray-100 dark:divide-neutral-700">
           @forelse($rows as $item)
             @php $info = $this->rowInfo($item); @endphp
-            <tr wire:key="borrowed-{{ $item->id }}" class="align-top">
+            <tr wire:key="borrowed-{{ $item->id }}" class="align-top hover:bg-[#F3F8F5]/60 dark:hover:bg-neutral-900/30 transition">
               <td class="px-4 py-3">
                 <p class="font-semibold text-gray-900 dark:text-neutral-100">{{ $item->item_name }}</p>
                 <p class="text-xs text-gray-500 dark:text-neutral-400">Qty {{ number_format($item->quantity) }} ·
@@ -145,8 +135,8 @@
             </tr>
           @empty
             <tr>
-              <td colspan="4" class="px-4 py-12 text-center text-sm text-gray-500">
-                @if($filter === 'returned') No returned items yet. @else You have no borrowed items to return. @endif
+              <td colspan="4">
+                @include('partials.borrowed-items-empty')
               </td>
             </tr>
           @endforelse

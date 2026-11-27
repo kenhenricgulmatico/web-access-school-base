@@ -1,5 +1,5 @@
 {{-- Faculty Borrowed Items: status badge + details for one item. Needs $item and $info (rowInfo()). --}}
-<span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold {{ $info['badge'] }}">{{ $info['label'] }}</span>
+<x-portal.status :status="$info['tone']">{{ $info['label'] }}</x-portal.status>
 
 @if($item->returned_at)
     <p class="text-xs text-gray-500 dark:text-neutral-400 mt-1">

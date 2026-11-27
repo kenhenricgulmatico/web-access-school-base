@@ -1,5 +1,5 @@
 <div>
-    <div class="max-w-2xl mx-auto px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+    <div class="max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
 
         {{-- Back --}}
         <a href="{{ route('admin.schedule') }}" wire:navigate
@@ -14,7 +14,7 @@
 
             {{-- Header --}}
             <div class="mb-6">
-                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">
+                <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">
                     Add Facility
                 </h2>
                 <p class="text-sm text-gray-500 dark:text-neutral-400 mt-1">
@@ -24,7 +24,7 @@
 
             {{-- Flash --}}
             @if(session()->has('success'))
-                <div class="mb-5 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 text-sm">
+                <div class="mb-5 p-3 rounded-lg bg-green-50 dark:bg-[#1C6B45]/20 border border-green-200 dark:border-[#1C6B45/40] text-[#1C6B45] dark:text-green-400 text-sm">
                     {{ session('success') }}
                 </div>
             @endif
@@ -51,7 +51,7 @@
                         wire:loading.attr="disabled"
                         wire:loading.class="opacity-50 cursor-not-allowed"
                         class="px-5 py-2.5 text-sm font-medium rounded-lg
-                               bg-green-600 text-white hover:bg-green-700
+                               bg-[#123524] text-white hover:bg-[#0B2418]
                                focus:outline-none focus:ring-2 focus:ring-green-500/30
                                disabled:opacity-50 disabled:pointer-events-none transition">
                         <span wire:loading.remove wire:target="submit">Save Facility</span>

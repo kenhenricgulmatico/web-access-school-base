@@ -1,10 +1,10 @@
 <div>
-<div class="max-w-[85rem] px-4 py-6 sm:py-8 sm:px-6 lg:px-8 mx-auto space-y-5">
+<div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-5">
 
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3">
         <div>
-            <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-neutral-100">Audit Logs</h2>
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">Audit Logs</h1>
             <p class="text-sm text-gray-500 dark:text-neutral-400 mt-0.5">
                 What the faculty of
                 <span class="font-medium text-[#123524] dark:text-green-300">{{ Auth::user()->department->department_name ?? 'your department' }}</span>
@@ -23,9 +23,9 @@
     {{-- ✅ Stats --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         @foreach ([
-            ['Requests this week', $this->requestsThisWeek, 'bg-blue-100 dark:bg-blue-900/40', 'text-blue-600 dark:text-blue-300', 'M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M8.25 8.25H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z'],
+            ['Requests this week', $this->requestsThisWeek, 'bg-[#E8F3EC] dark:bg-[#1C6B45]/25', 'text-[#1C6B45] dark:text-[#9FD3AE]', 'M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M8.25 8.25H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z'],
             ['Request activity today', $this->activityToday, 'bg-green-100 dark:bg-green-900/40', 'text-green-600 dark:text-green-300', 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5'],
-            ['Sign-ins today', $this->signInsToday, 'bg-purple-100 dark:bg-purple-900/40', 'text-purple-600 dark:text-purple-300', 'M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75'],
+            ['Sign-ins today', $this->signInsToday, 'bg-slate-100 dark:bg-slate-500/20', 'text-slate-600 dark:text-slate-300', 'M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75'],
             ['Active teachers this week', $this->activeTeachers . ' / ' . $this->teachers->count(), 'bg-amber-100 dark:bg-amber-900/40', 'text-amber-600 dark:text-amber-300', 'M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z'],
         ] as [$label, $value, $bubble, $icon, $path])
             <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl p-3 sm:p-4 shadow-sm">
@@ -46,7 +46,7 @@
         {{-- ✅ Filters --}}
         @php
             $fld     = 'py-2 px-3 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-gray-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-[#123524] dark:focus:ring-green-700';
-            $chipOn  = 'bg-[#123524] border-[#123524] text-white dark:bg-green-700 dark:border-green-700';
+            $chipOn  = 'bg-[#123524] border-[#123524] text-white dark:bg-[#1C6B45] dark:border-green-700';
             $chipOff = 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700';
             $range   = $this->activeRange();
             $teacher = $teacherId !== '' ? $this->teachers->firstWhere('id', (int) $teacherId) : null;
@@ -136,7 +136,7 @@
                             $log->action === 'logout'    => ['bg-gray-100 text-gray-600 dark:bg-neutral-700 dark:text-neutral-300', 'Signed out'],
                             $log->table_name === 'users' => ['bg-gray-100 text-gray-600 dark:bg-neutral-700 dark:text-neutral-300', 'Account'],
                             $log->action === 'created'   => ['bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', $log->table_name === 'requests' ? 'New request' : 'Item added'],
-                            $log->action === 'updated'   => ['bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', $log->table_name === 'requests' ? 'Request changed' : 'Item changed'],
+                            $log->action === 'updated'   => ['bg-slate-100 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300', $log->table_name === 'requests' ? 'Request changed' : 'Item changed'],
                             $log->action === 'deleted'   => ['bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300', 'Deleted'],
                             default                      => ['bg-gray-100 text-gray-600 dark:bg-neutral-700 dark:text-neutral-300', ucfirst((string) $log->action)],
                         };
@@ -182,7 +182,7 @@
                         <td class="block @3xl:table-cell @3xl:pe-5 @3xl:ps-3 pt-2 @3xl:py-3 @3xl:text-right @3xl:whitespace-nowrap">
                             <button type="button"
                                 @click="$dispatch('open-modal', {{ \Illuminate\Support\Js::from(\App\Support\AuditLogDetails::for($log)) }})"
-                                class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">Details</button>
+                                class="text-sm font-semibold text-[#1C6B45] hover:underline dark:text-[#7FBF8E]">Details</button>
                             @if ($canOpen)
                                 <span class="text-gray-300 dark:text-neutral-600 mx-1">·</span>
                                 <a href="{{ route('coordinator.view-request-reserve', $reqId) }}"

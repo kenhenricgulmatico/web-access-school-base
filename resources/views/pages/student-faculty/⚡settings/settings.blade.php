@@ -1,10 +1,7 @@
-<div class="select-none">
-    <div class="max-w-3xl mx-auto px-3 py-6 sm:px-6 lg:px-8 lg:py-14">
+<div>
+    <div class="max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
 
-        <div class="mb-6">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
-            <p class="text-sm text-gray-500 dark:text-neutral-400 mt-1">Manage your account security</p>
-        </div>
+        <x-portal.page-header title="Settings" subtitle="Manage your account security" :back="route('portal.profile')" back-label="Profile" />
 
         @if (session()->has('password_message'))
             <div class="mb-6 flex items-center gap-2 p-3 sm:p-4 rounded-xl bg-green-50 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800">
@@ -28,7 +25,7 @@
                             Current password <span class="text-red-500">*</span>
                         </label>
                         <input type="password" wire:model="current_password"
-                            class="w-full px-3 py-2.5 text-xs sm:text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:focus:ring-green-500 dark:focus:border-green-500 transition">
+                            class="w-full px-3 py-2.5 text-xs sm:text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 focus:ring-2 focus:ring-[#1C6B45]/30 focus:border-[#1C6B45] dark:focus:ring-[#1C6B45]/30 dark:focus:border-[#1C6B45] transition">
                         @error('current_password')
                             <p class="text-xs text-red-500 dark:text-red-400 mt-1.5">{{ $message }}</p>
                         @enderror
@@ -40,7 +37,7 @@
                                 New password <span class="text-red-500">*</span>
                             </label>
                             <input type="password" wire:model="new_password"
-                                class="w-full px-3 py-2.5 text-xs sm:text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:focus:ring-green-500 dark:focus:border-green-500 transition">
+                                class="w-full px-3 py-2.5 text-xs sm:text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 focus:ring-2 focus:ring-[#1C6B45]/30 focus:border-[#1C6B45] dark:focus:ring-[#1C6B45]/30 dark:focus:border-[#1C6B45] transition">
                             @error('new_password')
                                 <p class="text-xs text-red-500 dark:text-red-400 mt-1.5">{{ $message }}</p>
                             @enderror
@@ -51,7 +48,7 @@
                                 Confirm new password <span class="text-red-500">*</span>
                             </label>
                             <input type="password" wire:model="new_password_confirmation"
-                                class="w-full px-3 py-2.5 text-xs sm:text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:focus:ring-green-500 dark:focus:border-green-500 transition">
+                                class="w-full px-3 py-2.5 text-xs sm:text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 focus:ring-2 focus:ring-[#1C6B45]/30 focus:border-[#1C6B45] dark:focus:ring-[#1C6B45]/30 dark:focus:border-[#1C6B45] transition">
                         </div>
                     </div>
                 </div>
@@ -60,7 +57,7 @@
                     <button type="submit"
                         wire:loading.attr="disabled"
                         wire:loading.class="opacity-50 cursor-not-allowed"
-                        class="w-full sm:w-auto px-6 py-2.5 bg-green-700 hover:bg-green-800 text-white rounded-lg font-medium text-sm shadow-sm transition text-center">
+                        class="w-full sm:w-auto px-6 py-2.5 bg-[#123524] hover:bg-[#0B2418] text-white rounded-lg font-medium text-sm shadow-sm transition text-center">
                         <span wire:loading.remove wire:target="updatePassword">Update Password</span>
                         <span wire:loading wire:target="updatePassword">Updating...</span>
                     </button>
@@ -70,7 +67,7 @@
 
         <div class="mt-6 flex justify-end">
             <a href="{{ route('portal.profile') }}"
-                class="text-sm font-medium text-green-700 dark:text-green-400 hover:underline">
+                class="text-sm font-medium text-[#1C6B45] dark:text-[#7FBF8E] hover:underline">
                 ← Back to Profile
             </a>
         </div>

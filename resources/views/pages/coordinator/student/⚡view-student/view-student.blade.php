@@ -1,10 +1,10 @@
-<div class="select-none">
-<div class="max-w-5xl px-4 py-8 sm:px-6 mx-auto space-y-6">
+<div>
+<div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6">
 
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">Faculty</h2>
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">Faculty</h1>
             <p class="text-sm text-gray-500 dark:text-neutral-400">{{ $this->departmentName }}</p>
         </div>
 
@@ -29,7 +29,7 @@
         <span><strong class="text-gray-800 dark:text-neutral-200">{{ $this->counts['total'] }}</strong> total</span>
         <span><strong class="text-gray-800 dark:text-neutral-200">{{ $this->counts['faculty'] }}</strong> faculty</span>
         @if($this->counts['pending'] > 0)
-            <span class="text-yellow-700 dark:text-yellow-400">
+            <span class="text-amber-700 dark:text-amber-400">
                 <strong>{{ $this->counts['pending'] }}</strong> pending approval
             </span>
         @endif
@@ -92,7 +92,7 @@
                                              alt="{{ $user->name }}"
                                              class="size-9 rounded-full object-cover shrink-0 ring-1 ring-gray-200 dark:ring-neutral-600">
                                     @else
-                                        <div class="size-9 rounded-full bg-[#123524] dark:bg-green-700 text-white flex items-center justify-center text-sm font-semibold shrink-0">
+                                        <div class="size-9 rounded-full bg-[#123524] dark:bg-[#1C6B45] text-white flex items-center justify-center text-sm font-semibold shrink-0">
                                             {{ strtoupper(substr($user->name, 0, 1)) }}
                                         </div>
                                     @endif
@@ -108,8 +108,8 @@
                             </td>
                             <td class="px-4 py-3">
                                 <span class="text-xs font-medium
-                                    @if($user->status === 'approved') text-green-700 dark:text-green-400
-                                    @elseif($user->status === 'pending') text-yellow-700 dark:text-yellow-400
+                                    @if($user->status === 'approved') text-[#1C6B45] dark:text-[#7FBF8E]
+                                    @elseif($user->status === 'pending') text-amber-700 dark:text-amber-400
                                     @else text-red-700 dark:text-red-400 @endif">
                                     {{ ucfirst($user->status) }}
                                 </span>

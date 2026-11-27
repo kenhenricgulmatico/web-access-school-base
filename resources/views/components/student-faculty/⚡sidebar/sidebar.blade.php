@@ -1,4 +1,4 @@
-<div class="select-none">
+<div>
 <!-- ========== MAIN SIDEBAR ========== -->
 <div id="hs-pro-sidebar" class="hs-overlay [--body-scroll:true] lg:[--overlay-backdrop:false] [--is-layout-affect:true] [--opened:lg] [--auto-close:lg]
 hs-overlay-open:translate-x-0 lg:hs-overlay-layout-open:translate-x-0
@@ -19,12 +19,12 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
         {{-- Top row: close + user --}}
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2 min-w-0">
-            <div class="w-8 h-8 rounded-full bg-[#123524] text-white flex items-center justify-center text-sm font-bold ring-2 ring-[#D4A537]/50 shrink-0">
+            <div class="w-8 h-8 rounded-full bg-[#123524] text-white flex items-center justify-center text-sm font-bold ring-2 ring-[#7FBF8E]/60 shrink-0">
               {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
             </div>
             <div class="min-w-0">
               <p class="text-sm font-semibold text-foreground truncate">{{ Auth::user()->name }}</p>
-              <p class="text-[10px] uppercase tracking-wide text-[#B8862A] font-medium">
+              <p class="text-[10px] uppercase tracking-wide text-[#1C6B45] dark:text-[#7FBF8E] font-medium">
                 {{ Auth::user()->roles->first()?->name ?? 'User' }}
               </p>
             </div>
@@ -58,14 +58,14 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
 
       {{-- Home --}}
       <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
-                <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">Home</span>
+                <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#1C6B45]/80 dark:text-[#7FBF8E]">Home</span>
                 <ul class="flex flex-col gap-y-1">
                     <li>
             <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                 {{ request()->routeIs('portal.dashboard')
-                    ? 'bg-[#123524] text-white font-medium shadow-sm'
-                    : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
-                            focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
+                    ? 'bg-[#E8F3EC] text-[#123524] font-semibold dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]'
+                    : 'text-gray-700 dark:text-neutral-300 hover:bg-[#F3F8F5] dark:hover:bg-neutral-800' }}
+                            focus:outline-hidden focus:bg-[#F3F8F5] dark:focus:bg-neutral-800"
                             href="/portal/dashboard">
               <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <rect x="3" y="3" width="7" height="7"/>
@@ -82,7 +82,7 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
       {{-- Requests --}}
       @canany(['facility-requests.view', 'material-requests.view', 'borrowed-items.view', 'calendar.view'])
       <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
-        <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">
+        <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#1C6B45]/80 dark:text-[#7FBF8E]">
           Requests
         </span>
         <ul class="flex flex-col gap-y-1">
@@ -90,9 +90,9 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
           <li>
             <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                 {{ request()->routeIs('portal.reservation') || request()->routeIs('portal.create-reservation')
-                    ? 'bg-[#123524] text-white font-medium shadow-sm'
-                    : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
-                focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
+                    ? 'bg-[#E8F3EC] text-[#123524] font-semibold dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]'
+                    : 'text-gray-700 dark:text-neutral-300 hover:bg-[#F3F8F5] dark:hover:bg-neutral-800' }}
+                focus:outline-hidden focus:bg-[#F3F8F5] dark:focus:bg-neutral-800"
                 href="{{ route('portal.reservation') }}">
               <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -110,9 +110,9 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
           <li>
             <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                 {{ request()->routeIs('portal.material')
-                    ? 'bg-[#123524] text-white font-medium shadow-sm'
-                    : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
-                focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
+                    ? 'bg-[#E8F3EC] text-[#123524] font-semibold dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]'
+                    : 'text-gray-700 dark:text-neutral-300 hover:bg-[#F3F8F5] dark:hover:bg-neutral-800' }}
+                focus:outline-hidden focus:bg-[#F3F8F5] dark:focus:bg-neutral-800"
                 href="{{ route('portal.material') }}">
               <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
@@ -134,9 +134,9 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
             @endphp
             <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                 {{ request()->routeIs('portal.borrowed-items')
-                    ? 'bg-[#123524] text-white font-medium shadow-sm'
-                    : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
-                focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
+                    ? 'bg-[#E8F3EC] text-[#123524] font-semibold dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]'
+                    : 'text-gray-700 dark:text-neutral-300 hover:bg-[#F3F8F5] dark:hover:bg-neutral-800' }}
+                focus:outline-hidden focus:bg-[#F3F8F5] dark:focus:bg-neutral-800"
                 href="{{ route('portal.borrowed-items') }}">
               <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/>
@@ -154,9 +154,9 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
           <li>
             <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                 {{ request()->routeIs('portal.calendar')
-                    ? 'bg-[#123524] text-white font-medium shadow-sm'
-                    : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
-                focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
+                    ? 'bg-[#E8F3EC] text-[#123524] font-semibold dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]'
+                    : 'text-gray-700 dark:text-neutral-300 hover:bg-[#F3F8F5] dark:hover:bg-neutral-800' }}
+                focus:outline-hidden focus:bg-[#F3F8F5] dark:focus:bg-neutral-800"
                 href="{{ route('portal.calendar') }}">
               <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -177,16 +177,16 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
 
       {{-- Account --}}
       <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
-        <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">
+        <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#1C6B45]/80 dark:text-[#7FBF8E]">
           Account
         </span>
         <ul class="flex flex-col gap-y-1">
           <li>
             <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                 {{ request()->routeIs('portal.profile')
-                    ? 'bg-[#123524] text-white font-medium shadow-sm'
-                    : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800' }}
-                focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800"
+                    ? 'bg-[#E8F3EC] text-[#123524] font-semibold dark:bg-[#1C6B45]/25 dark:text-[#9FD3AE]'
+                    : 'text-gray-700 dark:text-neutral-300 hover:bg-[#F3F8F5] dark:hover:bg-neutral-800' }}
+                focus:outline-hidden focus:bg-[#F3F8F5] dark:focus:bg-neutral-800"
                 href="/portal/profile">
               <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>

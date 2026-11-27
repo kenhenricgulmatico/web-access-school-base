@@ -1,11 +1,11 @@
 <div>
-<div class="max-w-[85rem] px-4 py-6 sm:px-6 sm:py-10 lg:px-8 lg:py-14 mx-auto">
+<div class="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
 
     @include('partials.users-tabs')
 
     {{-- Flash messages --}}
     @if (session()->has('success'))
-        <div class="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400 rounded-lg text-sm">
+        <div class="mb-4 p-3 bg-green-50 border border-green-200 text-[#1C6B45] dark:bg-[#1C6B45]/20 dark:border-[#1C6B45/40] dark:text-green-400 rounded-lg text-sm">
             {{ session('success') }}
         </div>
     @endif
@@ -22,7 +22,7 @@
         {{-- Header --}}
         <div class="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-neutral-700 flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:justify-between lg:items-center">
             <div>
-                <h2 class="text-lg sm:text-xl font-semibold text-gray-800 dark:text-neutral-200">Account Approvals</h2>
+                <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-[#123524] dark:text-white">Account Approvals</h2>
                 <p class="text-xs sm:text-sm text-gray-500 dark:text-neutral-400">Approve or reject faculty and program head accounts</p>
             </div>
 
@@ -86,7 +86,7 @@
                                              alt="{{ $user->name }}"
                                              class="w-8 h-8 rounded-full object-cover shrink-0 ring-1 ring-gray-200 dark:ring-neutral-600">
                                     @else
-                                        <div class="w-8 h-8 rounded-full bg-green-700 text-white flex items-center justify-center text-sm font-bold shrink-0">
+                                        <div class="w-8 h-8 rounded-full bg-[#0B2418] text-white flex items-center justify-center text-sm font-bold shrink-0">
                                             {{ strtoupper(substr($user->name, 0, 1)) }}
                                         </div>
                                     @endif
@@ -101,8 +101,8 @@
                             <td class="inline-block @3xl:table-cell @3xl:px-3 py-1 @3xl:py-3">
                                 @php $role = $user->roles->first()?->name ?? 'N/A'; @endphp
                                 <span class="px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap
-                                    @if($role === 'faculty') bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300
-                                    @elseif($role === 'program head') bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300
+                                    @if($role === 'faculty') bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-300
+                                    @elseif($role === 'program head') bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300
                                     @else bg-gray-100 text-gray-600 dark:bg-neutral-700 dark:text-neutral-300 @endif">
                                     {{ ucfirst($role) }}
                                 </span>
@@ -116,8 +116,8 @@
                             {{-- Status (+ when they registered) --}}
                             <td class="block @3xl:table-cell @3xl:px-3 py-1 @3xl:py-3">
                                 <span class="px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap
-                                    @if($user->status === 'pending') bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300
-                                    @elseif($user->status === 'approved') bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300
+                                    @if($user->status === 'pending') bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300
+                                    @elseif($user->status === 'approved') bg-green-100 text-[#1C6B45] dark:bg-[#1C6B45]/30 dark:text-green-300
                                     @elseif($user->status === 'rejected') bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300
                                     @else bg-gray-200 text-gray-700 dark:bg-neutral-700 dark:text-neutral-300
                                     @endif">
@@ -134,7 +134,7 @@
                                     @can('users.approve')
                                         <button wire:click="approve({{ $user->id }})"
                                             wire:confirm="Approve {{ $user->name }}?"
-                                            class="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 text-xs transition">
+                                            class="px-3 py-1 bg-[#123524] text-white rounded-lg hover:bg-[#0B2418] text-xs transition">
                                             Approve
                                         </button>
                                         <button wire:click="openReject({{ $user->id }})"
@@ -143,7 +143,7 @@
                                         </button>
                                     @endcan
                                 @elseif($user->status === 'approved')
-                                    <span class="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-medium">
+                                    <span class="inline-flex items-center gap-1 text-xs text-[#1C6B45] dark:text-green-400 font-medium">
                                         <svg class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/>
                                         </svg>

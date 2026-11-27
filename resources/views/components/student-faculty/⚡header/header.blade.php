@@ -1,4 +1,4 @@
-<div class="select-none">
+<div>
 <!-- ========== HEADER ========== -->
 <header class="fixed top-0 inset-x-0 flex flex-wrap md:justify-start md:flex-nowrap z-48 lg:z-61 w-full bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-700 text-sm py-2.5">
     <nav class="px-4 sm:px-5.5 flex basis-full items-center w-full mx-auto">
@@ -9,8 +9,8 @@
                 <li class="inline-flex items-center gap-1.5 sm:gap-2.5 relative pe-1.5 sm:pe-2.5 last:pe-0 last:after:hidden after:absolute after:top-1/2 after:end-0 after:inline-block after:w-px after:h-3.5 after:bg-navbar-2-divider after:rounded-full after:-translate-y-1/2 after:rotate-12">
 
                     {{-- Logo --}}
-                    <a href="/admin/dashboard"
-                        class="shrink-0 inline-flex justify-center items-center rounded-full bg-white ring-2 ring-[#D4A537]/60 p-0.5 sm:p-1 shadow-sm hover:ring-[#D4A537] transition focus:outline-hidden focus:opacity-80"
+                    <a href="{{ route('portal.dashboard') }}" wire:navigate
+                        class="shrink-0 inline-flex justify-center items-center rounded-full bg-white ring-2 ring-[#7FBF8E]/70 p-0.5 sm:p-1 shadow-sm hover:ring-[#1C6B45] transition focus:outline-hidden focus:opacity-80"
                         aria-label="CSAV">
                         <img src="{{ asset('images/csav-logo.png') }}"
                             alt="CSAV Logo" class="h-5 w-5 sm:h-6 sm:w-6 object-contain" />
@@ -21,7 +21,7 @@
                         <span class="text-sm font-semibold text-gray-900 dark:text-white ms-1 truncate">
                             Colegio de Sta. Ana de Victorias
                         </span>
-                        <span class="text-[9px] sm:text-[10px] uppercase tracking-[0.15em] text-[#D4A537] font-medium">
+                        <span class="text-[9px] sm:text-[10px] uppercase tracking-[0.15em] text-[#1C6B45] dark:text-[#7FBF8E] font-medium">
                             Campus Portal
                         </span>
                     </div>
@@ -76,7 +76,7 @@
                     <button @click="open = !open"
                         class="relative flex justify-center items-center size-8 sm:size-9 text-sm text-gray-600 dark:text-neutral-300 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 focus:outline-hidden focus:bg-gray-100 dark:focus:bg-neutral-800 transition"
                         aria-label="Notifications">
-                        <svg class="shrink-0 size-5 dark:text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        <svg class="shrink-0 size-5 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none"
                             stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
@@ -102,12 +102,12 @@
                             style="display: none;">
 
                             {{-- Header --}}
-                            <div class="flex items-center justify-between px-4 py-3 bg-[#FAF7EF] dark:bg-[#0E1A14] border-b border-[#E4E1D8] dark:border-[#2A4B3A]">
+                            <div class="flex items-center justify-between px-4 py-3 bg-[#F3F8F5] dark:bg-[#0E1A14] border-b border-[#E4E1D8] dark:border-[#2A4B3A]">
                                 <div class="flex items-center gap-2 min-w-0">
                                     <svg class="size-4 text-[#1C6B45] dark:text-[#7FBF8E] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                                     </svg>
-                                    <h3 class="text-sm font-semibold text-[#123524] dark:text-white truncate" style="font-family: 'Fraunces', serif;">Notifications</h3>
+                                    <h3 class="text-sm font-semibold text-[#123524] dark:text-white truncate">Notifications</h3>
                                     <span x-show="unreadCount > 0"
                                         class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-[#B8352A] rounded-full shrink-0"
                                         x-text="unreadCount"></span>
@@ -126,15 +126,15 @@
                                     <div @click="openNotification(notification.id)"
                                         class="px-4 py-3 flex items-start gap-3 transition-colors cursor-pointer"
                                         :class="notification.status === 'pending'
-                                            ? 'bg-[#D4A537]/[0.06] hover:bg-[#D4A537]/[0.1]'
-                                            : 'hover:bg-[#FAF7EF] dark:hover:bg-[#0E1A14]/50'">
+                                            ? 'bg-[#E8F3EC]/60 hover:bg-[#E8F3EC] dark:bg-[#1C6B45]/15 dark:hover:bg-[#1C6B45]/25'
+                                            : 'hover:bg-[#F3F8F5] dark:hover:bg-[#0E1A14]/50'">
 
                                         {{-- Icon --}}
                                         <div class="shrink-0 mt-0.5">
                                             <div class="w-8 h-8 rounded-full flex items-center justify-center"
                                                 :class="notification.is_facility
-                                                    ? 'bg-[#123524]/10 dark:bg-[#123524]/30 text-[#1C6B45] dark:text-[#7FBF8E]'
-                                                    : 'bg-[#D4A537]/15 dark:bg-[#D4A537]/25 text-[#B8862A]'">
+                                                    ? 'bg-[#123524] text-white dark:bg-[#1C6B45]'
+                                                    : 'bg-[#E8F3EC] dark:bg-[#1C6B45]/25 text-[#2F8A5B] dark:text-[#9FD3AE]'">
                                                 <template x-if="notification.is_facility">
                                                     <svg class="size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m4.5 0v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21" />
@@ -156,7 +156,7 @@
                                                         ? 'bg-[#1C6B45]/15 text-[#1C6B45] dark:bg-[#1C6B45]/25 dark:text-[#7FBF8E]'
                                                         : (notification.action_status === 'rejected' || notification.action_status === 'overdue'
                                                             ? 'bg-[#B8352A]/15 text-[#B8352A]'
-                                                            : 'bg-[#D4A537]/15 text-[#B8862A]')"
+                                                            : 'bg-gray-100 text-gray-600 dark:bg-neutral-700 dark:text-neutral-300')"
                                                     x-text="notification.action_status === 'approved' ? 'Approved'
                                                         : (notification.action_status === 'rejected' ? 'Rejected'
                                                         : (notification.action_status === 'overdue' ? 'Overdue' : 'Info'))">
@@ -175,8 +175,8 @@
 
                                 {{-- Empty State --}}
                                 <div x-show="notifications.length === 0" class="py-10 sm:py-12 text-center px-4">
-                                    <div class="w-14 h-14 rounded-full bg-[#FAF7EF] dark:bg-[#0E1A14] flex items-center justify-center mx-auto mb-3">
-                                        <svg class="size-7 text-[#B8862A]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <div class="w-14 h-14 rounded-full bg-[#F3F8F5] dark:bg-[#0E1A14] flex items-center justify-center mx-auto mb-3">
+                                        <svg class="size-7 text-[#1C6B45] dark:text-[#7FBF8E]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                                         </svg>
                                     </div>
@@ -188,7 +188,7 @@
 
                             {{-- Footer: View all / Show less (only when there are more than 10) --}}
                             <div x-show="totalCount > 10"
-                                class="px-4 py-2.5 bg-[#FAF7EF] dark:bg-[#0E1A14] border-t border-[#E4E1D8] dark:border-[#2A4B3A] text-center">
+                                class="px-4 py-2.5 bg-[#F3F8F5] dark:bg-[#0E1A14] border-t border-[#E4E1D8] dark:border-[#2A4B3A] text-center">
                                 <button type="button" @click="toggleAll()"
                                     class="text-xs font-medium text-[#1C6B45] hover:text-[#123524] dark:text-[#7FBF8E] hover:underline transition"
                                     x-text="showAll ? 'Show less ↑' : 'View all notifications →'">
@@ -213,9 +213,9 @@
                                 <img src="{{ asset(Auth::user()->avatar) }}"
                                      wire:key="header-avatar-{{ Auth::user()->avatar }}"
                                      alt="{{ Auth::user()->name }}"
-                                     class="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover ring-3 ring-[#D4A537]/50 shrink-0">
+                                     class="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover ring-3 ring-[#7FBF8E]/60 shrink-0">
                             @else
-                                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#123524] dark:bg-green-700 text-white flex items-center justify-center text-xs sm:text-sm font-bold ring-3 ring-[#D4A537]/50 dark:ring-[#D4A537]/50 shrink-0">
+                                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#123524] dark:bg-green-700 text-white flex items-center justify-center text-xs sm:text-sm font-bold ring-3 ring-[#7FBF8E]/60 shrink-0">
                                     {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                                 </div>
                             @endif
