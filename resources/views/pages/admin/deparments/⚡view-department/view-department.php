@@ -9,6 +9,11 @@ use Livewire\Component;
 
 new #[Layout('layouts.admin')] class extends Component
 {
+    public function mount(): void
+    {
+        abort_unless(auth()->user()->can('departments.view'), 403);
+    }
+
     #[Computed]
     public function departments()
     {

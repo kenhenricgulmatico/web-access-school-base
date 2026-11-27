@@ -13,29 +13,12 @@ new #[Layout('layouts::admin')] class extends Component
     public $selectedPermissions = [];
 
     /**
-     * Same "safe default" groups the Edit Role page falls back to
-     * for roles that aren't admin / program head / faculty.
+     * ✅ A new (custom) role can be given the Admin-side features — same list Edit Role uses.
+     *    It can't get Roles & Permissions itself (only the Admin role has that).
      */
-    private const DEFAULT_GROUPS = [
-        'program-head-requests',
-        'stock-materials',
-        'facility-schedule',
-        'users',
-    ];
-
-    /**
-     * Permissions that should never be grantable from the Create page,
-     * matching the Edit Role page's admin hidden list.
-     */
-    private const HIDDEN_PERMISSIONS = [
-        'program-head-requests.create',
-        'program-head-requests.update',
-        'program-head-requests.delete',
-    ];
-
     public function mount()
     {
-        $this->permissions(); // warm the computed property
+        abort_unless(auth()->user()->can('roles.manage'), 403);
     }
 
     #[Computed()]
@@ -47,15 +30,26 @@ new #[Layout('layouts::admin')] class extends Component
             ->values();
     }
 
+    #[Computed()]
+    public function grouped(): array
+    {
+        return \App\Support\PermissionCatalog::grouped($this->permissions);
+    }
+
+    /** "All" / "None" for one feature group. */
+    public function toggleGroup(string $group): void
+    {
+        $names = collect($this->grouped[$group] ?? [])->pluck('name');
+        $allOn = $names->diff($this->selectedPermissions)->isEmpty();
+
+        $this->selectedPermissions = $allOn
+            ? collect($this->selectedPermissions)->diff($names)->values()->all()
+            : collect($this->selectedPermissions)->merge($names)->unique()->values()->all();
+    }
+
     protected function isManageable(string $permName): bool
     {
-        if (in_array($permName, self::HIDDEN_PERMISSIONS, true)) {
-            return false;
-        }
-
-        $prefix = explode('.', $permName, 2)[0] ?? '';
-
-        return in_array($prefix, self::DEFAULT_GROUPS, true);
+        return \App\Support\PermissionCatalog::manageable(null, $permName);
     }
 
     public function rules()
@@ -79,6 +73,7 @@ new #[Layout('layouts::admin')] class extends Component
 
     public function save()
     {
+        abort_unless(auth()->user()->can('roles.manage'), 403);
         $this->validate();
 
         // Sanitize the role name
@@ -105,6 +100,6 @@ new #[Layout('layouts::admin')] class extends Component
         ]);
 
         // Refresh the computed cache after reset
-        unset($this->permissions);
+        unset($this->permissions, $this->grouped);
     }
 };

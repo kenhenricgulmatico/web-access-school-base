@@ -27,6 +27,8 @@ class AppServiceProvider extends ServiceProvider
         ResourceRequest::observe(AuditLogObserver::class);
         RequestItem::observe(AuditLogObserver::class);
         Department::observe(AuditLogObserver::class);
+        // ✅ rooms (add, rename, maintenance, delete) and materials (add, edit, delete)
+        \App\Models\Resource::observe(AuditLogObserver::class);
 
         // ✅ Login and logout logging
         Event::listen(Login::class, [LogAuthActivity::class, 'handleLogin']);

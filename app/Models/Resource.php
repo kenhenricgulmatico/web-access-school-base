@@ -19,12 +19,20 @@ class Resource extends Model
         'description',
         'unit',
         'quantity_available',
+        'low_stock_at',
         'status',
         'is_returnable',
+        // ✅ facility rooms
+        'capacity',
+        'location',
+        'room_kind',
+        'maintenance_reason',
+        'maintenance_until',
     ];
 
     protected $casts = [
-        'is_returnable' => 'boolean',
+        'is_returnable'     => 'boolean',
+        'maintenance_until' => 'date',
     ];
 
     /**
@@ -69,5 +77,17 @@ class Resource extends Model
     public function latestStock(): HasOne
     {
         return $this->hasOne(Stock::class)->latestOfMany();
+    }
+
+    /** ✅ Last time stock was ADDED (removals are stock rows with a negative quantity). */
+    public function latestRestock(): HasOne
+    {
+        return $this->hasOne(Stock::class)->ofMany(['id' => 'max'], fn ($q) => $q->where('quantity_added', '>', 0));
+    }
+
+    /** ✅ At or below its own "warn me" level (but not empty). */
+    public function isLowStock(): bool
+    {
+        return $this->quantity_available > 0 && $this->quantity_available <= (int) ($this->low_stock_at ?? 5);
     }
 }

@@ -21,6 +21,12 @@ new #[Layout('layouts.student-faculty')] class extends Component
 {
     use WithPagination;
 
+    public function mount(): void
+    {
+        abort_unless(auth()->user()->can('borrowed-items.view'), 403);
+    }
+
+
     public string $filter = 'outstanding'; // outstanding | returned
 
     public function updatingFilter(): void { $this->resetPage(); }
@@ -33,6 +39,13 @@ new #[Layout('layouts.student-faculty')] class extends Component
             ->whereHas('request', fn ($q) => $q
                 ->where('user_id', Auth::id())
                 ->where('status', 'approved'));
+    }
+
+    /** ✅ How many assigned items (kept, no return date) I hold. */
+    #[Computed]
+    public function keptCount(): int
+    {
+        return \App\Models\RequestItem::assignedNow()->where('holder_id', \Illuminate\Support\Facades\Auth::id())->count();
     }
 
     #[Computed]
@@ -149,6 +162,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     /** I'm giving the item back — tell my Program Head to check and confirm it. */
     public function requestReturn(int $id): void
     {
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
         $item = $this->myQuery()->whereNull('returned_at')->findOrFail($id);
 
         if ($item->return_requested_at) {
@@ -169,6 +183,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     /** ✅ Give back every item of one request that is still with me — one click, one notice. */
     public function requestReturnAll(int $requestId): void
     {
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
         $items = $this->myQuery()
             ->where('request_id', $requestId)
             ->whereNull('returned_at')
@@ -197,6 +212,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
     /** Undo a return sent by mistake (only before the Program Head confirms). */
     public function cancelRequestReturn(int $id): void
     {
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
         $item = $this->myQuery()->whereNull('returned_at')->findOrFail($id);
 
         if (! $item->return_requested_at) {

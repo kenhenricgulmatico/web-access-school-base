@@ -30,6 +30,7 @@ new #[Layout('layouts.coordinator')] class extends Component
 
     public function mount(): void
     {
+        abort_unless(auth()->user()->can('calendar.view'), 403);
         $this->goToToday();
 
         // ✅ Opened from Facility Requests ("See on calendar"): ?date=2026-12-05&room=Room 101

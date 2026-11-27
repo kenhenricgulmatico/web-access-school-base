@@ -27,10 +27,24 @@
     </div>
   @endif
 
+  {{-- ✅ Due back today / tomorrow — remind people before they're late --}}
+  @if($this->counts['dueSoon'] > 0)
+    <div class="mb-4 flex flex-wrap items-center gap-2 px-4 py-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800 dark:bg-amber-950/30 dark:border-amber-900 dark:text-amber-300">
+      <svg class="size-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>
+        <strong>{{ $this->counts['dueSoon'] }} {{ \Illuminate\Support\Str::plural('item', $this->counts['dueSoon']) }}</strong>
+        {{ $this->counts['dueSoon'] === 1 ? 'is' : 'are' }} due back today or tomorrow.
+      </span>
+      @if($filter !== 'outstanding')
+        <button type="button" wire:click="$set('filter', 'outstanding')" class="font-semibold underline">View</button>
+      @endif
+    </div>
+  @endif
+
   {{-- Tabs + search --}}
   <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
     <div class="inline-flex p-1 bg-gray-100 dark:bg-neutral-800 rounded-xl gap-1" role="tablist" aria-label="Filter borrowed items">
-      @foreach(['pending' => 'To approve', 'outstanding' => 'Not returned', 'overdue' => 'Overdue', 'returned' => 'Returned'] as $key => $label)
+      @foreach(['pending' => 'To approve', 'outstanding' => 'Not returned', 'overdue' => 'Overdue', 'returned' => 'Returned', 'assigned' => 'Assigned'] as $key => $label)
         <button type="button" role="tab" wire:click="$set('filter', '{{ $key }}')" aria-selected="{{ $filter === $key ? 'true' : 'false' }}"
           class="min-h-10 px-4 rounded-lg text-sm font-semibold transition inline-flex items-center gap-2
             {{ $filter === $key ? 'bg-white dark:bg-neutral-700 text-[#123524] dark:text-white shadow-sm' : 'text-gray-600 dark:text-neutral-400 hover:text-[#123524]' }}">
@@ -47,9 +61,11 @@
       @endforeach
     </div>
 
+    @if ($filter !== 'assigned') {{-- the Assigned list has its own search --}}
     <label class="sr-only" for="admin-borrowed-search">Search</label>
     <input id="admin-borrowed-search" type="search" wire:model.live.debounce.300ms="search" placeholder="Search item, program head or department…"
       class="w-full sm:w-72 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-800 dark:text-neutral-200">
+    @endif
   </div>
 
   {{-- ============================================================
@@ -58,8 +74,8 @@
   @if($filter === 'pending')
   <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl overflow-hidden">
     <div class="overflow-x-auto">
-      <table class="min-w-full text-sm">
-        <thead class="bg-gray-50 dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-400">
+      <table class="min-w-full text-sm block md:table">
+        <thead class="hidden md:table-header-group bg-gray-50 dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-400">
           <tr>
             <th class="px-4 py-3 font-semibold">Requested items</th>
             <th class="px-4 py-3 font-semibold">Requested by</th>
@@ -68,7 +84,7 @@
             <th class="px-4 py-3 font-semibold text-right">Action</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-neutral-700">
+        <tbody class="block md:table-row-group divide-y divide-gray-100 dark:divide-neutral-700">
           @forelse($this->pendingRequests as $req)
             @php
               $neededOn = $req->items->min('request_date');
@@ -76,8 +92,8 @@
                 ? \Carbon\Carbon::parse($neededOn)->format('Y-m-d')
                 : today()->format('Y-m-d');
             @endphp
-            <tr wire:key="pending-{{ $req->id }}" class="align-top">
-              <td class="px-4 py-3">
+            <tr wire:key="pending-{{ $req->id }}" class="block md:table-row align-top px-4 py-4 md:p-0">
+              <td class="block md:table-cell px-0 md:px-4 py-1 md:py-3">
                 <ul class="space-y-1">
                   @foreach($req->items as $ri)
                     <li class="flex items-center gap-2">
@@ -97,38 +113,65 @@
                 @if($req->purpose)
                   <p class="text-xs text-gray-400 italic mt-0.5">"{{ \Illuminate\Support\Str::limit($req->purpose, 60) }}"</p>
                 @endif
+
+                {{-- ✅ Is there enough in the main stock? --}}
+                @php $short = $this->shortItems($req); @endphp
+                @if(empty($short))
+                  <p class="mt-1.5 text-xs font-medium text-green-700 dark:text-green-400">✓ In stock — {{ $this->stockLine($req) }}</p>
+                @else
+                  <p class="mt-1.5 max-w-sm text-xs text-red-700 dark:text-red-300"><span class="font-semibold">Not enough:</span> {{ implode(', ', $short) }}</p>
+                @endif
               </td>
-              <td class="px-4 py-3 text-gray-700 dark:text-neutral-300">
+              <td class="block md:table-cell px-0 md:px-4 py-1 md:py-3 text-gray-700 dark:text-neutral-300">
                 {{ $req->user->name ?? '—' }}
                 <p class="text-xs text-gray-500">{{ $req->department->department_name ?? ($req->user->department->department_name ?? '') }}</p>
               </td>
-              <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-neutral-300">
-                {{ $neededOn ? \Carbon\Carbon::parse($neededOn)->format('M d, Y') : '—' }}
+              <td class="block md:table-cell px-0 md:px-4 py-1 md:py-3 md:whitespace-nowrap text-gray-700 dark:text-neutral-300">
+                <span class="md:hidden text-xs text-gray-500">Needed on </span>{{ $neededOn ? \Carbon\Carbon::parse($neededOn)->format('M d, Y') : '—' }}
               </td>
-              <td class="px-4 py-3">
+              <td class="block md:table-cell px-0 md:px-4 py-1 md:py-3">
+                {{-- ✅ Borrow (return by a date) or Assign (they keep it — e.g. furniture for a faculty room) --}}
+                @php $mode = $modes[$req->id] ?? 'borrow'; @endphp
+                <div class="inline-flex p-0.5 mb-1.5 rounded-lg bg-gray-100 dark:bg-neutral-700 text-xs font-semibold" role="radiogroup" aria-label="Borrow or assign">
+                  @foreach (['borrow' => 'Borrow', 'assign' => 'Assign (keep)'] as $mk => $ml)
+                    <label class="cursor-pointer">
+                      <input type="radio" class="sr-only peer" wire:model.live="modes.{{ $req->id }}" value="{{ $mk }}" @checked($mode === $mk)>
+                      <span class="block px-2.5 py-1 rounded-md transition peer-checked:bg-white peer-checked:text-[#123524] peer-checked:shadow-sm dark:peer-checked:bg-neutral-900 dark:peer-checked:text-green-300 text-gray-600 dark:text-neutral-300">{{ $ml }}</span>
+                    </label>
+                  @endforeach
+                </div>
+                @if ($mode === 'assign')
+                  <p class="text-xs text-gray-600 dark:text-neutral-300 max-w-56">No return date — they keep it (e.g. faculty room furniture) and it can be handed over to the next teacher.</p>
+                @else
                 <label for="deadline-{{ $req->id }}" class="sr-only">Return deadline</label>
-                <input id="deadline-{{ $req->id }}" type="date" wire:model="deadlines.{{ $req->id }}" min="{{ $minDate }}"
-                  class="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-800 dark:text-neutral-200">
+                <input id="deadline-{{ $req->id }}" type="date" wire:model.live.debounce.400ms="deadlines.{{ $req->id }}" min="{{ $minDate }}"
+                  class="block px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-800 dark:text-neutral-200">
+                @endif
                 @error('deadlines.' . $req->id)
                   <p class="text-xs text-red-500 mt-1 max-w-56">{{ $message }}</p>
                 @enderror
               </td>
-              <td class="px-4 py-3 text-right whitespace-nowrap">
+              <td class="block md:table-cell px-0 md:px-4 pt-3 md:py-3 md:text-right md:whitespace-nowrap">
+                @can('borrowed-items.manage')
                 <button type="button" wire:click="accept({{ $req->id }})" wire:loading.attr="disabled" wire:target="accept({{ $req->id }})"
+                  wire:confirm="{{ $this->acceptConfirm($req) }}"
                   class="min-h-10 px-4 rounded-lg bg-green-600 text-white text-xs font-semibold hover:bg-green-700 disabled:opacity-60 transition">
                   Accept
                 </button>
+                @endcan
+                @can('borrowed-items.manage')
                 <button type="button" wire:click="openReject({{ $req->id }})"
                   class="min-h-10 px-4 ml-1 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition">
                   Reject
                 </button>
+                @endcan
               </td>
             </tr>
 
             {{-- ✅ Inline "reject" form --}}
             @if($rejectingRequestId === $req->id)
-              <tr wire:key="reject-{{ $req->id }}" class="bg-red-50/50 dark:bg-red-950/20">
-                <td colspan="5" class="px-4 py-4">
+              <tr wire:key="reject-{{ $req->id }}" class="block md:table-row bg-red-50/50 dark:bg-red-950/20">
+                <td colspan="5" class="block md:table-cell px-4 py-4">
                   <form wire:submit="confirmReject" class="flex flex-col sm:flex-row sm:items-end gap-3">
                     <div class="flex-1">
                       <label for="reject-reason-{{ $req->id }}" class="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1">Reason for rejecting (optional)</label>
@@ -145,8 +188,8 @@
               </tr>
             @endif
           @empty
-            <tr>
-              <td colspan="5" class="px-4 py-12 text-center text-sm text-gray-500">No borrow requests waiting for approval.</td>
+            <tr class="block md:table-row">
+              <td colspan="5" class="block md:table-cell px-4 py-12 text-center text-sm text-gray-500">No borrow requests waiting for approval.</td>
             </tr>
           @endforelse
         </tbody>
@@ -155,13 +198,16 @@
   </div>
 
   <div class="mt-4">{{ $this->pendingRequests->links() }}</div>
+  @elseif($filter === 'assigned')
+    {{-- ✅ Kept items (no return date) — hand over to the next teacher, or take back into stock --}}
+    <livewire:assigned-items scope="admin" :key="'assigned-admin'" />
   @else
 
   {{-- Table --}}
   <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl overflow-hidden">
     <div class="overflow-x-auto">
-      <table class="min-w-full text-sm">
-        <thead class="bg-gray-50 dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-400">
+      <table class="min-w-full text-sm block md:table">
+        <thead class="hidden md:table-header-group bg-gray-50 dark:bg-neutral-900/50 text-left text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-400">
           <tr>
             <th class="px-4 py-3 font-semibold">Item</th>
             <th class="px-4 py-3 font-semibold">Borrowed by</th>
@@ -170,7 +216,7 @@
             <th class="px-4 py-3 font-semibold text-right">Action</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-neutral-700">
+        <tbody class="block md:table-row-group divide-y divide-gray-100 dark:divide-neutral-700">
           @forelse($this->items as $item)
             @php
               $dueDate      = \Carbon\Carbon::parse($item->due_date);
@@ -185,23 +231,23 @@
                 (bool) $item->returned_at                                 => 'bg-orange-100 text-orange-800',
                 (bool) $item->return_requested_at                         => 'bg-blue-100 text-blue-800',
                 $dueDate->lt(today())                                     => 'bg-red-100 text-red-800',
-                $dueDate->isToday()                                       => 'bg-amber-100 text-amber-800',
+                $dueDate->lte(today()->addDay())                          => 'bg-amber-100 text-amber-800',
                 default                                                   => 'bg-gray-100 text-gray-700',
               };
             @endphp
-            <tr wire:key="item-{{ $item->id }}">
-              <td class="px-4 py-3">
+            <tr wire:key="item-{{ $item->id }}" class="block md:table-row px-4 py-4 md:p-0">
+              <td class="block md:table-cell px-0 md:px-4 py-1 md:py-3">
                 <p class="font-semibold text-gray-900 dark:text-neutral-100">{{ $item->item_name }}</p>
-                <p class="text-xs text-gray-500">{{ number_format($item->quantity) }} pcs · Request</p>
+                <p class="text-xs text-gray-500">{{ number_format($item->quantity) }} pcs</p>
               </td>
-              <td class="px-4 py-3 text-gray-700 dark:text-neutral-300">
+              <td class="block md:table-cell px-0 md:px-4 py-1 md:py-3 text-gray-700 dark:text-neutral-300">
                 {{ $item->request->user->name ?? '—' }}
                 <p class="text-xs text-gray-500">
                   {{ $item->request->department->department_name ?? ($item->request->user->department->department_name ?? '') }}
                 </p>
               </td>
-              <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-neutral-300">{{ $dueDate->format('M d, Y') }}</td>
-              <td class="px-4 py-3">
+              <td class="block md:table-cell px-0 md:px-4 py-1 md:py-3 md:whitespace-nowrap text-gray-700 dark:text-neutral-300"><span class="md:hidden text-xs text-gray-500">Return by </span>{{ $dueDate->format('M d, Y') }}</td>
+              <td class="block md:table-cell px-0 md:px-4 py-1 md:py-3">
                 <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold {{ $badge }}">{{ $label }}</span>
                 @if($item->returned_at)
                   <p class="text-xs text-gray-500 mt-1">
@@ -232,14 +278,28 @@
                   @endif
                 @endif
               </td>
-              <td class="px-4 py-3 text-right whitespace-nowrap">
+              <td class="block md:table-cell px-0 md:px-4 pt-3 md:py-3 md:text-right md:whitespace-nowrap">
                 @if(! $item->returned_at)
                   @if($item->return_requested_at)
                     {{-- ✅ Program Head returned it → the Admin checks and confirms --}}
+                    @can('borrowed-items.manage')
                     <button type="button" wire:click="openReturn({{ $item->id }})"
                       class="min-h-10 px-3 rounded-lg bg-[#123524] text-white text-xs font-semibold hover:bg-[#0B2418] transition">
                       Confirm return
                     </button>
+                    @endcan
+                    {{-- ✅ Several items from this request sent back → confirm them all as Good --}}
+                    @php $sentBackHere = $this->sentBackCounts[$item->request_id] ?? 0; @endphp
+                    @if($sentBackHere > 1)
+                      @can('borrowed-items.manage')
+                      <button type="button" wire:click="confirmAllGood({{ $item->request_id }})"
+                        wire:confirm="Confirm all {{ $sentBackHere }} items from {{ $item->request->user->name ?? 'this Program Head' }} as returned in GOOD condition? They go back to the main stock. (Use “Confirm return” for anything damaged or lost.)"
+                        wire:loading.attr="disabled" wire:target="confirmAllGood({{ $item->request_id }})"
+                        class="block md:ml-auto mt-1.5 text-xs font-medium text-[#1C6B45] dark:text-green-300 hover:underline disabled:opacity-60">
+                        Confirm all {{ $sentBackHere }} as Good
+                      </button>
+                      @endcan
+                    @endif
                   @elseif($isOverdue)
                     {{-- ✅ Overdue: message the Program Head instead of "Mark returned" --}}
                     @if($lastReminder?->isToday())
@@ -248,6 +308,7 @@
                         Reminded today
                       </span>
                     @else
+                      @can('borrowed-items.manage')
                       <button type="button" wire:click="sendReminder({{ $item->id }})"
                         wire:confirm="Send a reminder to {{ $item->request->user->name ?? 'the Program Head' }} to return {{ $item->quantity }} pcs of {{ $item->item_name }}?"
                         wire:loading.attr="disabled" wire:target="sendReminder({{ $item->id }})"
@@ -257,6 +318,7 @@
                         </svg>
                         {{ $lastReminder ? 'Remind again' : 'Send reminder' }}
                       </button>
+                      @endcan
                     @endif
                   @else
                     {{-- Not returned yet and not overdue: nothing to do until the Program Head returns it --}}
@@ -265,13 +327,24 @@
                     </span>
                   @endif
                 @endif
+                @if (! $item->returned_at && ! $item->return_requested_at)
+                  @can('borrowed-items.manage')
+                    {{-- ✅ They keep it (e.g. faculty room furniture): no return date, no overdue --}}
+                    <button type="button" wire:click="convertToAssigned({{ $item->id }})"
+                      wire:confirm="Change to ASSIGNED? {{ $item->item_name }} ×{{ $item->quantity }} stays with the borrower with no return date (no overdue, no reminders) and can be handed over to the next teacher."
+                      class="block md:ml-auto mt-1.5 text-xs font-medium text-[#1C6B45] dark:text-green-300 hover:underline">
+                      Assign instead (keep)
+                    </button>
+                  @endcan
+                @endif
               </td>
             </tr>
 
             {{-- Inline "mark returned" form --}}
             @if($returningId === $item->id)
-              <tr wire:key="form-{{ $item->id }}" class="bg-gray-50 dark:bg-neutral-900/40">
-                <td colspan="5" class="px-4 py-4">
+              <tr wire:key="form-{{ $item->id }}" class="block md:table-row bg-gray-50 dark:bg-neutral-900/40">
+                <td colspan="5" class="block md:table-cell px-4 py-4">
+                  @can('borrowed-items.manage')
                   <form wire:submit="confirmReturn" class="flex flex-col sm:flex-row sm:items-end gap-3">
                     <div>
                       <label for="cond-{{ $item->id }}" class="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1">Condition</label>
@@ -290,16 +363,17 @@
                     </div>
                     <div class="flex gap-2">
                       <button type="button" wire:click="cancelReturn" class="min-h-10 px-3 rounded-lg border border-gray-300 text-sm font-medium bg-white hover:bg-gray-50">Cancel</button>
-                      <button type="submit" class="min-h-10 px-3 rounded-lg bg-[#123524] text-white text-sm font-semibold hover:bg-[#0B2418]">Confirm return</button>
+                      <button type="submit" wire:loading.attr="disabled" wire:target="confirmReturn" class="min-h-10 px-3 rounded-lg bg-[#123524] text-white text-sm font-semibold hover:bg-[#0B2418] disabled:opacity-60">Confirm return</button>
                     </div>
                   </form>
+                  @endcan
                   <p class="text-xs text-gray-500 mt-2">Items returned in <strong>Good</strong> condition go back to the main stock. Damaged or lost items don't.</p>
                 </td>
               </tr>
             @endif
           @empty
-            <tr>
-              <td colspan="5" class="px-4 py-12 text-center text-sm text-gray-500">
+            <tr class="block md:table-row">
+              <td colspan="5" class="block md:table-cell px-4 py-12 text-center text-sm text-gray-500">
                 @if($filter === 'overdue') No overdue items.
                 @elseif($filter === 'returned') No returned items yet.
                 @else Nothing is currently borrowed.

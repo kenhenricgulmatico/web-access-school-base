@@ -6,7 +6,7 @@
 
         <title>{{ $title ?? config('app.name') }}</title>
 
-        <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/5/55/LogoCSAV.png">
+        <link rel="icon" type="image/png" href="{{ asset('images/csav-logo.png') }}">
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

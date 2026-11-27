@@ -36,9 +36,11 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
             </div>
 
             {{-- Manage Request --}}
+            @canany(['program-head-requests.view', 'borrowed-items.view'])
             <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
                 <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">Manage Request</span>
                 <ul class="flex flex-col gap-y-1">
+                    @can('program-head-requests.view')
                     <li>
                         <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                             {{ request()->routeIs('admin.manage-coordinator')
@@ -55,7 +57,9 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
                             Program Head Requests
                         </a>
                     </li>
+                    @endcan
                                         {{-- ✅ NEW: Borrowed Items (Pcs) --}}
+                    @can('borrowed-items.view')
                     <li>
                         <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                             {{ request()->routeIs('admin.borrowed-items')
@@ -70,13 +74,17 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
                             Borrowed Items
                         </a>
                     </li>
+                    @endcan
                 </ul>
             </div>
+            @endcanany
 
             {{-- Inventory / Stocks --}}
+            @canany(['stock-materials.view', 'stock-history.view'])
             <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
                 <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">Inventory</span>
                 <ul class="flex flex-col gap-y-1">
+                    @can('stock-materials.view')
                     <li>
                         <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                             {{ request()->routeIs('admin.inventory-stock-material')
@@ -92,6 +100,8 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
                             Stock Materials
                         </a>
                     </li>
+                    @endcan
+                    @can('stock-history.view')
                     <li>
                         <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                             {{ request()->routeIs('admin.inventory-stock-history')
@@ -106,13 +116,17 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
                             Stock History
                         </a>
                     </li>
+                    @endcan
                 </ul>
             </div>
+            @endcanany
 
             {{-- Schedule --}}
+            @canany(['calendar.view', 'facility-schedule.view'])
             <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
                 <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">Schedule</span>
                 <ul class="flex flex-col gap-y-1">
+                    @can('calendar.view')
                     <li>
                         <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                             {{ request()->routeIs('admin.calendar')
@@ -129,6 +143,8 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
                             Calendar
                         </a>
                     </li>
+                    @endcan
+                    @can('facility-schedule.view')
                     <li>
                         <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                             {{ request()->routeIs('admin.schedule')
@@ -145,13 +161,17 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
                             Facility Room
                         </a>
                     </li>
+                    @endcan
                 </ul>
             </div>
+            @endcanany
 
             {{-- Management --}}
+            @canany(['users.view'])
             <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
                 <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">Management</span>
                 <ul class="flex flex-col gap-y-1">
+                    @can('users.view')
                     <li>
                         <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                             {{ request()->routeIs('admin.users')
@@ -168,13 +188,17 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
                             Users
                         </a>
                     </li>
+                    @endcan
                 </ul>
             </div>
+            @endcanany
 
             {{-- System --}}
+            @canany(['audit.view-all'])
             <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
                 <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">System</span>
                 <ul class="flex flex-col gap-y-1">
+                    @can('audit.view-all')
                     <li>
                         <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                             {{ request()->routeIs('admin.audit-logs')
@@ -189,8 +213,10 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
                             Audit Logs
                         </a>
                     </li>
+                    @endcan
                 </ul>
             </div>
+            @endcanany
 
         </nav>
     </div>

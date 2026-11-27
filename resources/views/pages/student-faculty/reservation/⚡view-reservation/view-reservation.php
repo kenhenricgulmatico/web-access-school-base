@@ -23,11 +23,11 @@ new #[Layout('layouts.student-faculty')] class extends Component
 
     public function mount(): void
     {
-        // ✅ Matches seeder: faculty/student get facility-requests.view + material-requests.view
+        // ✅ Facility Requests page → facility-requests.* (unticking it in Roles closes this page)
         abort_unless(
             auth()->user()->canAny([
                 'facility-requests.view',
-                'material-requests.view',
+                'facility-requests.view-all',
             ]),
             403
         );

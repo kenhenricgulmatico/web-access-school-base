@@ -8,6 +8,11 @@ use Livewire\Component;
 
 new #[Layout('layouts.admin')] class extends Component
 {
+    public function mount(): void
+    {
+        abort_unless(auth()->user()->can('departments.manage'), 403);
+    }
+
     public string $department_name = '';
 
     protected array $rules = [
@@ -21,6 +26,7 @@ new #[Layout('layouts.admin')] class extends Component
 
     public function submit()
     {
+        abort_unless(auth()->user()->can('departments.manage'), 403);
         $this->validate();
 
         Department::create([

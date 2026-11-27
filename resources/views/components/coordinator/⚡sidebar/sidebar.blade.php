@@ -42,11 +42,13 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
       </div>
 
       {{-- Faculty Management --}}
+      @canany(['members.view'])
       <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
         <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">
           Faculty Management
         </span>
         <ul class="flex flex-col gap-y-1">
+          @can('members.view')
           <li>
             <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition min-w-0
                 {{ request()->routeIs('programHead.students')
@@ -60,15 +62,19 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
               <span class="truncate">View Faculty</span>
             </a>
           </li>
+          @endcan
         </ul>
       </div>
+      @endcanany
 
       {{-- Manage Request --}}
+      @canany(['requests.view-department', 'calendar.view'])
       <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
         <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">
           Manage Request
         </span>
         <ul class="flex flex-col gap-y-1">
+          @can('requests.view-department')
           <li>
             <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition min-w-0
                 {{ request()->routeIs('programHead.facility')
@@ -79,7 +85,9 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
               <span class="truncate">Reservations & Requests</span>
             </a>
           </li>
+          @endcan
           {{-- ✅ Calendar: my department's approved reservations and material requests --}}
+          @can('calendar.view')
           <li>
             <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition min-w-0
                 {{ request()->routeIs('coordinator.calendar')
@@ -95,15 +103,19 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
               <span class="truncate">Calendar</span>
             </a>
           </li>
+          @endcan
         </ul>
       </div>
+      @endcanany
 
       {{-- Make Request (to Admin) --}}
+      @canany(['program-head-requests.view'])
       <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
         <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">
           Make Request
         </span>
         <ul class="flex flex-col gap-y-1">
+          @can('program-head-requests.view')
           <li>
             <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition min-w-0
                 {{ request()->routeIs('programHead.request-to-admin.*')
@@ -114,15 +126,19 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
               <span class="truncate">Request to Admin</span>
             </a>
           </li>
+          @endcan
         </ul>
       </div>
+      @endcanany
 
       {{-- Resources --}}
+      @canany(['allocations.view', 'borrowed-items.view'])
       <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
         <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">
           Resources
         </span>
         <ul class="flex flex-col gap-y-1">
+          @can('allocations.view')
           <li>
             <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition min-w-0
                 {{ request()->routeIs('programHead.resource-allocation')
@@ -133,6 +149,8 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
               <span class="truncate">Resource Allocation</span>
             </a>
           </li>
+          @endcan
+          @can('borrowed-items.view')
           <li>
             <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition min-w-0
                 {{ request()->routeIs('coordinator.borrowed-items')
@@ -143,15 +161,19 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
               <span class="truncate">Borrowed Items</span>
             </a>
           </li>
+          @endcan
         </ul>
       </div>
+      @endcanany
 
       {{-- System --}}
+      @canany(['audit.view-own-department'])
       <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
         <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">
           System
         </span>
         <ul class="flex flex-col gap-y-1">
+          @can('audit.view-own-department')
           <li>
             <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition min-w-0
                 {{ request()->routeIs('coordinator.audit')
@@ -162,8 +184,10 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
               <span class="truncate">Audit Logs</span>
             </a>
           </li>
+          @endcan
         </ul>
       </div>
+      @endcanany
 
       {{-- Mobile Others (visible only on small screens)
       <div class="pt-3 mt-3 lg:hidden flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
@@ -189,7 +213,7 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
     {{-- Footer: CSAV mini badge (now links to profile) --}}
     <footer class="mt-auto p-2.5 sm:p-3 border-t border-gray-200 dark:border-neutral-700">
       <a href="{{ route('coordinator.profile') }}" class="flex items-center gap-2.5 px-2 py-2 rounded-lg bg-gradient-to-r from-[#123524]/5 to-[#D4A537]/5 dark:from-white/5 dark:to-[#D4A537]/10 min-w-0 hover:from-[#123524]/10 hover:to-[#D4A537]/10 dark:hover:from-white/10 dark:hover:to-[#D4A537]/20 transition">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/LogoCSAV.png" alt="CSAV" class="w-6 h-6 rounded-full bg-white p-0.5 ring-1 ring-[#D4A537]/40 object-contain shrink-0">
+        <img src="{{ asset('images/csav-logo.png') }}" alt="CSAV" class="w-6 h-6 rounded-full bg-white p-0.5 ring-1 ring-[#D4A537]/40 object-contain shrink-0">
         <div class="leading-tight min-w-0">
           <p class="text-[11px] font-semibold text-gray-700 dark:text-white truncate">CSAV Portal</p>
           <p class="text-[10px] text-muted-foreground-1 dark:text-gray-100/60 truncate">Program Head</p>

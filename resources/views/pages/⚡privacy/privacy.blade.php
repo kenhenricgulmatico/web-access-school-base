@@ -3,7 +3,7 @@
 
         {{-- Header --}}
         <div class="flex items-center gap-3 mb-8">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/LogoCSAV.png"
+            <img src="{{ asset('images/csav-logo.png') }}"
                  alt="CSAV logo"
                  class="w-12 h-12 object-contain">
             <div>

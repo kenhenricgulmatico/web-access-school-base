@@ -1,3 +1,4 @@
+@can('borrowed-items.manage')
 {{-- Faculty Borrowed Items: buttons for one item. Needs $item and $info (rowInfo()). --}}
 @if(! $item->returned_at && ! $item->return_requested_at)
     <button type="button" wire:click="requestReturn({{ $item->id }})"
@@ -24,3 +25,4 @@
         Cancel return
     </button>
 @endif
+@endcan

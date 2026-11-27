@@ -80,11 +80,13 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
       </div>
 
       {{-- Requests --}}
+      @canany(['facility-requests.view', 'material-requests.view', 'borrowed-items.view', 'calendar.view'])
       <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">
         <span class="block ps-2.5 mb-2 font-medium text-[10px] tracking-wider uppercase text-[#B8862A]">
           Requests
         </span>
         <ul class="flex flex-col gap-y-1">
+          @can('facility-requests.view')
           <li>
             <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                 {{ request()->routeIs('portal.reservation') || request()->routeIs('portal.create-reservation')
@@ -103,6 +105,8 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
               @endif
             </a>
           </li>
+          @endcan
+          @can('material-requests.view')
           <li>
             <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                 {{ request()->routeIs('portal.material')
@@ -119,6 +123,8 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
               @endif
             </a>
           </li>
+          @endcan
+          @can('borrowed-items.view')
           <li>
             @php
               $overdueBorrowed = \App\Models\RequestItem::overdue()
@@ -143,6 +149,8 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
               @endif
             </a>
           </li>
+          @endcan
+          @can('calendar.view')
           <li>
             <a class="w-full flex items-center gap-x-2.5 py-2 px-2.5 text-sm rounded-lg transition
                 {{ request()->routeIs('portal.calendar')
@@ -162,8 +170,10 @@ lg:block lg:-translate-x-full lg:end-auto lg:bottom-0"
               @endif
             </a>
           </li>
+          @endcan
         </ul>
       </div>
+      @endcanany
 
       {{-- Account --}}
       <div class="pt-3 mt-3 flex flex-col border-t border-gray-200 dark:border-neutral-700 first:border-t-0 first:pt-0 first:mt-0">

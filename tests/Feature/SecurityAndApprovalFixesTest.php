@@ -189,13 +189,16 @@ class SecurityAndApprovalFixesTest extends TestCase
         $component = Livewire::actingAs($admin)->test('pages::admin.schedule.calendar.calendar-schedule')
             ->set('year', $date->year)->set('month', $date->month);
 
+        // dayCounts: rooms, material requests and due-back dates — a fixed number of queries,
+        // never one per day
+        unset($component->instance()->dayCounts);
         DB::enableQueryLog();
-        $days = $component->instance()->daysWithEvents();
+        $days = $component->instance()->dayCounts;
         $queries = count(DB::getQueryLog());
         DB::disableQueryLog();
 
-        $this->assertTrue($days[$date->format('Y-m-d')]['reservation']);
-        $this->assertFalse($days[$date->format('Y-m-d')]['material']);
-        $this->assertLessThanOrEqual(2, $queries);
+        $this->assertSame(1, $days[$date->format('Y-m-d')]['rooms']);
+        $this->assertSame(0, $days[$date->format('Y-m-d')]['materials']);
+        $this->assertLessThanOrEqual(3, $queries);
     }
 }

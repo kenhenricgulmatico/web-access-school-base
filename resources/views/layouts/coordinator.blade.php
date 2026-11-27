@@ -6,7 +6,7 @@
 
         <title>{{ $title ?? config('app.name') }}</title>
 
-        <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/5/55/LogoCSAV.png">
+        <link rel="icon" type="image/png" href="{{ asset('images/csav-logo.png') }}">
 
         {{-- Always emitted, so x-cloak works even when Vite is unavailable --}}
         <style>

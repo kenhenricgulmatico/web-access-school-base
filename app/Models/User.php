@@ -21,6 +21,7 @@ use Spatie\Permission\Traits\HasRoles;
     'status',
     'department_id',
     'responsibility_center_id',
+    'must_change_password',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
@@ -36,9 +37,23 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'email_verified_at'    => 'datetime',
+            'password'             => 'hashed',
+            'must_change_password' => 'boolean',
         ];
+    }
+
+    /**
+     * ✅ When people change their OWN password (Settings, or "Choose your own password"),
+     *    they no longer have to change it. A password set by the Admin keeps the flag.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (User $user) {
+            if ($user->exists && $user->isDirty('password') && auth()->id() === $user->id) {
+                $user->must_change_password = false;
+            }
+        });
     }
 
     public function auditLogs(): HasMany

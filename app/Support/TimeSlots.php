@@ -114,9 +114,12 @@ class TimeSlots
         return RequestItem::whereNull('resource_id')
             ->where('item_name', $facility)
             ->whereDate('request_date', $date)
-            ->whereHas('request', fn ($q) => $q
+            ->whereHas('request', fn ($q) => static::withoutDuplicateCopies($q
                 ->where('status', 'approved')
-                ->when($exceptRequestId, fn ($e) => $e->where('id', '!=', $exceptRequestId)))
+                // leave out the request being edited — and its endorsed copy
+                ->when($exceptRequestId, fn ($e) => $e->where('id', '!=', $exceptRequestId)
+                    ->where(fn ($c) => $c->whereNull('forwarded_from_request_id')
+                        ->orWhere('forwarded_from_request_id', '!=', $exceptRequestId))), ['approved']))
             ->with('request.department')
             ->orderBy('start_time')
             ->get()
@@ -129,6 +132,24 @@ class TimeSlots
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * ✅ One booking, counted once.
+     *    When a Program Head endorses a faculty request, the system keeps TWO requests for the
+     *    same room and time: the faculty's own and the Program Head's copy sent to the Admin
+     *    (requests.forwarded_from_request_id). Leave the copy out while its faculty request is
+     *    in one of $sourceStatuses — the faculty request already stands for that booking.
+     *    (If the faculty request was NOT approved, the copy still counts: it is the real booking.)
+     */
+    public static function withoutDuplicateCopies($requestQuery, array $sourceStatuses)
+    {
+        return $requestQuery->where(fn ($q) => $q
+            ->whereNull('requests.forwarded_from_request_id')
+            ->orWhereNotExists(fn ($src) => $src->selectRaw('1')
+                ->from('requests as src')
+                ->whereColumn('src.id', 'requests.forwarded_from_request_id')
+                ->whereIn('src.status', $sourceStatuses)));
     }
 
     /** True when $start–$end overlaps any of $bookings. */

@@ -12,7 +12,7 @@
                     <a href="/coordinator/dashboard"
                         class="shrink-0 inline-flex justify-center items-center rounded-full bg-white ring-2 ring-[#D4A537]/60 p-1 shadow-sm hover:ring-[#D4A537] transition focus:outline-hidden focus:opacity-80"
                         aria-label="CSAV">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/LogoCSAV.png"
+                        <img src="{{ asset('images/csav-logo.png') }}"
                             alt="CSAV Logo" class="h-5 w-5 sm:h-6 sm:w-6 object-contain" />
                     </a>
 

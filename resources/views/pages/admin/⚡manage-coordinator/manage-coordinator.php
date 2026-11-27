@@ -15,6 +15,12 @@ use Carbon\Carbon;
 new #[Layout('layouts.admin')] class extends Component
 {
     use WithPagination;
+
+    public function mount(): void
+    {
+        abort_unless(auth()->user()->can('program-head-requests.view'), 403);
+    }
+
     use ReviewsProgramHeadRequests; // approve / reject (shared with the View page)
 
     // ✅ Opens on the Admin's work queue: pending requests
@@ -22,7 +28,11 @@ new #[Layout('layouts.admin')] class extends Component
     public $statusFilter = 'pending';
     public $search       = '';
 
-    public function updatingStatusFilter(): void { $this->resetPage(); }
+    // ✅ "Reject all overdue" panel
+    public bool   $confirmingOverdue = false;
+    public string $overdueReason     = '';
+
+    public function updatingStatusFilter(): void { $this->resetPage(); $this->confirmingOverdue = false; }
     public function updatingSearch(): void       { $this->resetPage(); }
 
     #[Computed]
@@ -39,22 +49,135 @@ new #[Layout('layouts.admin')] class extends Component
                     )
                     ->orWhereHas('department', fn($d) =>
                         $d->where('department_name', 'like', '%' . $this->search . '%')
+                    )
+                    // ✅ item or room name ("Projector", "Room 101")
+                    ->orWhereHas('items', fn($i) =>
+                        $i->where('item_name', 'like', '%' . $this->search . '%')
                     );
             });
         }
 
-        if ($this->statusFilter) {
+        if ($this->statusFilter === 'overdue') {
+            // ✅ Still pending, but the day it was needed has already passed
+            $this->overdueScope($query);
+        } elseif ($this->statusFilter) {
             $query->where('status', $this->statusFilter);
         }
 
         $query->with('approvals');
 
-        // ✅ Pending: the soonest "needed on" date first. Everything else: most recent first.
-        $this->statusFilter === 'pending'
+        // ✅ Pending / overdue: the soonest "needed on" date first. Everything else: most recent first.
+        in_array($this->statusFilter, ['pending', 'overdue'], true)
             ? $query->orderBy(RequestItem::selectRaw('MIN(request_date)')->whereColumn('request_items.request_id', 'requests.id'))
             : $query->latest();
 
         return $query->paginate(10);
+    }
+
+    /** Pending requests whose "needed on" date has already passed. */
+    protected function overdueScope($query)
+    {
+        return $query->where('status', 'pending')
+            ->whereHas('items', fn ($i) => $i->whereDate('request_date', '<', today()));
+    }
+
+    #[Computed]
+    public function overdueCount(): int
+    {
+        return $this->overdueScope($this->incomingRequestsQuery())->count();
+    }
+
+    /**
+     * ✅ What was asked for, in one line:
+     *    facility → ['Room 101', 'Dec 02 · 9:00 AM – 10:00 AM', +N items]
+     *    material → ['Bond Paper A4 ×5', null, +N more]
+     */
+    public function summary($request): array
+    {
+        $facility  = $request->items->firstWhere('resource_id', null);
+        $materials = $request->items->whereNotNull('resource_id')->values();
+
+        if ($facility) {
+            $when = $facility->request_date ? Carbon::parse($facility->request_date)->format('M d') : '';
+            if ($facility->start_time && $facility->end_time) {
+                $when .= ' · ' . Carbon::parse($facility->start_time)->format('g:i A') . ' – ' . Carbon::parse($facility->end_time)->format('g:i A');
+            }
+
+            return ['main' => $facility->item_name, 'sub' => $when ?: null, 'more' => $materials->count()];
+        }
+
+        $first = $materials->first();
+
+        return [
+            'main' => $first ? "{$first->item_name} ×{$first->quantity}" : '—',
+            'sub'  => null,
+            'more' => max($materials->count() - 1, 0),
+        ];
+    }
+
+    /** ✅ The Approve confirmation spells out exactly what will happen. */
+    public function approveConfirm($request): string
+    {
+        $who   = $request->user->name ?? 'this Program Head';
+        $parts = [];
+
+        $facility = $request->items->firstWhere('resource_id', null);
+        if ($facility) {
+            $s = $this->summary($request);
+            $parts[] = $s['main'] . ($s['sub'] ? ' on ' . $s['sub'] : '');
+        }
+
+        $needed = [];
+        foreach ($request->items->whereNotNull('resource_id') as $item) {
+            $needed[$item->resource_id] ??= ['name' => $item->item_name, 'qty' => 0, 'have' => (int) ($item->resource?->quantity_available ?? 0)];
+            $needed[$item->resource_id]['qty'] += (int) $item->quantity;
+        }
+        foreach ($needed as $n) {
+            $parts[] = "{$n['name']} ×{$n['qty']} (main stock {$n['have']} → " . ($n['have'] - $n['qty']) . ')';
+        }
+
+        return 'Approve for ' . $who . ': ' . (implode('; ', $parts) ?: 'this request') . '?';
+    }
+
+    // ============================================================
+    // ✅ REJECT ALL OVERDUE (one reason, each Program Head is told)
+    // ============================================================
+    public function openRejectOverdue(): void
+    {
+        abort_unless(auth()->user()->canAny(['program-head-requests.reject', 'requests.reject']), 403);
+
+        $this->confirmingOverdue = true;
+        $this->overdueReason     = 'The date it was needed has already passed. Please send a new request if you still need it.';
+    }
+
+    public function cancelRejectOverdue(): void
+    {
+        $this->confirmingOverdue = false;
+    }
+
+    public function rejectAllOverdue(): void
+    {
+        abort_unless(auth()->user()->canAny(['program-head-requests.reject', 'requests.reject']), 403);
+
+        $ids = $this->overdueScope($this->incomingRequestsQuery())->pluck('id');
+        $done = 0;
+
+        foreach ($ids as $id) {
+            // Same path as a single Reject: status, approval note, bell + e-mail, forwarded request
+            $this->rejectingRequestId = $id;
+            $this->rejectReason       = trim($this->overdueReason);
+            $this->confirmReject();
+            $done++;
+        }
+
+        $this->confirmingOverdue = false;
+        $this->overdueReason     = '';
+        $this->statusFilter      = 'pending';
+        unset($this->requests, $this->overdueCount, $this->pendingCount, $this->rejectedCount);
+
+        session()->flash('message', $done
+            ? "Rejected {$done} overdue " . \Illuminate\Support\Str::plural('request', $done) . '. Each Program Head was told why.'
+            : 'There were no overdue requests to reject.');
     }
 
     /** ✅ Earliest "needed on" date of a request (Carbon or null). */

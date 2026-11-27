@@ -19,6 +19,11 @@ new #[Layout('layouts.admin')] class extends Component
     public $department_id = '';
     public $role = '';
 
+    public function mount(): void
+    {
+        abort_unless(auth()->user()->can('users.create'), 403);
+    }
+
     #[Computed()]
     public function departments()
     {
@@ -105,6 +110,7 @@ new #[Layout('layouts.admin')] class extends Component
 
     public function save()
     {
+        abort_unless(auth()->user()->can('users.create'), 403);
         $this->validate();
 
         $plainPassword = $this->password;
@@ -115,6 +121,8 @@ new #[Layout('layouts.admin')] class extends Component
             'password'      => Hash::make($plainPassword),
             'department_id' => $this->department_id,
             'status'        => 'approved',
+            // ✅ The Admin knows this password → they choose their own at first sign-in
+            'must_change_password' => true,
         ]);
 
         $user->assignRole($this->role);

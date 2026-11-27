@@ -1,11 +1,11 @@
-<div class="select-none">
+<div>
 <div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto space-y-6">
 
     {{-- Header --}}
     <div class="flex items-center justify-between flex-wrap gap-4">
         <div>
             <h2 class="text-2xl font-bold text-gray-800 dark:text-neutral-200">Stock History</h2>
-            <p class="text-sm text-gray-500 dark:text-neutral-400">Complete log of restocks, materials released via admin-approved requests, and returned borrowed items</p>
+            <p class="text-sm text-gray-500 dark:text-neutral-400">Every change to the main stock: restocks, materials released on approval, returned borrowed items and stock removed</p>
         </div>
         <a href="{{ route('admin.inventory-stock-material') }}"
             class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:bg-green-700 disabled:opacity-50 disabled:pointer-events-none">
@@ -16,143 +16,206 @@
         </a>
     </div>
 
-    {{-- Stats Cards --}}
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-
-        {{-- Total Restocks --}}
+    {{-- ✅ Stats: in / out / net for the current filters --}}
+    @php
+        $tot    = $this->totals;
+        $period = $this->periodLabel();
+        $unit   = $this->selectedMaterial?->unit;
+        $scope  = $this->selectedMaterial ? $this->selectedMaterial->resource_name : 'all materials';
+    @endphp
+    <div class="grid sm:grid-cols-3 gap-3">
         <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5 dark:bg-neutral-800 dark:border-neutral-700">
             <div class="flex items-center gap-x-2 mb-3">
-                <span class="size-8 inline-flex justify-center items-center rounded-full border-4 border-blue-50 bg-blue-100 text-blue-800 dark:border-blue-900 dark:bg-blue-800 dark:text-blue-400">
-                    <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                    </svg>
+                <span class="size-8 inline-flex justify-center items-center rounded-full border-4 border-green-50 bg-green-100 text-green-800 dark:border-green-900 dark:bg-green-800 dark:text-green-300">
+                    <svg class="shrink-0 size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
                 </span>
-                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-500">Total Restocks</p>
+                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-500">Stock in</p>
             </div>
-            <div class="flex items-center gap-x-2">
-                <h3 class="text-xl sm:text-2xl font-medium text-gray-800 dark:text-neutral-200">
-                    {{ $this->totalRestocks }}
-                </h3>
-            </div>
-            <p class="mt-1 text-xs text-gray-500 dark:text-neutral-500">All time</p>
+            <h3 class="text-xl sm:text-2xl font-medium text-green-700 dark:text-green-400">+{{ number_format($tot['in']) }} <span class="text-sm font-normal text-gray-400">{{ $unit }}</span></h3>
+            <p class="mt-1 text-xs text-gray-500 dark:text-neutral-500">{{ $period }} · {{ $tot['inEntries'] }} restocks &amp; returns · {{ $scope }}</p>
         </div>
 
-        {{-- Total Quantity Added --}}
         <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5 dark:bg-neutral-800 dark:border-neutral-700">
             <div class="flex items-center gap-x-2 mb-3">
-                <span class="size-8 inline-flex justify-center items-center rounded-full border-4 border-green-50 bg-green-100 text-green-800 dark:border-green-900 dark:bg-green-800 dark:text-green-400">
-                    <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M12 5v14M5 12h14"/>
-                    </svg>
+                <span class="size-8 inline-flex justify-center items-center rounded-full border-4 border-red-50 bg-red-100 text-red-800 dark:border-red-900 dark:bg-red-800 dark:text-red-300">
+                    <svg class="shrink-0 size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M5 12h14"/></svg>
                 </span>
-                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-500">Total Qty Added</p>
+                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-500">Stock out</p>
             </div>
-            <div class="flex items-center gap-x-2">
-                <h3 class="text-xl sm:text-2xl font-medium text-gray-800 dark:text-neutral-200">
-                    {{ number_format($this->totalQuantityAdded) }}
-                </h3>
-            </div>
-            <p class="mt-1 text-xs text-gray-500 dark:text-neutral-500">Units restocked</p>
+            <h3 class="text-xl sm:text-2xl font-medium text-red-700 dark:text-red-400">−{{ number_format($tot['out']) }} <span class="text-sm font-normal text-gray-400">{{ $unit }}</span></h3>
+            <p class="mt-1 text-xs text-gray-500 dark:text-neutral-500">{{ $period }} · {{ $tot['outEntries'] }} approved &amp; removed · {{ $scope }}</p>
         </div>
 
-        {{-- Today --}}
         <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5 dark:bg-neutral-800 dark:border-neutral-700">
             <div class="flex items-center gap-x-2 mb-3">
-                <span class="size-8 inline-flex justify-center items-center rounded-full border-4 border-purple-50 bg-purple-100 text-purple-800 dark:border-purple-900 dark:bg-purple-800 dark:text-purple-400">
-                    <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
+                <span class="size-8 inline-flex justify-center items-center rounded-full border-4 border-blue-50 bg-blue-100 text-blue-800 dark:border-blue-900 dark:bg-blue-800 dark:text-blue-300">
+                    <svg class="shrink-0 size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
                 </span>
-                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-500">Today</p>
+                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-500">Net change</p>
             </div>
-            <div class="flex items-center gap-x-2">
-                <h3 class="text-xl sm:text-2xl font-medium text-gray-800 dark:text-neutral-200">
-                    {{ $this->todayRestocks }}
-                </h3>
-            </div>
-            <p class="mt-1 text-xs text-gray-500 dark:text-neutral-500">Restocks today</p>
+            <h3 class="text-xl sm:text-2xl font-medium {{ $tot['net'] > 0 ? 'text-green-700 dark:text-green-400' : ($tot['net'] < 0 ? 'text-red-700 dark:text-red-400' : 'text-gray-800 dark:text-neutral-200') }}">
+                {{ $tot['net'] > 0 ? '+' : ($tot['net'] < 0 ? '−' : '') }}{{ number_format(abs($tot['net'])) }} <span class="text-sm font-normal text-gray-400">{{ $unit }}</span>
+            </h3>
+            <p class="mt-1 text-xs text-gray-500 dark:text-neutral-500">{{ $period }} · in minus out{{ $this->selectedMaterial ? '' : ' (all units together)' }}</p>
         </div>
-
     </div>
 
     {{-- Table Card --}}
     <div class="flex flex-col">
         <div class="-m-1.5 overflow-x-auto">
             <div class="p-1.5 min-w-full inline-block align-middle">
-                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden dark:bg-neutral-800 dark:border-neutral-700">
+                {{-- ✅ @container: the table follows the width of THIS box, not the window --}}
+                <div class="@container bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden dark:bg-neutral-800 dark:border-neutral-700">
 
                     {{-- Table Header --}}
                     <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-gray-200 dark:border-neutral-700">
                         <div>
                             <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">Restock, Approval &amp; Return Logs</h2>
-                            <p class="text-sm text-gray-600 dark:text-neutral-400">Full history of restocking, admin-approved material requests, and returned borrowed items</p>
+                            <p class="text-sm text-gray-600 dark:text-neutral-400">Newest first. Click a type to show only that kind.</p>
                         </div>
-                        <div class="flex flex-wrap items-center gap-2">
+                        {{-- ✅ Download what's shown (all pages) --}}
+                        @can('stock-history.export')
+                        <button type="button" wire:click="exportCsv" wire:loading.attr="disabled" wire:target="exportCsv"
+                            class="self-start md:self-center py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-60 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-700">
+                            <svg class="shrink-0 size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"/></svg>
+                            <span wire:loading.remove wire:target="exportCsv">Download CSV</span>
+                            <span wire:loading wire:target="exportCsv">Preparing…</span>
+                        </button>
+                        @endcan
+                    </div>
 
+                    {{-- ✅ Filters --}}
+                    @php
+                        $fld   = 'py-2 px-3 block w-full border border-gray-200 rounded-lg text-sm focus:border-green-600 focus:ring-green-600 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-300';
+                        $range = $this->activeRange();
+                        $sum   = $this->summary;
+                    @endphp
+                    <div class="px-6 py-4 space-y-3 border-b border-gray-200 dark:border-neutral-700">
+                        <div class="grid gap-3 @2xl:grid-cols-2 @5xl:grid-cols-4">
                             {{-- Search --}}
-                            <div class="relative">
-                                <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-3">
-                                    <svg class="size-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                                    </svg>
+                            <div>
+                                <label for="sh-search" class="block text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">Search</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-3">
+                                        <svg class="size-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                                    </div>
+                                    <input id="sh-search" type="text" wire:model.live.debounce.300ms="search" placeholder="Material, supplier, department, person…"
+                                        class="{{ $fld }} ps-9">
                                 </div>
-                                <input type="text" wire:model.live="search"
-                                    placeholder="Search material, supplier, department..."
-                                    class="py-2 ps-9 pe-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600">
                             </div>
 
-                            {{-- Date From --}}
-                            <input type="date" wire:model.live="dateFrom"
-                                class="py-2 px-3 block border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
+                            {{-- Material --}}
+                            <div>
+                                <label for="sh-material" class="block text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">Material</label>
+                                <select id="sh-material" wire:model.live="materialId" class="{{ $fld }}">
+                                    <option value="">All materials</option>
+                                    @foreach ($this->materials as $m)
+                                        <option value="{{ $m->id }}">{{ $m->resource_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
 
-                            {{-- Date To --}}
-                            <input type="date" wire:model.live="dateTo"
-                                class="py-2 px-3 block border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
+                            {{-- From / To --}}
+                            <div>
+                                <label for="sh-from" class="block text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">From</label>
+                                <input id="sh-from" type="date" wire:model.live="dateFrom" max="{{ today()->toDateString() }}" class="{{ $fld }}">
+                            </div>
+                            <div>
+                                <label for="sh-to" class="block text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">To</label>
+                                <input id="sh-to" type="date" wire:model.live="dateTo" max="{{ today()->toDateString() }}" class="{{ $fld }}">
+                            </div>
+                        </div>
 
+                        @if ($this->datesSwapped())
+                            <p class="text-xs text-amber-700 dark:text-amber-400">"From" was after "To", so the dates were swapped: showing {{ $this->periodLabel() }}.</p>
+                        @endif
+
+                        <div class="flex flex-wrap items-center gap-2">
+                            {{-- Quick ranges --}}
+                            @foreach (['today' => 'Today', 'week' => 'This week', 'month' => 'This month'] as $key => $label)
+                                <button type="button" wire:click="setRange('{{ $key }}')"
+                                    class="px-3 py-1 text-xs font-medium rounded-full border transition
+                                    {{ $range === $key ? 'bg-[#123524] border-[#123524] text-white' : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700' }}">
+                                    {{ $label }}
+                                </button>
+                            @endforeach
+
+                            <span class="hidden @xl:inline-block w-px h-5 bg-gray-200 dark:bg-neutral-700 mx-1"></span>
+
+                            {{-- ✅ Type chips with counts --}}
+                            @php
+                                $chipColors = [
+                                    'restock'  => 'bg-blue-600 border-blue-600',
+                                    'approval' => 'bg-green-600 border-green-600',
+                                    'return'   => 'bg-teal-600 border-teal-600',
+                                    'removal'  => 'bg-orange-600 border-orange-600',
+                                ];
+                            @endphp
+                            <button type="button" wire:click="setType('')"
+                                class="px-3 py-1 text-xs font-medium rounded-full border transition
+                                {{ $entryType === '' ? 'bg-gray-800 border-gray-800 text-white dark:bg-neutral-200 dark:border-neutral-200 dark:text-neutral-900' : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700' }}">
+                                All ({{ array_sum(array_column($sum, 'entries')) }})
+                            </button>
+                            @foreach ($this::TYPES as $key => $label)
+                                <button type="button" wire:click="setType('{{ $key }}')"
+                                    class="px-3 py-1 text-xs font-medium rounded-full border transition
+                                    {{ $entryType === $key ? $chipColors[$key] . ' text-white' : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700' }}">
+                                    {{ $label }} ({{ $sum[$key]['entries'] }})
+                                </button>
+                            @endforeach
+
+                            {{-- Clear --}}
+                            @if ($search !== '' || $materialId || $dateFrom !== '' || $dateTo !== '' || $entryType !== '')
+                                <button type="button" wire:click="clearFilters"
+                                    class="ms-auto px-3 py-1 text-xs font-medium rounded-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30">
+                                    ✕ Clear filters
+                                </button>
+                            @endif
                         </div>
                     </div>
 
                     {{-- Table --}}
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                        <thead class="bg-gray-50 dark:bg-neutral-800">
+                    <table class="min-w-full block @4xl:table divide-y divide-gray-200 dark:divide-neutral-700">
+                        <thead class="hidden @4xl:table-header-group bg-gray-50 dark:bg-neutral-800">
                             <tr>
-                                <th class="px-6 py-3 text-start">
+                                <th class="px-4 @7xl:px-6 py-3 text-start">
                                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">Material</span>
                                 </th>
-                                <th class="px-6 py-3 text-start">
+                                <th class="px-4 @7xl:px-6 py-3 text-start">
                                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">Type</span>
                                 </th>
-                                <th class="px-6 py-3 text-start">
+                                <th class="px-4 @7xl:px-6 py-3 text-start">
                                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">Qty</span>
                                 </th>
-                                <th class="px-6 py-3 text-start">
+                                <th class="px-4 @7xl:px-6 py-3 text-start">
                                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">Before / After</span>
                                 </th>
-                                <th class="px-6 py-3 text-start">
+                                <th class="px-4 @7xl:px-6 py-3 text-start">
                                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">Supplier / Department</span>
                                 </th>
-                                <th class="px-6 py-3 text-start">
+                                <th class="px-4 @7xl:px-6 py-3 text-start">
                                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">Date</span>
                                 </th>
-                                <th class="px-6 py-3 text-start">
+                                <th class="hidden @7xl:table-cell px-4 @7xl:px-6 py-3 text-start">
                                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">By</span>
                                 </th>
-                                <th class="px-6 py-3 text-start">
+                                <th class="hidden @5xl:table-cell px-4 @7xl:px-6 py-3 text-start">
                                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">Remarks</span>
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+                        <tbody class="block @4xl:table-row-group divide-y divide-gray-200 dark:divide-neutral-700">
                             @forelse($this->histories as $stock)
                                 @php
                                     $isRestock = $stock->entry_type === 'restock';
                                     $isReturn  = $stock->entry_type === 'return';
+                                    $isRemoval = $stock->entry_type === 'removal';   // ✅ taken out by the Admin
                                     $isPlus    = $isRestock || $isReturn;   // ✅ restocks and returns ADD to stock
                                 @endphp
-                                <tr wire:key="{{ $stock->entry_type }}-{{ $stock->id }}" class="bg-white hover:bg-gray-50 dark:bg-neutral-800 dark:hover:bg-neutral-700">
+                                <tr wire:key="{{ $stock->entry_type }}-{{ $stock->id }}" class="block @4xl:table-row px-4 py-4 @4xl:p-0 bg-white hover:bg-gray-50 dark:bg-neutral-800 dark:hover:bg-neutral-700">
 
                                     {{-- Material --}}
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="block @4xl:table-cell px-0 @4xl:px-4 @7xl:px-6 pb-2 @4xl:py-4 @4xl:whitespace-nowrap">
                                         <div class="flex items-center gap-x-3">
                                             <div class="size-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
                                                 <svg class="size-4 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -171,13 +234,20 @@
                                     </td>
 
                                     {{-- Type --}}
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="inline-block @4xl:table-cell px-0 @4xl:px-4 @7xl:px-6 py-1 @4xl:py-4 @4xl:whitespace-nowrap">
                                         @if($isRestock)
                                             <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900 dark:text-blue-400">
                                                 <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                                                 </svg>
                                                 Stock In
+                                            </span>
+                                        @elseif($isRemoval)
+                                            <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full dark:bg-orange-900 dark:text-orange-300">
+                                                <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/>
+                                                </svg>
+                                                Removed
                                             </span>
                                         @elseif($isReturn)
                                             <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-900 dark:text-teal-300">
@@ -197,7 +267,7 @@
                                     </td>
 
                                     {{-- Qty --}}
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="inline-block @4xl:table-cell px-0 ps-1 @4xl:px-4 @7xl:px-6 py-1 @4xl:py-4 @4xl:whitespace-nowrap">
                                         @if($isPlus)
                                             <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-green-100 text-green-800 rounded-full dark:bg-green-900 dark:text-green-400">
                                                 <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -217,7 +287,7 @@
                                     </td>
 
                                     {{-- Before / After --}}
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="block @4xl:table-cell px-0 @4xl:px-4 @7xl:px-6 py-1 @4xl:py-4 @4xl:whitespace-nowrap">
                                         @if(!is_null($stock->quantity_before) && !is_null($stock->quantity_after))
                                             <div class="flex items-center gap-x-2 text-sm text-gray-600 dark:text-neutral-400">
                                                 <span class="font-medium text-gray-500">{{ number_format($stock->quantity_before) }}</span>
@@ -226,7 +296,7 @@
                                                 </svg>
                                                 <span class="font-semibold text-gray-800 dark:text-neutral-200">{{ number_format($stock->quantity_after) }}</span>
                                             </div>
-                                        @elseif(! $isRestock)
+                                        @elseif(! $isRestock && ! $isRemoval)
                                             {{-- Approved / returned before stock levels were recorded --}}
                                             <span class="text-xs text-gray-400 dark:text-neutral-500 italic"
                                                   title="This {{ $isReturn ? 'return' : 'approval' }} happened before stock levels were recorded.">Not recorded</span>
@@ -236,14 +306,17 @@
                                     </td>
 
                                     {{-- Supplier / Department --}}
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="block @4xl:table-cell px-0 @4xl:px-4 @7xl:px-6 py-1 @4xl:py-4 @4xl:max-w-[14rem]">
                                         <span class="text-sm text-gray-600 dark:text-neutral-400">
-                                            {{ $isRestock ? ($stock->supplier ?? '—') : ($stock->department_name ?? '—') }}
+                                            {{ $isRemoval ? (\App\Models\Stock::REASONS[$stock->supplier] ?? 'Removed') : ($isRestock ? ($stock->supplier ?? '—') : ($stock->department_name ?? '—')) }}
                                         </span>
+                                        @if ($stock->remarks)
+                                            <span class="@5xl:hidden block text-xs text-gray-400 dark:text-neutral-500 line-clamp-2 max-w-xs" title="{{ $stock->remarks }}">{{ $stock->remarks }}</span>
+                                        @endif
                                     </td>
 
                                     {{-- Date --}}
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="block @4xl:table-cell px-0 @4xl:px-4 @7xl:px-6 py-1 @4xl:py-4 @4xl:whitespace-nowrap">
                                         <span class="block text-sm text-gray-800 dark:text-neutral-200">
                                             {{ \Carbon\Carbon::parse($stock->arrival_date)->format('M d, Y') }}
                                         </span>
@@ -252,10 +325,13 @@
                                                 {{ \Carbon\Carbon::parse($stock->arrival_time)->format('h:i A') }}
                                             </span>
                                         @endif
+                                        <span class="@7xl:hidden block text-xs text-gray-400 dark:text-neutral-500">
+                                            {{ $isRemoval ? 'Removed' : ($isRestock ? 'Restocked' : ($isReturn ? 'Received' : 'Requested')) }} by {{ $stock->actor_name ?? 'N/A' }}
+                                        </span>
                                     </td>
 
                                     {{-- By --}}
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="hidden @7xl:table-cell px-4 @7xl:px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center gap-x-2">
                                             <div class="size-6 rounded-full bg-green-700 text-white flex items-center justify-center text-[10px] font-bold">
                                                 {{ strtoupper(substr($stock->actor_name ?? 'A', 0, 1)) }}
@@ -263,23 +339,23 @@
                                             <span class="text-sm text-gray-800 dark:text-neutral-200">
                                                 {{ $stock->actor_name ?? 'N/A' }}
                                                 <span class="text-xs text-gray-400 dark:text-neutral-500">
-                                                    ({{ $isRestock ? 'Restocked' : ($isReturn ? 'Received' : 'Requested') }})
+                                                    ({{ $isRemoval ? 'Removed' : ($isRestock ? 'Restocked' : ($isReturn ? 'Received' : 'Requested')) }})
                                                 </span>
                                             </span>
                                         </div>
                                     </td>
 
                                     {{-- Remarks --}}
-                                    <td class="px-6 py-4">
-                                        <span class="text-sm text-gray-500 dark:text-neutral-400">
+                                    <td class="hidden @5xl:table-cell px-4 @7xl:px-6 py-4 max-w-[16rem]">
+                                        <span class="text-sm text-gray-500 dark:text-neutral-400 line-clamp-2" title="{{ $stock->remarks }}">
                                             {{ $stock->remarks ?? '—' }}
                                         </span>
                                     </td>
 
                                 </tr>
                             @empty
-                                <tr>
-                                    <td colspan="8" class="px-6 py-10 text-center">
+                                <tr class="block @4xl:table-row">
+                                    <td colspan="8" class="block @4xl:table-cell px-6 py-10 text-center">
                                         <div class="flex flex-col items-center gap-2">
                                             <svg class="size-10 text-gray-300 dark:text-neutral-600" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>

@@ -53,7 +53,7 @@
 
   {{-- ✅ Switch: Students & Faculty | My borrowed items --}}
   <div class="flex gap-2 mb-4 border-b border-gray-200 dark:border-neutral-700" role="tablist" aria-label="Whose borrowed items">
-    @foreach(['students' => 'Faculty', 'mine' => 'My borrowed items'] as $key => $label)
+    @foreach(['students' => 'Faculty', 'mine' => 'My borrowed items', 'assigned' => 'Assigned (kept)'] as $key => $label)
       <button type="button" role="tab" wire:click="$set('view', '{{ $key }}')" aria-selected="{{ $view === $key ? 'true' : 'false' }}"
         class="min-h-10 px-4 -mb-px border-b-2 text-sm font-semibold transition inline-flex items-center gap-2
           {{ $view === $key ? 'border-[#123524] text-[#123524] dark:border-green-300 dark:text-green-300' : 'border-transparent text-gray-500 hover:text-[#123524] dark:text-neutral-400' }}">
@@ -61,11 +61,17 @@
         @if($key === 'mine' && $this->counts['mine'] > 0)
           <span class="text-xs px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">{{ $this->counts['mine'] }}</span>
         @endif
+        @if($key === 'assigned' && $this->counts['assigned'] > 0)
+          <span class="text-xs px-1.5 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">{{ $this->counts['assigned'] }}</span>
+        @endif
       </button>
     @endforeach
   </div>
 
-  @if($view === 'mine')
+  @if($view === 'assigned')
+    {{-- ✅ Kept by my department's teachers (no return date) — hand over to the next teacher --}}
+    <livewire:assigned-items scope="department" :key="'assigned-dept'" />
+  @elseif($view === 'mine')
     {{-- ============================================================
          ✅ MY BORROWED ITEMS (from the Admin)
          ============================================================ --}}
@@ -141,19 +147,23 @@
                       {{ $facultyItem->return_requested_at ? 'They sent it back — confirm it in the Faculty tab.' : 'They have not returned it yet.' }}
                     </p>
                   @elseif(! $item->returned_at && ! $item->return_requested_at)
+                    @can('borrowed-items.manage')
                     <button type="button" wire:click="requestReturn({{ $item->id }})"
                       wire:confirm="Return {{ $item->quantity }} pcs of {{ $item->item_name }} to the Admin?"
                       wire:loading.attr="disabled" wire:target="requestReturn({{ $item->id }})"
                       class="disabled:opacity-60 min-h-10 px-3 rounded-lg bg-[#123524] text-white text-xs font-semibold hover:bg-[#0B2418] transition">
                       Return to Admin
                     </button>
+                    @endcan
                   @elseif(! $item->returned_at)
+                    @can('borrowed-items.manage')
                     <button type="button" wire:click="cancelRequestReturn({{ $item->id }})"
                       wire:confirm="Cancel the return of {{ $item->item_name }}? The Admin will be told the items are still with you."
                       wire:loading.attr="disabled" wire:target="cancelRequestReturn({{ $item->id }})"
                       class="disabled:opacity-60 min-h-10 px-3 rounded-lg border border-gray-300 text-xs font-medium bg-white hover:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-200">
                       Cancel return
                     </button>
+                    @endcan
                   @endif
                 </td>
               </tr>
@@ -300,37 +310,45 @@
                   @if($item->returned_at && $adminItem && ! $adminItem->returned_at)
                     {{-- ✅ Faculty gave it back → now I return it to the Admin (same row, not "My borrowed items") --}}
                     @if(! $adminItem->return_requested_at)
+                      @can('borrowed-items.manage')
                       <button type="button" wire:click="requestReturn({{ $adminItem->id }})"
                         wire:confirm="Return {{ $adminItem->quantity }} pcs of {{ $adminItem->item_name }} to the Admin?"
                         wire:loading.attr="disabled" wire:target="requestReturn({{ $adminItem->id }})"
                         class="min-h-10 px-3 rounded-lg bg-[#123524] text-white text-xs font-semibold hover:bg-[#0B2418] disabled:opacity-60 transition">
                         Return to Admin
                       </button>
+                      @endcan
                     @else
+                      @can('borrowed-items.manage')
                       <button type="button" wire:click="cancelRequestReturn({{ $adminItem->id }})"
                         wire:confirm="Cancel the return of {{ $adminItem->item_name }}? The Admin will be told the items are still with you."
                         wire:loading.attr="disabled" wire:target="cancelRequestReturn({{ $adminItem->id }})"
                         class="disabled:opacity-60 min-h-10 px-3 rounded-lg border border-gray-300 text-xs font-medium bg-white hover:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-200">
                         Cancel return
                       </button>
+                      @endcan
                     @endif
                   @elseif(! $item->returned_at)
-                    @can('requests.approve')
+                    @can('borrowed-items.manage')
                       @if($sentBack)
                         {{-- ✅ Faculty clicked "Return to Program Head" → check the item and confirm --}}
+                        @can('borrowed-items.manage')
                         <button type="button" wire:click="openReturn({{ $item->id }})"
                           class="min-h-10 px-3 rounded-lg bg-[#123524] text-white text-xs font-semibold hover:bg-[#0B2418] transition">
                           {{ $adminItem && ! $adminItem->returned_at ? 'Confirm & send to Admin' : 'Confirm return' }}
                         </button>
+                        @endcan
                         {{-- ✅ Several items from this request sent back → confirm them all as Good in one go --}}
                         @php $sentBackHere = $this->sentBackCounts[$item->request_id] ?? 0; @endphp
                         @if($sentBackHere > 1)
+                          @can('borrowed-items.manage')
                           <button type="button" wire:click="confirmAllGood({{ $item->request_id }})"
                             wire:confirm="Confirm all {{ $sentBackHere }} items from {{ $item->request->user->name ?? 'this faculty member' }} as returned in GOOD condition? (Use “Confirm return” for anything damaged or lost.)"
                             wire:loading.attr="disabled" wire:target="confirmAllGood({{ $item->request_id }})"
                             class="block sm:ml-auto mt-1.5 text-xs font-medium text-[#1C6B45] dark:text-green-300 hover:underline disabled:opacity-60">
                             Confirm all {{ $sentBackHere }} as Good
                           </button>
+                          @endcan
                         @endif
                       @elseif($isOverdue)
                         {{-- ✅ Overdue: message the faculty member --}}
@@ -340,6 +358,7 @@
                             Reminded today
                           </span>
                         @else
+                          @can('borrowed-items.manage')
                           <button type="button" wire:click="sendReminder({{ $item->id }})"
                             wire:confirm="Send a reminder to {{ $item->request->user->name ?? 'the borrower' }} to return {{ $item->item_name }} (x{{ $item->quantity }})?"
                             wire:loading.attr="disabled" wire:target="sendReminder({{ $item->id }})"
@@ -349,6 +368,7 @@
                             </svg>
                             {{ $reminded ? 'Remind again' : 'Send reminder' }}
                           </button>
+                          @endcan
                         @endif
                       @else
                         {{-- Still with the faculty member: nothing to confirm until they click "Return to Program Head" --}}
@@ -358,6 +378,16 @@
                       @endif
                     @endcan
                   @endif
+                  @if (! $item->returned_at && ! $item->return_requested_at)
+                    @can('borrowed-items.manage')
+                      {{-- ✅ The teacher keeps it (faculty room furniture): no return date, no overdue --}}
+                      <button type="button" wire:click="convertToAssigned({{ $item->id }})"
+                        wire:confirm="Let {{ $item->request?->user?->name ?? 'this teacher' }} KEEP {{ $item->item_name }} ×{{ $item->quantity }}? No return date, no reminders — it is handed over to the next teacher when needed."
+                        class="block md:ml-auto mt-1.5 text-xs font-medium text-[#1C6B45] dark:text-green-300 hover:underline">
+                        Keep (no return)
+                      </button>
+                    @endcan
+                  @endif
                 </td>
               </tr>
 
@@ -365,6 +395,7 @@
               @if($returningId === $item->id)
                 <tr wire:key="form-{{ $item->id }}" class="block sm:table-row bg-gray-50 dark:bg-neutral-900/40">
                   <td colspan="5" class="block sm:table-cell px-4 py-4">
+                    @can('borrowed-items.manage')
                     <form wire:submit="confirmReturn" class="flex flex-col sm:flex-row sm:items-end gap-3">
                       <div>
                         <label for="cond-{{ $item->id }}" class="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1">Condition</label>
@@ -388,6 +419,7 @@
                         </button>
                       </div>
                     </form>
+                    @endcan
                     @if($adminItem && ! $adminItem->returned_at)
                       <p class="text-xs text-gray-500 mt-2">This item was borrowed from the <strong>Admin</strong> — confirming sends it straight back to the Admin. No extra step needed.</p>
                     @else

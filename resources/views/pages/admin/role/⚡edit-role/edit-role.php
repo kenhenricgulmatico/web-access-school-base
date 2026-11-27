@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\PermissionCatalog;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -12,134 +13,102 @@ new #[Layout('layouts.admin')] class extends Component
     public $name;
     public $selectedPermissions = [];
 
-    private const ROLE_GROUPS = [
-        // ✅ ADMIN — unchanged
-        'admin' => [
-            'program-head-requests',
-            'stock-materials',
-            'facility-schedule',
-            'users',
-        ],
-
-        // ✅ PROGRAM HEAD — unchanged
-        'program head' => [
-            'members',
-            'requests',
-            'program-head-requests',
-        ],
-
-        // ✅ FACULTY — two clean groups now
-        'faculty' => [
-            'facility-requests',
-            'material-requests',
-        ],
-    ];
-
-    private const ROLE_HIDDEN_PERMISSIONS = [
-        'admin' => [
-            'program-head-requests.create',
-            'program-head-requests.update',
-            'program-head-requests.delete',
-        ],
-
-        'program head' => [
-            'requests.view-own',
-            'requests.create',
-            'requests.update-own',
-            'requests.delete-own',
-            'requests.cancel-own',
-            'program-head-requests.approve',
-            'program-head-requests.reject',
-        ],
-
-        // ✅ Faculty — nothing hidden now; all 5 actions per group are controllable
-        'faculty' => [],
-    ];
-
-    private const DEFAULT_GROUPS = [
-        'program-head-requests',
-        'stock-materials',
-        'facility-schedule',
-        'users',
-    ];
-
     public function mount(Role $role)
     {
+        abort_unless(auth()->user()->can('roles.manage'), 403);
+
         $this->role = $role;
         $this->name = $role->name;
 
         $this->selectedPermissions = $role->permissions
             ->pluck('name')
-            ->filter(fn ($permName) => $this->isManageable($permName))
+            ->filter(fn ($permName) => $this->isManageable($permName) || $this->isLocked($permName))
             ->values()
             ->toArray();
     }
 
+    /** ✅ Every feature this role's pages use (locked ones included, shown as fixed). */
     #[Computed()]
     public function permissions()
     {
         return Permission::select('id', 'name')
             ->get()
-            ->filter(fn ($permission) => $this->isManageable($permission->name))
+            ->filter(fn ($p) => $this->isManageable($p->name) || $this->isLocked($p->name))
             ->values();
     }
 
-    protected function allowedGroups(): array
+    #[Computed()]
+    public function grouped(): array
     {
-        return self::ROLE_GROUPS[$this->role->name] ?? self::DEFAULT_GROUPS;
+        return PermissionCatalog::orderFor(PermissionCatalog::grouped($this->permissions), $this->role->name);
     }
 
-    protected function hiddenPermissions(): array
+    /** "All" / "None" for one feature group. */
+    public function toggleGroup(string $group): void
     {
-        return self::ROLE_HIDDEN_PERMISSIONS[$this->role->name] ?? [];
+        $names = collect($this->grouped[$group] ?? [])->pluck('name')->reject(fn ($n) => $this->isLocked($n));
+        $allOn = $names->diff($this->selectedPermissions)->isEmpty();
+
+        $this->selectedPermissions = $allOn
+            ? collect($this->selectedPermissions)->diff($names)->values()->all()
+            : collect($this->selectedPermissions)->merge($names)->unique()->values()->all();
+    }
+
+    public function isLocked(string $permName): bool
+    {
+        return in_array($permName, PermissionCatalog::lockedFor($this->role->name), true);
     }
 
     protected function isManageable(string $permName): bool
     {
-        if (in_array($permName, $this->hiddenPermissions(), true)) {
-            return false;
-        }
-
-        $prefix = explode('.', $permName, 2)[0] ?? '';
-
-        return in_array($prefix, $this->allowedGroups(), true);
+        return ! $this->isLocked($permName) && PermissionCatalog::manageable($this->role->name, $permName);
     }
 
     protected function rules()
     {
         return [
             'name' => 'required|string|min:3|unique:roles,name,' . $this->role->id,
-            'selectedPermissions' => 'array|min:1',
+            'selectedPermissions' => 'array',
         ];
     }
 
     public function save()
     {
+        abort_unless(auth()->user()->can('roles.manage'), 403);
         $this->validate();
 
-        $manageable = collect($this->selectedPermissions)
-            ->filter(fn ($permName) => $this->isManageable($permName))
-            ->values()
-            ->toArray();
-
-        if (empty($manageable)) {
-            $this->addError('selectedPermissions', 'Please select at least one permission from the available groups.');
+        // ✅ the three built-in roles keep their names (routes and pages use them)
+        if (in_array($this->role->name, ['admin', 'program head', 'faculty'], true) && $this->name !== $this->role->name) {
+            $this->addError('name', 'The built-in roles (admin, program head, faculty) cannot be renamed.');
             return;
         }
 
+        $manageable = collect($this->selectedPermissions)
+            ->filter(fn ($permName) => $this->isManageable($permName))
+            ->values();
+
+        if ($manageable->isEmpty()) {
+            $this->addError('selectedPermissions', 'Please select at least one permission.');
+            return;
+        }
+
+        // Everything not on this checklist (Roles & Permissions, Reports…) stays as it was,
+        // and locked ones are always kept.
         $preserved = $this->role->permissions
             ->pluck('name')
-            ->filter(fn ($permName) => ! $this->isManageable($permName))
+            ->filter(fn ($permName) => ! $this->isManageable($permName));
+
+        $final = $preserved
+            ->merge($manageable)
+            ->merge(PermissionCatalog::lockedFor($this->role->name))
+            ->unique()
             ->values()
-            ->toArray();
+            ->all();
 
-        $finalPermissions = array_values(array_unique(array_merge($preserved, $manageable)));
+        $this->role->update(['name' => $this->name]);
+        $this->role->syncPermissions($final);
 
-        $this->role->update([
-            'name' => $this->name,
-        ]);
-
-        $this->role->syncPermissions($finalPermissions);
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
         session()->flash('success', 'Role updated successfully!');
     }

@@ -66,7 +66,7 @@
                                     </div>
 
                                     <select id="department-select"
-                                        wire:model="department_id"
+                                        wire:model.live="department_id"
                                         class="py-2.5 ps-10 pe-10 block w-full border-gray-200 rounded-lg sm:text-sm appearance-none
                                                focus:border-blue-500 focus:ring-blue-500
                                                dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-300
@@ -125,6 +125,14 @@
                             </div>
                         @endunless
 
+                        {{-- ✅ Changing role / department while requests or borrowed items are still open --}}
+                        @if ($warning = $this->changeWarning())
+                            <div class="flex items-start gap-2.5 p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
+                                <svg class="size-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+                                <span>{{ $warning }}</span>
+                            </div>
+                        @endif
+
                         {{-- Name + Email --}}
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
                             <div>
@@ -142,6 +150,9 @@
                                 </label>
                                 <input type="email" id="hs-email" wire:model="email"
                                     class="py-2.5 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400">
+                                @unless ($this->isAdmin)
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-neutral-400">Must end with @csav.edu.ph</p>
+                                @endunless
                                 @error('email') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                             </div>
                         </div>

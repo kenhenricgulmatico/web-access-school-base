@@ -29,6 +29,14 @@
     </div>
   </div>
 
+  {{-- ✅ What I keep (no return date) — e.g. a table and chair for my faculty room --}}
+  @if ($this->keptCount > 0)
+    <div class="mb-5">
+      <h3 class="mb-2 text-sm font-semibold text-gray-800 dark:text-neutral-100">Assigned to me · {{ $this->keptCount }}</h3>
+      <livewire:assigned-items scope="me" :key="'assigned-me'" />
+    </div>
+  @endif
+
   {{-- Flash --}}
   @if(session('message'))
     <div class="mb-4 px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-sm text-green-800 dark:bg-green-950/30 dark:border-green-900 dark:text-green-300">{{ session('message') }}</div>

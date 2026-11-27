@@ -35,6 +35,7 @@ class StockSnapshot
             DB::table('request_items')->where('id', $line->id)->update([
                 'stock_before_approval' => $running,
                 'stock_after_approval'  => $after,
+                'approved_at'           => now(), // ✅ the real moment it left the main stock
             ]);
 
             $running = $after;

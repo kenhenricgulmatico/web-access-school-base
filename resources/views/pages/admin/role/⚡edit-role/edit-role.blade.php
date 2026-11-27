@@ -1,4 +1,4 @@
-<div class="select-none">
+<div>
     <div class="max-w-3xl mx-auto px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
 
         {{-- Back --}}
@@ -40,6 +40,8 @@
                         wire:model.defer="name"
                         type="text"
                         id="role-name"
+                        @readonly(in_array($role->name, ['admin', 'program head', 'faculty'], true))
+                        @if (in_array($role->name, ['admin', 'program head', 'faculty'], true)) title="Built-in role — its name can't be changed" @endif
                         placeholder="e.g. registrar, librarian, staff"
                         class="w-full py-2.5 px-4 border border-gray-300 dark:border-neutral-600 rounded-lg text-sm
                                bg-white dark:bg-neutral-900 text-gray-800 dark:text-neutral-200
@@ -67,139 +69,7 @@
                         </div>
                     @enderror
 
-                    @if ($this->permissions->isEmpty())
-                        <p class="text-sm text-gray-400 dark:text-neutral-500">No permissions available.</p>
-                    @else
-                        @php
-                            $grouped = [];
-                            foreach ($this->permissions as $permission) {
-                                $parts  = explode('.', $permission->name, 2);
-                                $prefix = $parts[0] ?? 'other';
-                                $grouped[$prefix][] = $permission;
-                            }
-                            ksort($grouped);
-
-                            $groupTitles = [
-                                'members'                => 'View Faculty',
-                                'requests'               => 'Reservation & Request',
-                                'facility-requests'      => 'Facility',       // ✅ new
-                                'material-requests'      => 'Material',       // ✅ new
-                                'program-head-requests'  => 'Request to Admin',
-                                'stock-materials'        => 'Stock Materials',
-                                'facility-schedule'      => 'Facility Schedule',
-                                'users'                  => 'Users',
-                                'allocations'            => 'Resource Allocation',
-                                'audit'                  => 'Audit Logs',
-                                'reports'                => 'Reports',
-                            ];
-
-                            $permissionLabels = [
-                                // Generic requests
-                                'requests.view-own'        => 'View Own',
-                                'requests.create'          => 'Create',
-                                'requests.update-own'      => 'Edit Own',
-                                'requests.delete-own'      => 'Delete Own',
-                                'requests.cancel-own'      => 'Cancel Own',
-                                'requests.view-department' => 'View',
-                                'requests.view-all'        => 'View All',
-                                'requests.approve'         => 'Approve',
-                                'requests.reject'          => 'Reject',
-
-                                // Facility Requests
-                                'facility-requests.view'       => 'View',
-                                'facility-requests.view-all'   => 'View All',
-                                'facility-requests.create'     => 'Create',
-                                'facility-requests.update'     => 'Edit',
-                                'facility-requests.cancel'     => 'Cancel',
-
-                                // Material Requests
-                                'material-requests.view'       => 'View',
-                                'material-requests.view-all'   => 'View All',
-                                'material-requests.create'     => 'Create',
-                                'material-requests.update'     => 'Edit',
-                                'material-requests.cancel'     => 'Cancel',
-
-                                // Members
-                                'members.view'             => 'View',
-                                'members.create'           => 'Create',
-                                'members.update'           => 'Edit',
-                                'members.delete'           => 'Delete',
-
-                                // Program Head Requests
-                                'program-head-requests.view'       => 'View',
-                                'program-head-requests.view-all'   => 'View All',
-                                'program-head-requests.create'     => 'Create',
-                                'program-head-requests.update'     => 'Edit',
-                                'program-head-requests.delete'     => 'Delete',
-                                'program-head-requests.approve'    => 'Approve',
-                                'program-head-requests.reject'     => 'Reject',
-
-                                // Stock Materials
-                                'stock-materials.view'       => 'View',
-                                'stock-materials.view-all'   => 'View All',
-                                'stock-materials.create'     => 'Create',
-                                'stock-materials.update'     => 'Edit',
-                                'stock-materials.delete'     => 'Delete',
-
-                                // Facility Schedule
-                                'facility-schedule.view'     => 'View',
-                                'facility-schedule.view-all' => 'View All',
-                                'facility-schedule.create'   => 'Create',
-                                'facility-schedule.update'   => 'Edit',
-                                'facility-schedule.delete'   => 'Delete',
-
-                                // Users
-                                'users.view'                 => 'View',
-                                'users.create'               => 'Create',
-                                'users.update'               => 'Edit',
-                                'users.delete'               => 'Delete',
-                                'users.approve'              => 'Approve',
-                                'users.reset-password'       => 'Reset Password',
-                            ];
-                        @endphp
-
-                        <div class="space-y-5">
-                            @foreach ($grouped as $group => $permissions)
-                                <div class="border border-gray-200 dark:border-neutral-700 rounded-lg overflow-hidden">
-
-                                    <div class="px-4 py-2 bg-gray-50 dark:bg-neutral-900/60 border-b border-gray-200 dark:border-neutral-700 flex items-center justify-between gap-3">
-                                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-neutral-300">
-                                            {{ $groupTitles[$group] ?? \Illuminate\Support\Str::headline($group) }}
-                                        </p>
-                                        @php
-                                            $groupNames = collect($permissions)->pluck('name');
-                                            $selectedInGroup = collect($selectedPermissions)->intersect($groupNames)->count();
-                                        @endphp
-                                        <span class="text-[10px] font-medium text-gray-400 dark:text-neutral-500">
-                                            {{ $selectedInGroup }} / {{ count($permissions) }}
-                                        </span>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-0 divide-y sm:divide-y-0 sm:divide-x divide-gray-100 dark:divide-neutral-700">
-                                        @foreach ($permissions as $permission)
-                                            <label for="perm-{{ $permission->id }}"
-                                                class="flex items-start gap-3 p-3 cursor-pointer
-                                                       hover:bg-gray-50 dark:hover:bg-neutral-700/30 transition
-                                                       border-b border-gray-100 dark:border-neutral-700 last:border-b-0 sm:border-b-0 sm:[&:nth-last-child(-n+2)]:border-b-0">
-                                                <input
-                                                    type="checkbox"
-                                                    id="perm-{{ $permission->id }}"
-                                                    wire:model="selectedPermissions"
-                                                    value="{{ $permission->name }}"
-                                                    class="mt-0.5 shrink-0 size-4 rounded border-gray-300 text-blue-600
-                                                           focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-0
-                                                           dark:bg-neutral-800 dark:border-neutral-600
-                                                           dark:checked:bg-blue-600 dark:checked:border-blue-600">
-                                                <span class="text-sm text-gray-700 dark:text-neutral-300 leading-snug">
-                                                    {{ $permissionLabels[$permission->name] ?? \Illuminate\Support\Str::headline(str_replace('.', ' ', $permission->name)) }}
-                                                </span>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
+                    @include('partials.permission-checklist')
                 </div>
 
                 {{-- Buttons --}}

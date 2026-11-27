@@ -1,56 +1,7 @@
-<div class="select-none">
+<div>
 <div class="max-w-[85rem] px-4 py-6 sm:px-6 sm:py-10 lg:px-8 lg:py-14 mx-auto">
 
-    {{-- Quick Nav --}}
-    <div class="flex flex-wrap gap-2 mb-4">
-        <a href="{{ route('admin.users') }}"
-            class="py-2 px-3 inline-flex items-center gap-x-2 text-xs sm:text-sm font-medium rounded-lg border
-                {{ request()->routeIs('admin.users')
-                    ? 'border-transparent bg-blue-600 text-white'
-                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700' }}">
-            <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-            Users
-        </a>
-
-        <a href="{{ route('admin.students') }}"
-            class="py-2 px-3 inline-flex items-center gap-x-2 text-xs sm:text-sm font-medium rounded-lg border
-                {{ request()->routeIs('admin.students')
-                    ? 'border-transparent bg-blue-600 text-white'
-                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700' }}">
-            <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z"/>
-                <path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/>
-            </svg>
-            Account Approvals
-        </a>
-
-        <a href="{{ route('admin.roles') }}"
-            class="py-2 px-3 inline-flex items-center gap-x-2 text-xs sm:text-sm font-medium rounded-lg border
-                {{ request()->routeIs('admin.roles*')
-                    ? 'border-transparent bg-blue-600 text-white'
-                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700' }}">
-            <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-            Roles &amp; Permissions
-        </a>
-
-        <a href="{{ route('admin.departments') }}"
-            class="py-2 px-3 inline-flex items-center gap-x-2 text-xs sm:text-sm font-medium rounded-lg border
-                {{ request()->routeIs('admin.departments*')
-                    ? 'border-transparent bg-blue-600 text-white'
-                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700' }}">
-            <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 21h18M5 21V7l8-4v18M13 21V11h6v10M9 9h.01M9 13h.01M9 17h.01"/>
-            </svg>
-            Departments
-        </a>
-    </div>
+    @include('partials.users-tabs')
 
     {{-- Flash messages --}}
     @if (session()->has('success'))
@@ -65,12 +16,13 @@
         </div>
     @endif
 
-    <div class="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
+    {{-- ✅ @container: the table follows the width of THIS box (the sidebar takes 240px) --}}
+    <div class="@container bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl shadow-sm overflow-hidden">
 
         {{-- Header --}}
         <div class="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-neutral-700 flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:justify-between lg:items-center">
             <div>
-                <h2 class="text-lg sm:text-xl font-semibold text-gray-800 dark:text-neutral-200">User Management</h2>
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-800 dark:text-neutral-200">Account Approvals</h2>
                 <p class="text-xs sm:text-sm text-gray-500 dark:text-neutral-400">Approve or reject faculty and program head accounts</p>
             </div>
 
@@ -104,31 +56,30 @@
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
+                        <option value="deactivated">Deactivated</option>
                     </select>
                 </div>
             </div>
         </div>
 
         {{-- Table --}}
-        <div class="overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-600">
-            <table class="min-w-[860px] w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                <thead class="bg-gray-50 dark:bg-neutral-800">
+        <div>
+            <table class="w-full block @3xl:table divide-y divide-gray-200 dark:divide-neutral-700">
+                <thead class="hidden @3xl:table-header-group bg-gray-50 dark:bg-neutral-800">
                     <tr>
-                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">Name</th>
-                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">Email</th>
-                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">Role</th>
-                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">Department</th>
-                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">Status</th>
-                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">Registered</th>
+                        <th class="ps-6 pe-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">Name</th>
+                                                <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">Role</th>
+                        <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">Department</th>
+                        <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">Status</th>
                         <th class="px-4 sm:px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-neutral-700">
+                <tbody class="block @3xl:table-row-group divide-y divide-gray-100 dark:divide-neutral-700">
                     @forelse($this->users as $user)
-                        <tr wire:key="user-{{ $user->id }}" class="hover:bg-gray-50 dark:hover:bg-neutral-700/40 transition">
+                        <tr wire:key="user-{{ $user->id }}" class="block @3xl:table-row px-4 py-3 @3xl:p-0 hover:bg-gray-50 dark:hover:bg-neutral-700/40 transition">
 
-                            {{-- Name + Avatar --}}
-                            <td class="px-4 sm:px-6 py-3">
+                            {{-- Name + Avatar (+ email) --}}
+                            <td class="block @3xl:table-cell @3xl:ps-6 @3xl:pe-3 py-1 @3xl:py-3 min-w-0">
                                 <div class="flex items-center gap-3">
                                     @if ($user->avatar)
                                         <img src="{{ asset($user->avatar) }}"
@@ -139,17 +90,15 @@
                                             {{ strtoupper(substr($user->name, 0, 1)) }}
                                         </div>
                                     @endif
-                                    <p class="text-sm font-medium text-gray-800 dark:text-neutral-200 whitespace-nowrap">{{ $user->name }}</p>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-medium text-gray-800 dark:text-neutral-200">{{ $user->name }}</p>
+                                        <p class="text-xs text-gray-500 dark:text-neutral-400 break-all">{{ $user->email }}</p>
+                                    </div>
                                 </div>
                             </td>
 
-                            {{-- Email --}}
-                            <td class="px-4 sm:px-6 py-3 text-sm text-gray-600 dark:text-neutral-400 whitespace-nowrap">
-                                {{ $user->email }}
-                            </td>
-
                             {{-- Role --}}
-                            <td class="px-4 sm:px-6 py-3">
+                            <td class="inline-block @3xl:table-cell @3xl:px-3 py-1 @3xl:py-3">
                                 @php $role = $user->roles->first()?->name ?? 'N/A'; @endphp
                                 <span class="px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap
                                     @if($role === 'faculty') bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300
@@ -160,28 +109,27 @@
                             </td>
 
                             {{-- Department --}}
-                            <td class="px-4 sm:px-6 py-3 text-sm text-gray-600 dark:text-neutral-400 whitespace-nowrap">
+                            <td class="inline-block @3xl:table-cell px-2 @3xl:px-3 py-1 @3xl:py-3 text-sm text-gray-600 dark:text-neutral-400">
                                 {{ $user->department->department_name ?? 'N/A' }}
                             </td>
 
-                            {{-- Status --}}
-                            <td class="px-4 sm:px-6 py-3">
+                            {{-- Status (+ when they registered) --}}
+                            <td class="block @3xl:table-cell @3xl:px-3 py-1 @3xl:py-3">
                                 <span class="px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap
                                     @if($user->status === 'pending') bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300
                                     @elseif($user->status === 'approved') bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300
                                     @elseif($user->status === 'rejected') bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300
+                                    @else bg-gray-200 text-gray-700 dark:bg-neutral-700 dark:text-neutral-300
                                     @endif">
                                     {{ ucfirst($user->status) }}
                                 </span>
-                            </td>
-
-                            {{-- Registered --}}
-                            <td class="px-4 sm:px-6 py-3 text-sm text-gray-400 dark:text-neutral-500 whitespace-nowrap">
-                                {{ $user->created_at->diffForHumans() }}
+                                <span class="ms-1 @3xl:ms-0 @3xl:block @3xl:mt-1 text-xs text-gray-400 dark:text-neutral-500" title="{{ $user->created_at->format('M d, Y g:i A') }}">
+                                    registered {{ $user->created_at->diffForHumans() }}
+                                </span>
                             </td>
 
                             {{-- Actions --}}
-                            <td class="px-4 sm:px-6 py-3 text-right whitespace-nowrap">
+                            <td class="block @3xl:table-cell @3xl:px-6 pt-2 @3xl:py-3 @3xl:text-right @3xl:whitespace-nowrap">
                                 @if($user->status === 'pending')
                                     @can('users.approve')
                                         <button wire:click="approve({{ $user->id }})"
@@ -208,6 +156,11 @@
                                         </svg>
                                         Rejected
                                     </span>
+                                @elseif($user->status === 'deactivated')
+                                    {{-- ✅ deactivated on the Users tab (teacher who left) --}}
+                                    <a href="{{ route('admin.users', ['show' => 'deactivated']) }}" class="text-xs font-medium text-gray-600 hover:underline dark:text-neutral-300">
+                                        Deactivated · manage in Users
+                                    </a>
                                 @endif
                             </td>
 
@@ -216,8 +169,8 @@
                         {{-- ✅ Inline Reject Form --}}
                         @can('users.approve')
                             @if ($rejectingUserId === $user->id)
-                                <tr class="bg-red-50/40 dark:bg-red-900/10">
-                                    <td colspan="7" class="px-6 py-4">
+                                <tr class="block @3xl:table-row bg-red-50/40 dark:bg-red-900/10">
+                                    <td colspan="5" class="block @3xl:table-cell px-4 @3xl:px-6 py-4">
                                         <div class="max-w-2xl bg-white dark:bg-neutral-800 border border-red-200 dark:border-red-900/50 rounded-lg p-4 space-y-3">
                                             <div class="flex items-center gap-2">
                                                 <svg class="size-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -258,8 +211,8 @@
                         @endcan
 
                     @empty
-                        <tr>
-                            <td colspan="7" class="px-6 py-14 text-center">
+                        <tr class="block @3xl:table-row">
+                            <td colspan="5" class="block @3xl:table-cell px-6 py-14 text-center">
                                 <div class="flex flex-col items-center gap-2">
                                     <div class="size-12 rounded-full bg-gray-100 dark:bg-neutral-700 flex items-center justify-center">
                                         <svg class="size-6 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">

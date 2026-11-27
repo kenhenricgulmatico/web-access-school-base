@@ -55,8 +55,9 @@
         {{-- Stats Cards --}}
         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
-            <div
-                class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5 dark:bg-neutral-800 dark:border-neutral-700">
+            <div role="button" tabindex="0" wire:click="filterStock('')" @keydown.enter="$wire.filterStock('')"
+                class="flex flex-col bg-white border shadow-sm rounded-xl p-4 md:p-5 cursor-pointer hover:shadow-md transition dark:bg-neutral-800
+                {{ $stockFilter === '' ? 'border-gray-200 dark:border-neutral-700' : 'border-gray-200 dark:border-neutral-700' }}">
                 <div class="flex items-center gap-x-2 mb-3">
                     <span
                         class="size-8 inline-flex justify-center items-center rounded-full border-4 border-blue-50 bg-blue-100 text-blue-800 dark:border-blue-900 dark:bg-blue-800 dark:text-blue-400">
@@ -69,7 +70,7 @@
                     <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-500">Total Materials</p>
                 </div>
                 <h3 class="text-2xl font-medium text-gray-800 dark:text-neutral-200">{{ $this->totalMaterials }}</h3>
-                <p class="mt-1 text-xs text-gray-500 dark:text-neutral-500">All items</p>
+                <p class="mt-1 text-xs text-gray-500 dark:text-neutral-500">All items · click to show all</p>
             </div>
 
             <div
@@ -89,8 +90,9 @@
                 <p class="mt-1 text-xs text-gray-500 dark:text-neutral-500">Units available</p>
             </div>
 
-            <div
-                class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5 dark:bg-neutral-800 dark:border-neutral-700">
+            <div role="button" tabindex="0" wire:click="filterStock('low')" @keydown.enter="$wire.filterStock('low')"
+                class="flex flex-col bg-white border shadow-sm rounded-xl p-4 md:p-5 cursor-pointer hover:shadow-md transition dark:bg-neutral-800
+                {{ $stockFilter === 'low' ? 'border-yellow-400 ring-2 ring-yellow-300 dark:border-yellow-600 dark:ring-yellow-800' : 'border-gray-200 dark:border-neutral-700' }}">
                 <div class="flex items-center gap-x-2 mb-3">
                     <span
                         class="size-8 inline-flex justify-center items-center rounded-full border-4 border-yellow-50 bg-yellow-100 text-yellow-800 dark:border-yellow-900 dark:bg-yellow-800 dark:text-yellow-400">
@@ -103,11 +105,12 @@
                     <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-500">Low Stock</p>
                 </div>
                 <h3 class="text-2xl font-medium text-gray-800 dark:text-neutral-200">{{ $this->lowStock }}</h3>
-                <p class="mt-1 text-xs text-gray-500 dark:text-neutral-500">≤ 5 units left</p>
+                <p class="mt-1 text-xs text-gray-500 dark:text-neutral-500">At or below each item's warn level · click to filter</p>
             </div>
 
-            <div
-                class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5 dark:bg-neutral-800 dark:border-neutral-700">
+            <div role="button" tabindex="0" wire:click="filterStock('out')" @keydown.enter="$wire.filterStock('out')"
+                class="flex flex-col bg-white border shadow-sm rounded-xl p-4 md:p-5 cursor-pointer hover:shadow-md transition dark:bg-neutral-800
+                {{ $stockFilter === 'out' ? 'border-red-400 ring-2 ring-red-300 dark:border-red-600 dark:ring-red-800' : 'border-gray-200 dark:border-neutral-700' }}">
                 <div class="flex items-center gap-x-2 mb-3">
                     <span
                         class="size-8 inline-flex justify-center items-center rounded-full border-4 border-red-50 bg-red-100 text-red-800 dark:border-red-900 dark:bg-red-800 dark:text-red-400">
@@ -121,7 +124,7 @@
                     <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-neutral-500">Out of Stock</p>
                 </div>
                 <h3 class="text-2xl font-medium text-gray-800 dark:text-neutral-200">{{ $this->outOfStock }}</h3>
-                <p class="mt-1 text-xs text-gray-500 dark:text-neutral-500">Zero units</p>
+                <p class="mt-1 text-xs text-gray-500 dark:text-neutral-500">Zero units · click to filter</p>
             </div>
 
         </div>
@@ -130,14 +133,22 @@
         <div class="flex flex-col">
             <div class="-m-1.5 overflow-x-auto">
                 <div class="p-1.5 min-w-full inline-block align-middle">
+                    {{-- ✅ @container: the table follows the width of THIS box (the sidebar takes 240px of the window) --}}
                     <div
-                        class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden dark:bg-neutral-800 dark:border-neutral-700">
+                        class="@container bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden dark:bg-neutral-800 dark:border-neutral-700">
 
                         {{-- Table Header --}}
                         <div
                             class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-gray-200 dark:border-neutral-700">
                             <div>
                                 <h2 class="text-xl font-semibold text-gray-800 dark:text-neutral-200">Materials</h2>
+                                @if ($stockFilter !== '')
+                                    <button type="button" wire:click="filterStock('')"
+                                        class="mt-1 inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-full
+                                        {{ $stockFilter === 'low' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300' : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' }}">
+                                        Showing {{ $stockFilter === 'low' ? 'low stock' : 'out of stock' }} only · Show all ✕
+                                    </button>
+                                @endif
                                 <p class="text-sm text-gray-600 dark:text-neutral-400">All registered materials and
                                     their stock levels</p>
                             </div>
@@ -150,7 +161,7 @@
                                             <path d="m21 21-4.35-4.35" />
                                         </svg>
                                     </div>
-                                    <input type="text" wire:model.live="search" placeholder="Search material..."
+                                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search material..."
                                         class="py-2 ps-9 pe-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500">
                                 </div>
                                 <select wire:model.live="statusFilter"
@@ -164,43 +175,48 @@
                         </div>
 
                         {{-- Table Body --}}
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                            <thead class="bg-gray-50 dark:bg-neutral-800">
+                        <table class="min-w-full block @4xl:table divide-y divide-gray-200 dark:divide-neutral-700">
+                            <thead class="hidden @4xl:table-header-group bg-gray-50 dark:bg-neutral-800">
                                 <tr>
                                     <th
-                                        class="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                        class="hidden @7xl:table-cell px-4 @7xl:px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                         #</th>
                                     <th
-                                        class="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                        class="px-4 @7xl:px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                         Material</th>
                                     <th
-                                        class="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                        class="hidden @6xl:table-cell px-4 @7xl:px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                         Type</th>
                                     <th
-                                        class="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                        class="px-4 @7xl:px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                         Qty Available</th>
                                     <th
-                                        class="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                        class="px-4 @7xl:px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                         Last Restocked</th>
                                     <th
-                                        class="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                        class="px-4 @7xl:px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                         Status</th>
                                     <th
-                                        class="px-6 py-3 text-end text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
+                                        class="px-4 @7xl:px-6 py-3 text-end text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-neutral-200">
                                         Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+                            <tbody class="block @4xl:table-row-group divide-y divide-gray-200 dark:divide-neutral-700">
                                 @forelse($this->materials as $index => $material)
-                                    <tr
-                                        class="bg-white hover:bg-gray-50 dark:bg-neutral-800 dark:hover:bg-neutral-700">
+                                    @php
+                                        $lent  = $this->lentOut[$material->id] ?? 0;
+                                        $isOut = $material->quantity_available <= 0;
+                                        $isLow = $material->isLowStock();
+                                    @endphp
+                                    <tr wire:key="mat-{{ $material->id }}"
+                                        class="block @4xl:table-row px-4 py-4 @4xl:p-0 bg-white hover:bg-gray-50 dark:bg-neutral-800 dark:hover:bg-neutral-700">
 
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td class="hidden @7xl:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {{ $this->materials->firstItem() + $index }}
                                         </td>
 
                                         {{-- Material --}}
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td class="block @4xl:table-cell px-0 @4xl:px-4 @7xl:px-6 pb-2 @4xl:py-4 @4xl:whitespace-nowrap">
                                             <div class="flex items-center gap-x-3">
                                                 <div
                                                     class="size-9 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
@@ -212,20 +228,28 @@
                                                     </svg>
                                                 </div>
                                                 <div>
-                                                    <span
-                                                        class="block text-sm font-semibold text-gray-800 dark:text-neutral-200">
+                                                    {{-- ✅ Name opens this material's Stock History --}}
+                                                    <a href="{{ route('admin.inventory-stock-history', ['material' => $material->id]) }}"
+                                                        title="See every change to {{ $material->resource_name }}"
+                                                        class="block text-sm font-semibold text-gray-800 hover:text-[#1C6B45] hover:underline dark:text-neutral-200 dark:hover:text-green-300">
                                                         {{ $material->resource_name }}
-                                                    </span>
-                                                    <span
-                                                        class="block text-xs text-gray-500 dark:text-neutral-400 truncate max-w-[200px]">
-                                                        {{ $material->description }}
+                                                    </a>
+                                                    @if (trim((string) $material->description) !== '' && strcasecmp(trim($material->description), trim($material->resource_name)) !== 0)
+                                                        <span
+                                                            class="block text-xs text-gray-500 dark:text-neutral-400 truncate max-w-[200px]">
+                                                            {{ $material->description }}
+                                                        </span>
+                                                    @endif
+                                                    {{-- mid-size screens: the Type column is hidden, show it here --}}
+                                                    <span class="hidden @4xl:inline-flex @6xl:hidden mt-0.5 py-0.5 px-1.5 text-[10px] font-medium bg-gray-100 text-gray-700 rounded-full dark:bg-neutral-700 dark:text-neutral-300">
+                                                        {{ $material->resourceType->type_name ?? 'N/A' }}
                                                     </span>
                                                 </div>
                                             </div>
                                         </td>
 
                                         {{-- Type --}}
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td class="inline-block @4xl:hidden @6xl:table-cell px-0 @6xl:px-4 @7xl:px-6 py-1 @4xl:py-4 @4xl:whitespace-nowrap">
                                             <span
                                                 class="py-1 px-2 inline-flex items-center text-xs font-medium bg-gray-100 text-gray-800 rounded-full dark:bg-neutral-700 dark:text-neutral-300">
                                                 {{ $material->resourceType->type_name ?? 'N/A' }}
@@ -233,38 +257,57 @@
                                         </td>
 
                                         {{-- Qty Available --}}
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="flex items-center gap-x-2">
+                                        <td class="block @4xl:table-cell px-0 @4xl:px-4 @7xl:px-6 py-1 @4xl:py-4 @4xl:whitespace-nowrap">
+                                            <div class="flex items-center gap-x-2" title="Warns at {{ number_format($material->low_stock_at) }} or below">
                                                 <span
                                                     class="text-sm font-semibold
-                                                @if ($material->quantity_available == 0) text-red-600 dark:text-red-400
-                                                @elseif($material->quantity_available <= 5) text-yellow-600 dark:text-yellow-400
+                                                @if ($isOut) text-red-600 dark:text-red-400
+                                                @elseif($isLow) text-yellow-600 dark:text-yellow-400
                                                 @else text-green-600 dark:text-green-400 @endif">
                                                     {{ number_format($material->quantity_available) }}
                                                 </span>
                                                 <span class="text-xs text-gray-400 dark:text-neutral-500">
                                                     {{ $material->unit ?? 'Ream' }}
                                                 </span>
-                                                @if ($material->quantity_available == 0)
+                                                @if ($isOut)
                                                     <span
                                                         class="py-0.5 px-1.5 text-[10px] font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-900 dark:text-red-400">Out
-                                                        of order</span>
-                                                @elseif($material->quantity_available <= 5)
+                                                        of stock</span>
+                                                @elseif($isLow)
                                                     <span
                                                         class="py-0.5 px-1.5 text-[10px] font-medium bg-yellow-100 text-yellow-800 rounded-full dark:bg-yellow-900 dark:text-yellow-400">Low</span>
                                                 @endif
                                             </div>
+                                            {{-- ✅ Borrowed Material items still out with Program Heads --}}
+                                            @if ($material->is_returnable)
+                                                @php $kept = $this->assignedOut[$material->id] ?? 0; @endphp
+                                                <p class="mt-0.5 text-xs text-gray-500 dark:text-neutral-400">
+                                                    @if ($lent > 0 || $kept > 0)
+                                                        @if ($lent > 0)
+                                                            <a href="{{ route('admin.borrowed-items') }}?filter=outstanding" class="text-[#1C6B45] dark:text-green-300 hover:underline">{{ number_format($lent) }} lent out</a> ·
+                                                        @endif
+                                                        @if ($kept > 0)
+                                                            {{-- ✅ kept by teachers (assigned, no return date) --}}
+                                                            <a href="{{ route('admin.borrowed-items') }}?filter=assigned" class="text-[#1C6B45] dark:text-green-300 hover:underline">{{ number_format($kept) }} assigned</a> ·
+                                                        @endif
+                                                        {{ number_format($material->quantity_available + $lent + $kept) }} owned
+                                                    @else
+                                                        none lent out
+                                                    @endif
+                                                </p>
+                                            @endif
                                         </td>
 
                                         {{-- Last Restocked --}}
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            @if ($material->latestStock)
-                                                <span class="block text-sm text-gray-800 dark:text-neutral-200">
-                                                    {{ \Carbon\Carbon::parse($material->latestStock->arrival_date)->format('M d, Y') }}
+                                        <td class="block @4xl:table-cell px-0 @4xl:px-4 @7xl:px-6 py-1 @4xl:py-4 @4xl:whitespace-nowrap">
+                                            <span class="@4xl:hidden text-xs text-gray-500 dark:text-neutral-400">Last restocked: </span>
+                                            @if ($material->latestRestock)
+                                                <span class="inline @4xl:block text-sm text-gray-800 dark:text-neutral-200">
+                                                    {{ \Carbon\Carbon::parse($material->latestRestock->arrival_date)->format('M d, Y') }}
                                                 </span>
-                                                @if ($material->latestStock->arrival_time)
-                                                    <span class="block text-xs text-gray-500 dark:text-neutral-400">
-                                                        {{ \Carbon\Carbon::parse($material->latestStock->arrival_time)->format('h:i A') }}
+                                                @if ($material->latestRestock->arrival_time)
+                                                    <span class="inline @4xl:block text-xs text-gray-500 dark:text-neutral-400">
+                                                        {{ \Carbon\Carbon::parse($material->latestRestock->arrival_time)->format('h:i A') }}
                                                     </span>
                                                 @endif
                                             @else
@@ -274,7 +317,7 @@
                                         </td>
 
                                         {{-- Status --}}
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td class="inline-block @4xl:table-cell px-0 @4xl:px-4 @7xl:px-6 py-1 @4xl:py-4 @4xl:whitespace-nowrap">
                                             <span
                                                 class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium rounded-full
                                                 @if ($material->status === 'available') bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-400
@@ -290,48 +333,59 @@
                                             </span>
                                         </td>
 
-                                        {{-- Actions --}}
-                                        <td class="px-6 py-4 whitespace-nowrap text-end">
-                                            <div class="flex items-center justify-end gap-x-1">
+                                        {{-- Actions: one line — [＋ Add | − Remove]  ✎  🗑 --}}
+                                        <td class="block @4xl:table-cell px-0 @4xl:px-4 @7xl:px-6 pt-3 @4xl:py-4 @4xl:whitespace-nowrap @4xl:text-end">
+                                            <div class="flex items-center @4xl:justify-end gap-1.5">
 
-                                                {{-- ✅ Add Stock — requires `stock-materials.create` --}}
-                                                @can('stock-materials.create')
-                                                    <button wire:click="openStockModal({{ $material->id }})"
-                                                        class="py-1.5 px-3 inline-flex items-center gap-x-1.5 text-xs font-medium rounded-lg border border-transparent bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900 dark:text-green-400 dark:hover:bg-green-800">
-                                                        <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg"
-                                                            fill="none" stroke="currentColor" stroke-width="2"
-                                                            viewBox="0 0 24 24">
-                                                            <path d="M12 5v14M5 12h14" />
-                                                        </svg>
-                                                        Add Stock
-                                                    </button>
-                                                @endcan
+                                                {{-- ✅ Stock in / out as one pair --}}
+                                                @canany(['stock-materials.create', 'stock-materials.update'])
+                                                    <div class="inline-flex rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden divide-x divide-gray-200 dark:divide-neutral-700" role="group" aria-label="Stock of {{ $material->resource_name }}">
+                                                        @can('stock-materials.create')
+                                                            <button type="button" wire:click="openStockModal({{ $material->id }})"
+                                                                title="Add stock (new delivery)"
+                                                                class="h-8 px-2.5 inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-white hover:bg-green-50 dark:bg-neutral-800 dark:text-green-400 dark:hover:bg-green-900/30 transition">
+                                                                <svg class="shrink-0 size-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                                    <path stroke-linecap="round" d="M12 5v14M5 12h14" />
+                                                                </svg>
+                                                                Add
+                                                            </button>
+                                                        @endcan
+                                                        @can('stock-materials.update')
+                                                            <button type="button" wire:click="openRemoveModal({{ $material->id }})" @disabled($isOut)
+                                                                title="{{ $isOut ? 'Nothing in stock to remove' : 'Remove stock (used up, damaged, lost, count correction)' }}"
+                                                                class="h-8 px-2.5 inline-flex items-center gap-1 text-xs font-semibold text-orange-700 bg-white hover:bg-orange-50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:bg-neutral-800 dark:text-orange-300 dark:hover:bg-orange-900/30 dark:disabled:hover:bg-neutral-800 transition">
+                                                                <svg class="shrink-0 size-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                                    <path stroke-linecap="round" d="M5 12h14" />
+                                                                </svg>
+                                                                Remove
+                                                            </button>
+                                                        @endcan
+                                                    </div>
+                                                @endcanany
 
                                                 {{-- ✅ Edit — requires `stock-materials.update` --}}
                                                 @can('stock-materials.update')
-                                                    <button wire:click="openEditModal({{ $material->id }})"
-                                                        class="py-1.5 px-3 inline-flex items-center gap-x-1.5 text-xs font-medium rounded-lg border border-transparent bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-400 dark:hover:bg-blue-800">
-                                                        <svg class="shrink-0 size-3.5" xmlns="http://www.w3.org/2000/svg"
-                                                            fill="none" stroke="currentColor" stroke-width="2"
-                                                            viewBox="0 0 24 24">
+                                                    <button type="button" wire:click="openEditModal({{ $material->id }})"
+                                                        title="Edit details, unit, warn level and status" aria-label="Edit {{ $material->resource_name }}"
+                                                        class="h-8 px-2 @4xl:w-8 @4xl:px-0 inline-flex items-center justify-center gap-1 text-xs font-semibold rounded-lg text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 transition">
+                                                        <svg class="shrink-0 size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                                                             <path d="M12 20h9" />
                                                             <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                                                         </svg>
-                                                        Edit
+                                                        <span class="@4xl:hidden">Edit</span>
                                                     </button>
                                                 @endcan
 
-                                                {{-- ✅ Delete — requires `stock-materials.delete` --}}
+                                                {{-- ✅ Delete — requires `stock-materials.delete` (blocked when the material is in use) --}}
                                                 @can('stock-materials.delete')
-                                                    <button wire:click="delete({{ $material->id }})"
-                                                        wire:confirm="Delete this material? This cannot be undone."
-                                                        class="py-1.5 px-2 inline-flex items-center gap-x-1 text-xs font-medium rounded-lg border border-transparent text-red-500 hover:bg-red-100 dark:hover:bg-red-900 dark:text-red-400">
-                                                        <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg"
-                                                            fill="none" stroke="currentColor" stroke-width="2"
-                                                            viewBox="0 0 24 24">
-                                                            <path
-                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    <button type="button" wire:click="delete({{ $material->id }})"
+                                                        wire:confirm="Delete {{ $material->resource_name }}? This cannot be undone. (Materials already used in requests or stock history cannot be deleted — set them to Unavailable instead.)"
+                                                        title="Delete" aria-label="Delete {{ $material->resource_name }}"
+                                                        class="h-8 px-2 @4xl:w-8 @4xl:px-0 inline-flex items-center justify-center gap-1 text-xs font-semibold rounded-lg text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 transition">
+                                                        <svg class="shrink-0 size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                                            <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                         </svg>
+                                                        <span class="@4xl:hidden">Delete</span>
                                                     </button>
                                                 @endcan
                                             </div>
@@ -339,8 +393,8 @@
 
                                     </tr>
                                 @empty
-                                    <tr>
-                                        <td colspan="7" class="px-6 py-10 text-center">
+                                    <tr class="block @4xl:table-row">
+                                        <td colspan="7" class="block @4xl:table-cell px-6 py-10 text-center">
                                             <div class="flex flex-col items-center gap-2">
                                                 <svg class="size-10 text-gray-300 dark:text-neutral-600"
                                                     xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -538,6 +592,141 @@
         @endif
     @endcan
 
+    {{-- ============================ REMOVE STOCK MODAL ============================ --}}
+    @can('stock-materials.update')
+        @if ($showRemoveModal)
+            @php
+                $rmRes = $remove_id ? collect($this->allResources)->firstWhere('id', $remove_id) : null;
+                $rmQty = (int) ($remove_qty ?? 0);
+                $rmUnit = $rmRes->unit ?? 'Ream';
+            @endphp
+
+            <div x-data="{ show: false }" x-init="$nextTick(() => show = true)">
+                <template x-teleport="body">
+                    <div @keydown.escape.window="$wire.closeModal()"
+                        class="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6">
+
+                        <div @click="$wire.closeModal()" x-show="show" x-transition.opacity.duration.150ms
+                            class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"></div>
+
+                        <div x-show="show" x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0 translate-y-2 scale-[0.98]"
+                            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                            class="relative w-full max-w-md max-h-[92vh] flex flex-col bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-neutral-700 overflow-hidden">
+
+                            {{-- Header --}}
+                            <div class="px-6 py-4 border-b border-gray-200 dark:border-neutral-700 flex items-center justify-between gap-4">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <span class="size-10 shrink-0 inline-flex justify-center items-center rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
+                                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+                                        </svg>
+                                    </span>
+                                    <div class="min-w-0">
+                                        <h3 class="text-base font-semibold text-gray-800 dark:text-neutral-100 leading-tight">Remove Stock</h3>
+                                        <p class="text-xs text-gray-500 dark:text-neutral-400 truncate">{{ $rmRes->resource_name ?? '' }} — recorded in Stock History</p>
+                                    </div>
+                                </div>
+                                <button type="button" @click="$wire.closeModal()" title="Close (Esc)"
+                                    class="p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-neutral-700 dark:hover:text-neutral-200 transition">
+                                    <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            {{-- Body --}}
+                            <div class="flex-1 overflow-y-auto p-6 space-y-5">
+                                @if ($rmRes)
+                                    <div class="rounded-xl border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900/40 p-4">
+                                        <div class="flex items-center justify-between gap-3">
+                                            <div>
+                                                <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">Current stock</p>
+                                                <p class="text-lg font-semibold text-gray-800 dark:text-neutral-100 leading-tight">
+                                                    {{ number_format($rmRes->quantity_available) }}
+                                                    <span class="text-xs font-normal text-gray-400 dark:text-neutral-500">{{ $rmUnit }}</span>
+                                                </p>
+                                            </div>
+                                            <svg class="size-5 shrink-0 text-gray-300 dark:text-neutral-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                            </svg>
+                                            <div class="text-right">
+                                                <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">After removing</p>
+                                                <p class="text-lg font-semibold leading-tight {{ $rmQty > $rmRes->quantity_available ? 'text-red-600 dark:text-red-400' : ($rmQty > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-800 dark:text-neutral-100') }}">
+                                                    {{ $rmQty > $rmRes->quantity_available ? 'Not enough' : number_format($rmRes->quantity_available - max($rmQty, 0)) }}
+                                                    <span class="text-xs font-normal text-gray-400 dark:text-neutral-500">{{ $rmUnit }}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- Quantity --}}
+                                <div>
+                                    <label for="remove-qty" class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">
+                                        How many to remove <span class="text-red-500">*</span>
+                                    </label>
+                                    <input id="remove-qty" type="number" wire:model.live.debounce.300ms="remove_qty" min="1"
+                                        max="{{ $rmRes->quantity_available ?? '' }}" class="{{ $input }}">
+                                    @error('remove_qty')
+                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                {{-- Reason --}}
+                                <div>
+                                    <p class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">
+                                        Reason <span class="text-red-500">*</span>
+                                    </p>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        @foreach (\App\Models\Stock::REASONS as $value => $label)
+                                            <label class="cursor-pointer">
+                                                <input type="radio" wire:model.live="remove_reason" value="{{ $value }}" class="peer sr-only">
+                                                <div class="text-center py-2.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-neutral-700 text-gray-600 dark:text-neutral-300 bg-white dark:bg-neutral-900 peer-checked:bg-orange-600 peer-checked:border-orange-600 peer-checked:text-white transition">
+                                                    {{ $label }}
+                                                </div>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                    @error('remove_reason')
+                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                {{-- Notes --}}
+                                <div>
+                                    <label for="remove-notes" class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">
+                                        Notes @if ($remove_reason === 'correction')<span class="text-red-500">*</span>@endif
+                                    </label>
+                                    <textarea id="remove-notes" wire:model="remove_notes" rows="2" maxlength="255"
+                                        placeholder="{{ $remove_reason === 'correction' ? 'e.g. Counted on Nov 27 — only 180 on the shelf' : 'Optional — e.g. used for the Foundation Day program' }}"
+                                        class="{{ $input }}"></textarea>
+                                    @error('remove_notes')
+                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- Footer --}}
+                            <div class="px-6 py-3.5 border-t border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900/40 flex justify-end gap-3">
+                                <button type="button" @click="$wire.closeModal()"
+                                    class="py-2 px-4 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-700 transition">
+                                    Cancel
+                                </button>
+                                <button type="button" wire:click="removeStock" wire:loading.attr="disabled"
+                                    wire:loading.class="opacity-50 cursor-not-allowed"
+                                    class="py-2 px-5 text-sm font-medium rounded-lg border border-transparent bg-orange-600 text-white hover:bg-orange-700 shadow-sm transition">
+                                    <span wire:loading.remove wire:target="removeStock">Remove Stock</span>
+                                    <span wire:loading wire:target="removeStock">Removing...</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        @endif
+    @endcan
+
     {{-- =========================== ADD MATERIAL MODAL =========================== --}}
     @can('stock-materials.create')
         @if ($showAddModal)
@@ -655,6 +844,18 @@
                                     </div>
                                 </div>
 
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">
+                                        Warn me when stock is at or below <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="number" wire:model="low_stock_at" min="0" class="{{ $input }}">
+                                    <p class="text-xs text-gray-500 dark:text-neutral-400 mt-1">Shown as "Low" and counted in the Low Stock card. 0 = never warn.</p>
+                                    @error('low_stock_at')
+                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
                                 {{-- Supplier --}}
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">Supplier</label>
@@ -665,7 +866,7 @@
                                     @enderror
                                 </div>
 
-                                
+
                             </div>
 
                             {{-- Footer --}}
@@ -802,6 +1003,18 @@
                                     @enderror
                                 </div>
 
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">
+                                        Warn me when stock is at or below <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="number" wire:model="edit_low_stock_at" min="0" class="{{ $input }}">
+                                    <p class="text-xs text-gray-500 dark:text-neutral-400 mt-1">Shown as "Low" and counted in the Low Stock card. 0 = never warn.</p>
+                                    @error('edit_low_stock_at')
+                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
                                 {{-- Status --}}
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">
@@ -831,7 +1044,7 @@
                                     @enderror
                                 </div>
 
-                                
+
 
                                 {{-- Note --}}
                                 <div class="flex items-start gap-2.5 rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/20 px-3.5 py-3">
@@ -840,7 +1053,7 @@
                                         <path stroke-linecap="round" d="M12 16v-4m0-4h.01" />
                                     </svg>
                                     <p class="text-xs text-blue-800 dark:text-blue-300">
-                                        Quantity isn't edited here. Use <strong>Add Stock</strong> to adjust quantity.
+                                        Quantity is not edited here. Use <strong>Add Stock</strong> or <strong>Remove</strong> so every change is recorded in Stock History.
                                     </p>
                                 </div>
                             </div>

@@ -37,11 +37,16 @@ class RequestItem extends Model
         'stock_after_return',
         'stock_before_approval',
         'stock_after_approval',
+        'approved_at',
+        'assigned_at',
+        'holder_id',
     ];
 
     protected $casts = [
         'due_back_at'      => 'date',
         'returned_at'      => 'datetime',
+        'approved_at'      => 'datetime',
+        'assigned_at'      => 'datetime',
         'reminder_sent_at' => 'datetime',
     ];
 
@@ -57,6 +62,23 @@ class RequestItem extends Model
     public function receiver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'received_by');
+    }
+
+    /** ✅ Who keeps an assigned item now. */
+    public function holder(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'holder_id');
+    }
+
+    public function handovers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ItemHandover::class)->latest('id');
+    }
+
+    /** ✅ Items someone keeps (no return date) and still has. One row per set of items. */
+    public function scopeAssignedNow(Builder $query): Builder
+    {
+        return $query->whereNotNull('assigned_at')->whereNotNull('holder_id')->whereNull('returned_at');
     }
 
     /** Borrowed items that still have to be given back. */

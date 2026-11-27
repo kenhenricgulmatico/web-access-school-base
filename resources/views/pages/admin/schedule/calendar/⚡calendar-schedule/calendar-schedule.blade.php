@@ -1,47 +1,79 @@
-<div class="select-none">
+<div>
   <div class="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
 
-    <div class="flex flex-col lg:flex-row gap-4 md:gap-6">
+    {{-- ✅ @container: side-by-side only when THIS area is wide enough (the sidebar takes 240px) --}}
+    <div class="@container">
+    <div class="flex flex-col @4xl:flex-row gap-4 md:gap-6">
 
       {{-- LEFT: Calendar --}}
-      <div class="w-full lg:w-[340px] xl:w-[380px] shrink-0">
+      <div class="w-full @4xl:w-[340px] @6xl:w-[380px] shrink-0 space-y-3">
         <div class="bg-white dark:bg-neutral-800 rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 dark:border-neutral-700 overflow-hidden">
 
-          {{-- Calendar Header --}}
-          <div class="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 bg-gradient-to-br from-teal-50 to-white dark:from-neutral-900 dark:to-neutral-800 border-b border-gray-100 dark:border-neutral-700">
-            <button wire:click="previousMonth"
+          {{-- Calendar Header: ‹ [Month ▾] [Year ▾] › --}}
+          <div class="flex items-center justify-between gap-2 px-3 sm:px-5 py-4 bg-gradient-to-br from-teal-50 to-white dark:from-neutral-900 dark:to-neutral-800 border-b border-gray-100 dark:border-neutral-700">
+            <button wire:click="previousMonth" aria-label="Previous month"
               class="p-1.5 sm:p-2 rounded-full bg-white dark:bg-neutral-700 shadow-sm hover:shadow transition text-gray-500 dark:text-neutral-300">
-              <svg class="size-3.5 sm:size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <svg class="size-3.5 sm:size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
               </svg>
             </button>
-            <h2 class="text-sm sm:text-base font-bold text-gray-800 dark:text-neutral-100 tracking-tight">
-              {{ \Carbon\Carbon::create($year, $month, 1)->format('F Y') }}
-            </h2>
-            <button wire:click="nextMonth"
+            <div class="flex items-center gap-1.5">
+              <label for="cal-month" class="sr-only">Month</label>
+              <select id="cal-month" wire:model.live="month"
+                class="py-1 ps-2 pe-7 text-sm font-bold rounded-lg border-transparent bg-transparent text-gray-800 hover:bg-white focus:ring-teal-500 dark:text-neutral-100 dark:hover:bg-neutral-700">
+                @foreach (range(1, 12) as $m)
+                  <option value="{{ $m }}" @selected($m === $month)>{{ \Carbon\Carbon::create(2000, $m, 1)->format('F') }}</option>
+                @endforeach
+              </select>
+              <label for="cal-year" class="sr-only">Year</label>
+              <select id="cal-year" wire:model.live="year"
+                class="py-1 ps-2 pe-7 text-sm font-bold rounded-lg border-transparent bg-transparent text-gray-800 hover:bg-white focus:ring-teal-500 dark:text-neutral-100 dark:hover:bg-neutral-700">
+                @foreach ($this->years() as $y)
+                  <option value="{{ $y }}" @selected($y === $year)>{{ $y }}</option>
+                @endforeach
+              </select>
+            </div>
+            <button wire:click="nextMonth" aria-label="Next month"
               class="p-1.5 sm:p-2 rounded-full bg-white dark:bg-neutral-700 shadow-sm hover:shadow transition text-gray-500 dark:text-neutral-300">
-              <svg class="size-3.5 sm:size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <svg class="size-3.5 sm:size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
               </svg>
             </button>
           </div>
 
-          {{-- Request Type Tabs --}}
-          <div class="flex gap-1.5 sm:gap-2 px-3 sm:px-4 pt-3 sm:pt-4">
-            <button wire:click="$set('activeTab', 'reservation')"
-              class="flex-1 py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold rounded-full transition
-                {{ $activeTab === 'reservation'
-                  ? 'bg-green-500 text-white shadow-sm'
-                  : 'bg-gray-100 dark:bg-neutral-700 text-gray-500 dark:text-neutral-400 hover:bg-gray-200 dark:hover:bg-neutral-600' }}">
-              FACILITY
-            </button>
-            <button wire:click="$set('activeTab', 'material')"
-              class="flex-1 py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold rounded-full transition
-                {{ $activeTab === 'material'
-                  ? 'bg-purple-500 text-white shadow-sm'
-                  : 'bg-gray-100 dark:bg-neutral-700 text-gray-500 dark:text-neutral-400 hover:bg-gray-200 dark:hover:bg-neutral-600' }}">
-              MATERIAL
-            </button>
+          {{-- Tabs: Facility / Material / Returns --}}
+          <div class="grid grid-cols-3 gap-1.5 sm:gap-2 px-3 sm:px-4 pt-3 sm:pt-4">
+            @foreach (['reservation' => ['FACILITY', 'bg-green-600'], 'material' => ['MATERIAL', 'bg-purple-500'], 'returns' => ['RETURNS', 'bg-red-500']] as $tab => [$label, $on])
+              <button wire:click="$set('activeTab', '{{ $tab }}')"
+                class="relative py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold rounded-full transition
+                  {{ $activeTab === $tab ? $on . ' text-white shadow-sm' : 'bg-gray-100 dark:bg-neutral-700 text-gray-500 dark:text-neutral-400 hover:bg-gray-200 dark:hover:bg-neutral-600' }}">
+                {{ $label }}
+                @if ($tab === 'returns' && $this->overdueCount > 0)
+                  <span class="absolute -top-1.5 -right-1 min-w-4 h-4 px-1 inline-flex items-center justify-center rounded-full bg-red-600 text-white text-[9px] ring-2 ring-white dark:ring-neutral-800"
+                    title="{{ $this->overdueCount }} overdue">{{ $this->overdueCount }}</span>
+                @endif
+              </button>
+            @endforeach
+          </div>
+
+          {{-- Filters --}}
+          <div class="flex flex-wrap items-center gap-2 px-3 sm:px-4 pt-3">
+            @if ($activeTab === 'reservation')
+              <label for="cal-room" class="sr-only">Room</label>
+              <select id="cal-room" wire:model.live="roomFilter"
+                class="flex-1 min-w-0 py-1.5 px-2.5 text-xs rounded-lg border border-gray-200 bg-white text-gray-700 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-200 focus:border-teal-500 focus:ring-teal-500">
+                <option value="">All rooms</option>
+                @foreach ($this->rooms as $r)
+                  <option value="{{ $r->resource_name }}" @selected($r->resource_name === $roomFilter)>{{ $r->resource_name }}{{ $r->status === 'maintenance' ? ' (maintenance)' : '' }}</option>
+                @endforeach
+              </select>
+            @endif
+            @if ($activeTab !== 'returns')
+              <label class="inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-neutral-300 cursor-pointer">
+                <input type="checkbox" wire:model.live="showPending" @checked($showPending) class="size-3.5 rounded border-gray-300 text-amber-500 focus:ring-amber-400">
+                Show pending
+              </label>
+            @endif
           </div>
 
           {{-- Day Headers --}}
@@ -53,20 +85,29 @@
             @endforeach
           </div>
 
-          {{-- Calendar Days --}}
+          {{-- Calendar Days: the number of things on each day (for the open tab) --}}
           <div class="grid grid-cols-7 px-2 sm:px-4 pb-4 sm:pb-5 gap-y-0.5 sm:gap-y-1">
             @foreach($this->calendarDays as $day)
               @php
                 $dateKey    = $day ? \Carbon\Carbon::create($year, $month, $day)->format('Y-m-d') : null;
                 $isToday    = $dateKey === now()->format('Y-m-d');
                 $isSelected = $dateKey === $selectedDate;
-                $events     = $day ? ($this->daysWithEvents[$dateKey] ?? null) : null;
+                $c          = $day ? ($this->dayCounts[$dateKey] ?? null) : null;
+                [$n, $p, $tone] = match ($activeTab) {
+                    'material' => [$c['materials'] ?? 0, $c['materialsPending'] ?? 0, 'text-purple-700 dark:text-purple-300'],
+                    'returns'  => [$c['due'] ?? 0, 0, ($c['overdue'] ?? false) ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-300'],
+                    default    => [$c['rooms'] ?? 0, $c['roomsPending'] ?? 0, 'text-green-700 dark:text-green-400'],
+                };
+                $tip = collect([
+                    $n ? $n . ' ' . match ($activeTab) { 'material' => 'material ' . \Illuminate\Support\Str::plural('request', $n), 'returns' => 'due back', default => \Illuminate\Support\Str::plural('booking', $n) } : null,
+                    $p ? $p . ' pending' : null,
+                ])->filter()->implode(' · ');
               @endphp
 
               <div class="flex flex-col items-center py-0.5">
                 @if($day)
                   <button wire:click="selectDate('{{ $dateKey }}')"
-                    title="{{ $this->relativeDayLabel($dateKey) }}"
+                    title="{{ trim($this->relativeDayLabel($dateKey) . ($tip ? ' — ' . $tip : '')) }}"
                     class="relative w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center text-[11px] sm:text-sm rounded-xl sm:rounded-2xl transition font-semibold
                       {{ $isSelected
                         ? 'bg-teal-500 text-white shadow-md shadow-teal-200 dark:shadow-none scale-105'
@@ -75,34 +116,41 @@
                           : 'text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700') }}">
                     {{ $day }}
                   </button>
-                  @if($events)
-                    <div class="flex gap-0.5 mt-0.5 sm:mt-1">
-                      @if($events['reservation'] ?? false)
-                        <span class="size-1 sm:size-1.5 rounded-full bg-green-500 inline-block"></span>
-                      @endif
-                      @if($events['material'] ?? false)
-                        <span class="size-1 sm:size-1.5 rounded-full bg-purple-500 inline-block"></span>
-                      @endif
-                    </div>
-                  @endif
+                  <div class="h-3 mt-0.5 flex items-center gap-0.5 text-[9px] font-bold leading-none">
+                    @if($n)
+                      <span class="{{ $tone }}">{{ $n }}</span>
+                    @endif
+                    @if($p)
+                      <span class="text-amber-600 dark:text-amber-400" aria-label="{{ $p }} pending">+{{ $p }}</span>
+                    @endif
+                  </div>
                 @endif
               </div>
             @endforeach
           </div>
 
           {{-- Legend --}}
-          <div class="mx-2 sm:mx-4 mb-4 sm:mb-5 px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 dark:bg-neutral-900/50 rounded-xl sm:rounded-2xl flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-4 text-[10px] sm:text-[11px] font-medium text-gray-500 dark:text-neutral-400">
-            <div class="flex items-center gap-1 sm:gap-1.5">
-              <span class="size-1.5 sm:size-2 rounded-full bg-green-500 inline-block"></span>
-              Facility
-            </div>
-            <div class="flex items-center gap-1 sm:gap-1.5">
-              <span class="size-1.5 sm:size-2 rounded-full bg-purple-500 inline-block"></span>
-              Material
-            </div>
+          <div class="mx-2 sm:mx-4 mb-4 sm:mb-5 px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 dark:bg-neutral-900/50 rounded-xl sm:rounded-2xl flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] sm:text-[11px] font-medium text-gray-500 dark:text-neutral-400">
+            @if ($activeTab === 'returns')
+              <span><b class="text-orange-600 dark:text-orange-300">2</b> due back that day</span>
+              <span><b class="text-red-600 dark:text-red-400">2</b> already overdue</span>
+            @else
+              <span><b class="{{ $activeTab === 'material' ? 'text-purple-700 dark:text-purple-300' : 'text-green-700 dark:text-green-400' }}">3</b> approved</span>
+              @if ($showPending)
+                <span><b class="text-amber-600 dark:text-amber-400">+1</b> pending (waiting for you)</span>
+              @endif
+            @endif
           </div>
 
         </div>
+
+        @if ($showPending && $this->pendingThisMonth > 0 && $activeTab !== 'returns')
+          <a href="{{ route('admin.manage-coordinator') }}"
+            class="flex items-center justify-between gap-2 px-4 py-3 rounded-2xl border border-amber-200 bg-amber-50 text-sm text-amber-800 hover:bg-amber-100 dark:bg-amber-950/30 dark:border-amber-900 dark:text-amber-300">
+            <span><b>{{ $this->pendingThisMonth }}</b> pending in {{ \Carbon\Carbon::create($year, $month, 1)->format('F') }} waiting for your decision</span>
+            <span class="font-semibold">Review →</span>
+          </a>
+        @endif
       </div>
 
       {{-- RIGHT: Events Panel --}}
@@ -110,7 +158,7 @@
         <div class="bg-white dark:bg-neutral-800 rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 dark:border-neutral-700 overflow-hidden h-full">
 
           {{-- Panel Header --}}
-          <div class="flex items-center justify-between px-4 sm:px-6 md:px-7 py-4 sm:py-5 bg-gradient-to-r from-gray-50 to-white dark:from-neutral-900 dark:to-neutral-800 border-b border-gray-100 dark:border-neutral-700">
+          <div class="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 md:px-7 py-4 sm:py-5 bg-gradient-to-r from-gray-50 to-white dark:from-neutral-900 dark:to-neutral-800 border-b border-gray-100 dark:border-neutral-700">
             <div class="flex items-center gap-3 sm:gap-4">
               <div class="flex flex-col items-center justify-center bg-teal-500 text-white rounded-xl sm:rounded-2xl size-11 sm:size-12 md:size-14 shadow-sm shrink-0">
                 <span class="text-base sm:text-lg font-extrabold leading-none">
@@ -155,60 +203,118 @@
           </div>
 
           {{-- Events List --}}
-          <div class="overflow-y-auto max-h-[400px] sm:max-h-[500px] md:max-h-[600px] p-2 sm:p-3 space-y-1.5 sm:space-y-2">
+          <div class="overflow-y-auto max-h-[480px] sm:max-h-[560px] md:max-h-[640px] p-2 sm:p-3 space-y-1.5 sm:space-y-2">
 
-            @php
-              $events       = $this->selectedDateEvents;
-              $reservations = $events['reservations'] ?? collect();
-              $materials    = $events['materials'] ?? collect();
-            @endphp
-
-            {{-- ✅ FACILITY: room list — click a room to see who reserved it + print --}}
+            {{-- ============ FACILITY: every room, booked or free ============ --}}
             @if($activeTab === 'reservation')
               @php
-                $rooms     = $this->roomSummary;
+                $rooms     = $this->roomDay;
+                $marks     = $this->hourMarks();
                 $dateLabel = $selectedDate ? \Carbon\Carbon::parse($selectedDate)->format('l, F j, Y') : '';
+                $booked    = collect($rooms)->where('busy', true)->count();
+                // ✅ Only booked rooms get a full row; free rooms become small chips below
+                //    (one room picked in the filter → always its full row)
+                $fullRows  = $roomFilter !== '' ? $rooms : array_values(array_filter($rooms, fn ($r) => $r['busy']));
+                $freeRooms = $roomFilter !== '' ? [] : array_values(array_filter($rooms, fn ($r) => ! $r['busy']));
+                $chipLimit = 12;
               @endphp
 
-              @if(count($rooms) > 0)
-                <div x-data="{ open: null }" wire:key="rooms-{{ $selectedDate }}" class="space-y-1.5 sm:space-y-2">
-                  @foreach($rooms as $i => $room)
-                    @php
-                      $roomDeptCounts = collect($room['slots'])->countBy('department')->sortKeys();
-                    @endphp
+              {{-- Search (shown when there are many rooms) --}}
+              @if ($this->rooms->count() > 8 || $roomSearch !== '')
+                <div class="relative px-1 pt-1">
+                  <label for="cal-room-search" class="sr-only">Find a room</label>
+                  <svg class="absolute left-3.5 top-1/2 mt-0.5 -translate-y-1/2 size-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                  <input id="cal-room-search" type="text" wire:model.live.debounce.300ms="roomSearch" placeholder="Find a room…"
+                    class="w-full py-1.5 ps-8 pe-3 text-xs sm:text-sm rounded-lg border border-gray-200 bg-white text-gray-700 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-200 focus:border-teal-500 focus:ring-teal-500">
+                </div>
+              @endif
 
-                    <div x-data="{ dept: 'all', room: @js($room) }"
-                      class="rounded-xl border border-gray-100 dark:border-neutral-700 overflow-hidden">
+              <p class="px-2 pt-1 text-[11px] sm:text-xs text-gray-500 dark:text-neutral-400">
+                <b class="text-gray-700 dark:text-neutral-200">{{ $booked }}</b> of {{ count($rooms) }} {{ \Illuminate\Support\Str::plural('room', count($rooms)) }} booked
+                · times shown 7 AM – 8 PM
+              </p>
 
-                      {{-- Room row --}}
-                      <button type="button"
-                        @click="open = (open === {{ $i }}) ? null : {{ $i }}"
-                        class="w-full flex items-center justify-between gap-3 px-3 sm:px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition"
-                        :class="open === {{ $i }} ? 'bg-green-50 dark:bg-green-900/20' : ''">
-                        <div class="flex items-center gap-2.5 min-w-0">
-                          <span class="size-2 rounded-full bg-green-500 shrink-0"></span>
-                          <span class="text-xs sm:text-sm font-bold text-gray-800 dark:text-neutral-100 truncate">
-                            {{ $room['room'] }}
-                          </span>
+              @if (empty($rooms))
+                <p class="px-2 py-6 text-center text-xs text-gray-500 dark:text-neutral-400">No room matches "{{ $roomSearch }}".</p>
+              @elseif (empty($fullRows))
+                <p class="px-2 py-4 text-center text-xs sm:text-sm font-semibold text-gray-500 dark:text-neutral-400">No room is booked on this day.</p>
+              @endif
+
+              <div x-data="{ open: null }" wire:key="rooms-{{ $selectedDate }}-{{ $roomFilter }}-{{ (int) $showPending }}-{{ md5($roomSearch) }}" class="space-y-1.5 sm:space-y-2">
+                @foreach($fullRows as $i => $room)
+                  @php
+                    $approvedSlots  = array_values(array_filter($room['slots'], fn ($x) => $x['status'] === 'approved'));
+                    $pendingN       = count($room['slots']) - count($approvedSlots);
+                    $printable      = ['room' => $room['room'], 'slots' => $approvedSlots];
+                    $roomDeptCounts = collect($approvedSlots)->countBy('department')->sortKeys();
+                    $hasClash       = collect($room['slots'])->contains('clash', true);
+                  @endphp
+
+                  <div x-data="{ dept: 'all', room: @js($printable) }" wire:key="room-{{ $i }}-{{ md5($room['room']) }}"
+                    class="rounded-xl border overflow-hidden {{ $hasClash ? 'border-red-300 dark:border-red-800' : 'border-gray-100 dark:border-neutral-700' }}">
+
+                    {{-- Room row: name, counts, time bar --}}
+                    <button type="button"
+                      @click="open = (open === {{ $i }}) ? null : {{ $i }}"
+                      class="w-full px-3 sm:px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition"
+                      :class="open === {{ $i }} ? 'bg-green-50 dark:bg-green-900/20' : ''">
+                      <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2 min-w-0">
+                          <span class="size-2 rounded-full shrink-0 {{ $room['status'] === 'maintenance' ? 'bg-yellow-500' : ($room['busy'] ? 'bg-green-500' : 'bg-gray-300 dark:bg-neutral-600') }}"></span>
+                          <span class="text-xs sm:text-sm font-bold text-gray-800 dark:text-neutral-100 truncate">{{ $room['room'] }}</span>
+                          @if ($room['status'] === 'maintenance')
+                            <span class="shrink-0 px-1.5 py-0.5 text-[9px] font-bold rounded bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300" title="{{ $room['note'] }}">MAINTENANCE{{ $room['note'] ? ' · ' . $room['note'] : '' }}</span>
+                          @elseif ($room['status'] === 'removed')
+                            <span class="shrink-0 px-1.5 py-0.5 text-[9px] font-bold rounded bg-gray-100 text-gray-600 dark:bg-neutral-700 dark:text-neutral-300">NOT A ROOM ANYMORE</span>
+                          @endif
+                          @if ($hasClash)
+                            <span class="shrink-0 px-1.5 py-0.5 text-[9px] font-bold rounded bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">CLASH</span>
+                          @endif
                         </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                          <span class="text-[10px] sm:text-xs text-gray-500 dark:text-neutral-400">
-                            {{ count($room['slots']) }} {{ Str::plural('reservation', count($room['slots'])) }}
-                          </span>
+                        <div class="flex items-center gap-2 shrink-0 text-[10px] sm:text-xs text-gray-500 dark:text-neutral-400">
+                          @if ($room['busy'])
+                            <span>{{ count($approvedSlots) }} booked</span>
+                            @if ($pendingN)
+                              <span class="text-amber-600 dark:text-amber-400">+{{ $pendingN }} pending</span>
+                            @endif
+                          @else
+                            <span class="text-green-700 dark:text-green-400 font-semibold">Free all day</span>
+                          @endif
                           <svg class="size-3.5 text-gray-400 transition-transform" :class="open === {{ $i }} ? 'rotate-90' : ''"
-                            fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                           </svg>
                         </div>
-                      </button>
+                      </div>
 
-                      {{-- Inside the room --}}
-                      <div x-show="open === {{ $i }}" x-cloak x-transition.opacity
-                        class="border-t border-gray-100 dark:border-neutral-700">
+                      {{-- ✅ 7 AM – 8 PM bar --}}
+                      <div class="relative mt-2 h-2.5 rounded-full bg-gray-100 dark:bg-neutral-700 overflow-hidden" aria-hidden="true">
+                        @foreach ($room['slots'] as $slot)
+                          <span class="absolute inset-y-0 rounded-full
+                            {{ $slot['clash'] ? 'bg-red-500' : ($slot['status'] === 'pending' ? 'bg-amber-300 dark:bg-amber-500/70' : 'bg-green-500') }}"
+                            style="left: {{ $slot['left'] }}%; width: {{ $slot['width'] }}%"></span>
+                        @endforeach
+                      </div>
+                      <div class="relative h-3 mt-0.5 text-[8px] text-gray-400 dark:text-neutral-500" aria-hidden="true">
+                        @foreach ($marks as $mk)
+                          <span class="absolute -translate-x-1/2 first:translate-x-0 last:-translate-x-full" style="left: {{ $mk['left'] }}%">{{ $mk['label'] }}</span>
+                        @endforeach
+                      </div>
+                      @if ($room['busy'] && $room['free'])
+                        <p class="mt-1 text-[10px] sm:text-[11px] text-green-700 dark:text-green-400 truncate">Free: {{ implode(', ', $room['free']) }}</p>
+                      @elseif ($room['busy'])
+                        <p class="mt-1 text-[10px] sm:text-[11px] text-red-600 dark:text-red-400">Fully booked</p>
+                      @endif
+                    </button>
 
-                        {{-- 🖨 Print bar (this room only) --}}
+                    {{-- Inside the room --}}
+                    <div x-show="open === {{ $i }}" x-cloak x-transition.opacity
+                      class="border-t border-gray-100 dark:border-neutral-700">
+
+                      @if (count($approvedSlots))
+                        {{-- 🖨 Print bar (approved bookings of this room) --}}
                         <div class="flex flex-wrap items-center gap-2 px-3 sm:px-4 py-2.5 bg-gray-50 dark:bg-neutral-900/50 border-b border-gray-100 dark:border-neutral-700">
-                          <select x-model="dept"
+                          <select x-model="dept" aria-label="Department to print"
                             class="flex-1 min-w-0 py-1.5 px-2.5 text-xs sm:text-sm rounded-lg border border-gray-200 bg-white text-gray-700 dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-200 focus:border-teal-500 focus:ring-teal-500">
                             <option value="all">All departments ({{ $roomDeptCounts->sum() }})</option>
                             @foreach($roomDeptCounts as $deptName => $count)
@@ -219,59 +325,99 @@
                           <button type="button"
                             @click="printRoomSchedule([room], dept, @js($dateLabel))"
                             class="inline-flex items-center gap-1.5 py-1.5 px-3 text-xs sm:text-sm font-semibold rounded-lg bg-teal-500 text-white hover:bg-teal-600 transition">
-                            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                               <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/>
                             </svg>
                             Print
                           </button>
                         </div>
+                      @endif
 
-                        {{-- Reservations of this room --}}
+                      @if (count($room['slots']))
                         <div class="divide-y divide-gray-100 dark:divide-neutral-700">
                           @foreach($room['slots'] as $slot)
-                            <div class="flex items-start gap-3 px-3 sm:px-4 py-2.5">
-                              <span class="w-32 sm:w-36 shrink-0 text-[11px] sm:text-xs font-bold text-gray-700 dark:text-neutral-200">
+                            <div class="flex items-start gap-3 px-3 sm:px-4 py-2.5 {{ $slot['status'] === 'pending' ? 'bg-amber-50/50 dark:bg-amber-950/10' : '' }}">
+                              <span class="w-28 sm:w-36 shrink-0 text-[11px] sm:text-xs font-bold text-gray-700 dark:text-neutral-200">
                                 {{ $slot['start'] && $slot['end'] ? $slot['start'] . ' – ' . $slot['end'] : 'No time' }}
                               </span>
-                              <div class="min-w-0">
+                              <div class="min-w-0 flex-1">
                                 <p class="text-[11px] sm:text-xs font-semibold text-gray-800 dark:text-neutral-100">
                                   {{ $slot['department'] }}
                                   <span class="font-normal text-gray-400 dark:text-neutral-500">· {{ $slot['user'] }}</span>
+                                  @if ($slot['status'] === 'pending')
+                                    <span class="ms-1 px-1.5 py-0.5 text-[9px] font-bold rounded bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">PENDING</span>
+                                  @endif
                                 </p>
                                 @if($slot['purpose'])
                                   <p class="text-[10px] sm:text-xs text-gray-400 dark:text-neutral-500 italic truncate">
-                                    "{{ Str::limit($slot['purpose'], 60) }}"
+                                    "{{ \Illuminate\Support\Str::limit($slot['purpose'], 60) }}"
                                   </p>
                                 @endif
+                                @if ($slot['clash'])
+                                  <p class="text-[10px] sm:text-xs font-semibold text-red-600 dark:text-red-400">Overlaps an approved booking — approving it would double-book the room.</p>
+                                @endif
                               </div>
+                              <a href="{{ route('admin.view-request', $slot['request_id']) }}"
+                                class="shrink-0 text-[11px] sm:text-xs font-semibold hover:underline {{ $slot['status'] === 'pending' ? 'text-amber-700 dark:text-amber-300' : 'text-[#1C6B45] dark:text-green-300' }}">
+                                {{ $slot['status'] === 'pending' ? 'Review →' : 'View' }}
+                              </a>
                             </div>
                           @endforeach
                         </div>
-
-                      </div>
+                      @else
+                        <p class="px-4 py-3 text-xs text-gray-500 dark:text-neutral-400">
+                          No bookings — free 7:00 AM – 8:00 PM{{ $room['status'] === 'maintenance' ? ', but the room is under maintenance' : '' }}.
+                        </p>
+                      @endif
                     </div>
-                  @endforeach
-                </div>
-              @elseif($materials->isNotEmpty())
-                <div class="px-4 sm:px-6 py-10 sm:py-14 text-center">
-                  <p class="text-xs sm:text-sm text-gray-400 dark:text-neutral-500">No facility reservations on this day.</p>
+                  </div>
+                @endforeach
+              </div>
+
+              {{-- ✅ Free all day: compact chips (click one to see that room's month) --}}
+              @if (count($freeRooms))
+                <div class="mt-1 px-2 sm:px-3 py-3 rounded-xl bg-gray-50 dark:bg-neutral-900/50">
+                  <p class="mb-2 text-[11px] sm:text-xs font-semibold text-green-700 dark:text-green-400">
+                    Free all day · {{ count($freeRooms) }} {{ \Illuminate\Support\Str::plural('room', count($freeRooms)) }}
+                  </p>
+                  <div class="flex flex-wrap gap-1.5">
+                    @foreach ($showAllFree ? $freeRooms : array_slice($freeRooms, 0, $chipLimit) as $free)
+                      <button type="button" wire:click="$set('roomFilter', @js($free['room']))"
+                        title="{{ $free['status'] === 'maintenance' ? 'Under maintenance' . ($free['note'] ? ': ' . $free['note'] : '') : 'Free 7:00 AM – 8:00 PM' }} · click to see this room's month"
+                        class="px-2 py-1 text-[11px] font-medium rounded-full border transition
+                        {{ $free['status'] === 'maintenance'
+                          ? 'border-yellow-300 bg-yellow-50 text-yellow-800 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300'
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-green-400 hover:text-green-700 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200' }}">
+                        {{ $free['room'] }}{{ $free['status'] === 'maintenance' ? ' · maintenance' : '' }}
+                      </button>
+                    @endforeach
+                    @if (count($freeRooms) > $chipLimit)
+                      <button type="button" wire:click="$set('showAllFree', {{ $showAllFree ? 'false' : 'true' }})"
+                        class="px-2 py-1 text-[11px] font-semibold rounded-full text-teal-700 hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-900/30">
+                        {{ $showAllFree ? 'Show less' : '+' . (count($freeRooms) - $chipLimit) . ' more' }}
+                      </button>
+                    @endif
+                  </div>
                 </div>
               @endif
             @endif
 
-            {{-- Material Requests --}}
+            {{-- ============ MATERIAL requests needed that day ============ --}}
             @if($activeTab === 'material')
-              @forelse($materials as $material)
-                <div wire:key="mat-{{ $material->id }}" class="flex gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-gray-100 dark:border-neutral-700 hover:border-purple-200 dark:hover:border-purple-800 hover:bg-purple-50/40 dark:hover:bg-purple-900/10 transition">
+              @forelse($this->selectedMaterials as $material)
+                @php $isPending = $material->status === 'pending'; @endphp
+                <div wire:key="mat-{{ $material->id }}" class="flex gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl border transition
+                  {{ $isPending ? 'border-amber-200 bg-amber-50/40 dark:border-amber-900 dark:bg-amber-950/10' : 'border-gray-100 dark:border-neutral-700 hover:border-purple-200 dark:hover:border-purple-800 hover:bg-purple-50/40 dark:hover:bg-purple-900/10' }}">
 
-                  <div class="w-1 rounded-full bg-purple-400 dark:bg-purple-500 shrink-0"></div>
+                  <div class="w-1 rounded-full shrink-0 {{ $isPending ? 'bg-amber-400' : 'bg-purple-400 dark:bg-purple-500' }}"></div>
 
                   <div class="flex-1 min-w-0">
-                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-2">
+                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                       <div class="flex-1 min-w-0">
                         <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1 sm:mb-1.5">
-                          <span class="inline-flex items-center py-0.5 px-2 sm:px-2.5 text-[8px] sm:text-[10px] font-bold bg-purple-100 text-purple-700 rounded-full dark:bg-purple-900 dark:text-purple-300">
-                            MATERIAL
+                          <span class="inline-flex items-center py-0.5 px-2 sm:px-2.5 text-[8px] sm:text-[10px] font-bold rounded-full
+                            {{ $isPending ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' }}">
+                            {{ $isPending ? 'PENDING' : 'APPROVED' }}
                           </span>
                           <span class="inline-flex items-center py-0.5 px-2 sm:px-2.5 text-[8px] sm:text-[10px] font-medium bg-gray-100 text-gray-600 rounded-full dark:bg-neutral-700 dark:text-neutral-300">
                             {{ $material->user->department->department_name ?? 'N/A' }}
@@ -285,56 +431,76 @@
                             </li>
                           @endforeach
                         </ul>
-                        <p class="text-[10px] sm:text-xs text-gray-500 dark:text-neutral-400 mt-0.5 sm:mt-1.5 flex items-center gap-1">
-                          <svg class="size-2.5 sm:size-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                          </svg>
-                          {{ $material->user->name }}
-                        </p>
+                        <p class="text-[10px] sm:text-xs text-gray-500 dark:text-neutral-400 mt-0.5 sm:mt-1.5">{{ $material->user->name }}</p>
                         @if($material->purpose)
                           <p class="text-[10px] sm:text-xs text-gray-400 dark:text-neutral-500 mt-0.5 sm:mt-1 italic">
-                            "{{ Str::limit($material->purpose, 60) }}"
+                            "{{ \Illuminate\Support\Str::limit($material->purpose, 60) }}"
                           </p>
                         @endif
                       </div>
-                      <div class="shrink-0 text-left sm:text-right">
-                        <p class="text-[10px] sm:text-xs font-bold text-gray-500 dark:text-neutral-400 bg-gray-50 dark:bg-neutral-700 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg">
-                          {{ \Carbon\Carbon::parse($material->created_at)->format('g:i A') }}
-                        </p>
-                      </div>
+                      <a href="{{ route('admin.view-request', $material->id) }}"
+                        class="shrink-0 self-start text-[11px] sm:text-xs font-semibold hover:underline {{ $isPending ? 'text-amber-700 dark:text-amber-300' : 'text-[#1C6B45] dark:text-green-300' }}">
+                        {{ $isPending ? 'Review →' : 'View' }}
+                      </a>
                     </div>
                   </div>
-
                 </div>
               @empty
-                @if($reservations->isNotEmpty())
-                  <div class="px-4 sm:px-6 py-10 sm:py-14 text-center">
-                    <p class="text-xs sm:text-sm text-gray-400 dark:text-neutral-500">No material requests on this day.</p>
-                  </div>
-                @endif
+                <div class="px-4 sm:px-6 py-14 text-center">
+                  <p class="text-xs sm:text-sm font-semibold text-gray-500 dark:text-neutral-400">No material requests needed on this day</p>
+                </div>
               @endforelse
             @endif
 
-            {{-- Both empty --}}
-            @if($reservations->isEmpty() && $materials->isEmpty())
-              <div class="flex flex-col items-center justify-center py-14 sm:py-20 px-4 sm:px-6 text-center">
-                <div class="size-12 sm:size-16 rounded-2xl sm:rounded-3xl bg-gray-50 dark:bg-neutral-700 flex items-center justify-center mb-3 sm:mb-4">
-                  <svg class="size-6 sm:size-8 text-gray-300 dark:text-neutral-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
-                  </svg>
+            {{-- ============ RETURNS: borrowed items due back ============ --}}
+            @if($activeTab === 'returns')
+              @php $ret = $this->selectedReturns; @endphp
+
+              @foreach (['overdue' => 'Overdue (all)', 'due' => 'Due back this day'] as $key => $title)
+                @if ($ret[$key]->isNotEmpty())
+                  <p class="px-2 pt-2 text-[11px] font-bold uppercase tracking-wide {{ $key === 'overdue' ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-neutral-400' }}">
+                    {{ $title }} · {{ $ret[$key]->count() }}
+                  </p>
+                  @foreach ($ret[$key] as $loan)
+                    @php $late = (int) \Carbon\Carbon::parse($loan->due_back_at)->diffInDays(today()); @endphp
+                    <div wire:key="loan-{{ $key }}-{{ $loan->id }}" class="flex items-start justify-between gap-3 p-3 rounded-xl border
+                      {{ $key === 'overdue' ? 'border-red-200 bg-red-50/50 dark:border-red-900 dark:bg-red-950/20' : 'border-gray-100 dark:border-neutral-700' }}">
+                      <div class="min-w-0">
+                        <p class="text-xs sm:text-sm font-semibold text-gray-800 dark:text-neutral-100">{{ $loan->item_name }} <span class="font-normal text-gray-400">×{{ $loan->quantity }}</span></p>
+                        <p class="text-[11px] sm:text-xs text-gray-500 dark:text-neutral-400">
+                          {{ $loan->request?->user?->name ?? 'N/A' }} · {{ $loan->request?->user?->department?->department_name ?? 'N/A' }}
+                        </p>
+                        <p class="text-[11px] sm:text-xs {{ $key === 'overdue' ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-500 dark:text-neutral-400' }}">
+                          Due {{ \Carbon\Carbon::parse($loan->due_back_at)->format('M d, Y') }}{{ $key === 'overdue' ? ' · ' . $late . ' ' . \Illuminate\Support\Str::plural('day', $late) . ' late' : '' }}
+                          @if ($loan->return_requested_at)
+                            · <span class="text-teal-700 dark:text-teal-300">sent back, waiting for you to confirm</span>
+                          @endif
+                        </p>
+                      </div>
+                      <a href="{{ route('admin.borrowed-items') }}?filter={{ $key === 'overdue' ? 'overdue' : 'outstanding' }}"
+                        class="shrink-0 text-[11px] sm:text-xs font-semibold text-[#1C6B45] dark:text-green-300 hover:underline">Open →</a>
+                    </div>
+                  @endforeach
+                @endif
+              @endforeach
+
+              @if ($ret['due']->isEmpty() && $ret['overdue']->isEmpty())
+                <div class="px-4 sm:px-6 py-14 text-center">
+                  <p class="text-xs sm:text-sm font-semibold text-gray-500 dark:text-neutral-400">Nothing due back on this day</p>
+                  @if ($this->overdueCount > 0 && $selectedDate !== today()->toDateString())
+                    <button type="button" wire:click="goToday" class="mt-2 text-xs font-semibold text-red-600 hover:underline dark:text-red-400">
+                      {{ $this->overdueCount }} overdue — see them on Today
+                    </button>
+                  @endif
                 </div>
-                <p class="text-xs sm:text-sm font-semibold text-gray-500 dark:text-neutral-400">Nothing on this day</p>
-                <p class="text-[10px] sm:text-xs text-gray-400 dark:text-neutral-500 mt-0.5 sm:mt-1">Select another date to see events</p>
-              </div>
+              @endif
             @endif
 
           </div>
         </div>
       </div>
 
+    </div>
     </div>
 
   </div>

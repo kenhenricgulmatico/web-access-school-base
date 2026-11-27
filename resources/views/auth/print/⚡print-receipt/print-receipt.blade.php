@@ -33,7 +33,7 @@
             {{-- Header --}}
             <div class="px-4 sm:px-7 pt-6 sm:pt-7 pb-4 sm:pb-5 border-b border-gray-200 dark:border-neutral-700">
                 <div class="flex items-start gap-3 sm:gap-4">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/LogoCSAV.png"
+                    <img src="{{ asset('images/csav-logo.png') }}"
                          alt="CSAV Logo"
                          class="size-10 sm:size-12 rounded-lg shrink-0 object-contain">
                     <div class="min-w-0 flex-1">

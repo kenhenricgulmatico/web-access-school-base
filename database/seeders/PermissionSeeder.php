@@ -33,6 +33,18 @@ class PermissionSeeder extends Seeder
             'users.delete',
             'users.approve',
             'users.reset-password',
+            'users.deactivate',
+
+            // ── ✅ Borrowed Items (lent chairs, projectors…) ──
+            'borrowed-items.view',
+            'borrowed-items.manage',
+
+            // ── ✅ Calendar ──
+            'calendar.view',
+
+            // ── ✅ Stock History ──
+            'stock-history.view',
+            'stock-history.export',
 
             // ── Roles ──
             'roles.view',
@@ -119,8 +131,11 @@ class PermissionSeeder extends Seeder
         // ── ADMIN — unchanged ──
         $adminRole->syncPermissions([
             'users.view', 'users.create', 'users.update', 'users.delete',
-            'users.approve', 'users.reset-password',
+            'users.approve', 'users.reset-password', 'users.deactivate',
             'roles.view', 'roles.manage',
+            'borrowed-items.view', 'borrowed-items.manage',
+            'calendar.view',
+            'stock-history.view', 'stock-history.export',
             'departments.view', 'departments.manage',
             'requests.view-all', 'requests.approve', 'requests.reject',
             'program-head-requests.view', 'program-head-requests.view-all',
@@ -144,6 +159,8 @@ class PermissionSeeder extends Seeder
             'facility-schedule.view',
             'allocations.view',
             'audit.view-own-department', 'reports.view-department',
+            'borrowed-items.view', 'borrowed-items.manage',
+            'calendar.view',
         ]);
 
         // ── FACULTY & STUDENT — self-service portal ──
@@ -169,6 +186,11 @@ class PermissionSeeder extends Seeder
 
             // Own reports
             'reports.view-own',
+
+            // ✅ Borrowed items (give back) + calendar
+            'borrowed-items.view',
+            'borrowed-items.manage',
+            'calendar.view',
         ];
 
         $facultyRole->syncPermissions($portalPermissions);

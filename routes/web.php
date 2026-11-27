@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 // Authentication routes
 Route::livewire('/', 'auth::login')->name('login');
 Route::livewire('/waiting', 'auth::waiting')->name('waiting');
+// ✅ First sign-in with a password the Admin gave → choose your own (signed in, but not behind "approved")
+Route::livewire('/change-password', 'auth::change-password')->middleware('auth')->name('password.change');
 
 //Privacy
 Route::livewire('/privacy', 'pages::privacy')->name('privacy');

@@ -30,6 +30,7 @@ new #[Layout('layouts.student-faculty')] class extends Component
 
     public function mount(): void
     {
+        abort_unless(auth()->user()->can('calendar.view'), 403);
         $this->goToToday();
     }
 

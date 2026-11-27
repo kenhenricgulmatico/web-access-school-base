@@ -6,7 +6,7 @@
 
         <title>{{ $title ?? config('app.name') }}</title>
 
-        <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/5/55/LogoCSAV.png">
+        <link rel="icon" type="image/png" href="{{ asset('images/csav-logo.png') }}">
 
          @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])

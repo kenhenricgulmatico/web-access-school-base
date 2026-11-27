@@ -65,19 +65,27 @@ new class extends Component
                 return;
             }
 
+            // ✅ A teacher who left: the account stays (with its history) but can't sign in
+            if ($user->status === 'deactivated') {
+                Auth::logout();
+                $this->addError('email', 'This account has been deactivated. Please contact the Admin.');
+                return;
+            }
+
             if ($user->status !== 'approved') {
                 return redirect()->route('waiting');
             }
 
-            if ($user->hasRole('admin')) {
-                return redirect()->route('admin.dashboard');
+            // ✅ Signed in with the shared default password → must choose their own first
+            if ($this->password === \App\Support\Accounts::DEFAULT_PASSWORD && ! $user->must_change_password) {
+                $user->forceFill(['must_change_password' => true])->saveQuietly();
             }
 
-            if ($user->hasRole('program head')) {
-                return redirect()->route('coordinator.dashboard');
+            if ($user->must_change_password) {
+                return redirect()->route('password.change');
             }
 
-            return redirect()->route('portal.dashboard');
+            return redirect(\App\Support\Accounts::homeRoute($user));
         }
 
         // ✅ 3. Wrong password — show the error under the PASSWORD box

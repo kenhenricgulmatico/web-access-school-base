@@ -45,6 +45,7 @@ new #[Layout('layouts.coordinator')] class extends Component
 
     public function mount(): void
     {
+        abort_unless(auth()->user()->can('requests.view-department'), 403);
         if (! in_array($this->tab, ['pending', 'approved', 'rejected'], true)) {
             $this->tab = 'pending';
         }

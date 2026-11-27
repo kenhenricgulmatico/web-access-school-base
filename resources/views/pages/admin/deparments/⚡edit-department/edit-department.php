@@ -11,6 +11,7 @@ new #[Layout('layouts.admin')] class extends Component
 
     public function mount($id)
     {
+        abort_unless(auth()->user()->can('departments.manage'), 403);
         $this->department_id = $id;
         $department = Department::findOrFail($id);
         $this->department_name = $department->department_name;
@@ -27,6 +28,7 @@ new #[Layout('layouts.admin')] class extends Component
 
     public function update()
     {
+        abort_unless(auth()->user()->can('departments.manage'), 403);
         $this->validate();
 
         $department = Department::findOrFail($this->department_id);

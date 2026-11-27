@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -31,11 +32,21 @@ new #[Layout('layouts.admin')] class extends Component
 {
     use WithPagination;
 
+    public function mount(): void
+    {
+        abort_unless(auth()->user()->can('borrowed-items.view'), 403);
+    }
+
+
+    #[Url]
     public string $filter = 'pending'; // pending | outstanding | overdue | returned
     public string $search = '';
 
     /** Return deadline typed by the Admin, per request id. */
     public array $deadlines = [];
+
+    /** ✅ Per request: 'borrow' (return by a date) or 'assign' (they keep it — furniture for a faculty room). */
+    public array $modes = [];
 
     // ✅ Reject dialog (To approve tab)
     public ?int   $rejectingRequestId = null;
@@ -80,6 +91,7 @@ new #[Layout('layouts.admin')] class extends Component
     {
         return RequestItem::query()
             ->whereNotNull('request_items.resource_id')
+            ->whereNull('request_items.assigned_at')   // ✅ assigned items (kept, no return) are on the Assigned tab
             ->whereHas('resource', fn ($r) => $r->where('is_returnable', true))
             ->whereHas('request', fn ($q) => $q
                 ->where('status', 'approved')
@@ -104,11 +116,16 @@ new #[Layout('layouts.admin')] class extends Component
 
         return [
             'pending'     => $this->pendingQuery()->count(),
+            'assigned'    => RequestItem::assignedNow()->whereHas('resource', fn ($r) => $r->where('is_returnable', true))->count(),
             'outstanding' => (clone $this->baseQuery())->whereNull('returned_at')->count(),
             'overdue'     => (clone $this->baseQuery())->whereNull('returned_at')->whereRaw("{$due} < ?", [today()->toDateString()])->count(),
             'returned'    => (clone $this->baseQuery())->whereNotNull('returned_at')->count(),
             // ✅ Program Head clicked "Return to Admin" — waiting for the Admin to confirm
             'sentBack'    => (clone $this->baseQuery())->whereNull('returned_at')->whereNotNull('return_requested_at')->count(),
+            // ✅ Still with the Program Head, due back today or tomorrow
+            'dueSoon'     => (clone $this->baseQuery())->whereNull('returned_at')->whereNull('return_requested_at')
+                                ->whereRaw("{$due} >= ?", [today()->toDateString()])
+                                ->whereRaw("{$due} <= ?", [today()->addDay()->toDateString()])->count(),
         ];
     }
 
@@ -116,7 +133,7 @@ new #[Layout('layouts.admin')] class extends Component
     public function pendingRequests()
     {
         $q = $this->pendingQuery()
-            ->with(['user.department', 'department', 'items.resource'])
+            ->with(['user.department', 'department', 'items.resource.resourceType'])
             ->oldest();
 
         if ($this->search !== '') {
@@ -205,6 +222,74 @@ new #[Layout('layouts.admin')] class extends Component
         )->format('Y-m-d');
     }
 
+    /**
+     * ✅ What this request needs from the main stock: resource_id => [name, qty, have].
+     *    Same items accept() takes (facilities don't count).
+     */
+    protected function stockNeeded(ResourceRequest $request): array
+    {
+        $needed = [];
+        foreach ($request->items->whereNotNull('resource_id') as $item) {
+            if (! $item->resource || ($item->resource->resourceType?->type_name ?? null) === \App\Models\ResourceType::FACILITY) {
+                continue;
+            }
+            $needed[$item->resource_id] ??= ['name' => $item->item_name, 'qty' => 0, 'have' => (int) $item->resource->quantity_available];
+            $needed[$item->resource_id]['qty'] += (int) $item->quantity;
+        }
+
+        return $needed;
+    }
+
+    /** ✅ Items the main stock doesn't have enough of (empty = Accept will work). */
+    public function shortItems(ResourceRequest $request): array
+    {
+        return collect($this->stockNeeded($request))
+            ->filter(fn ($n) => $n['have'] < $n['qty'])
+            ->map(fn ($n) => "{$n['name']} (need {$n['qty']}, have {$n['have']})")
+            ->values()
+            ->all();
+    }
+
+    /** ✅ "Chair: 100 available" for each Pcs item, shown when there is enough. */
+    public function stockLine(ResourceRequest $request): string
+    {
+        return collect($this->stockNeeded($request))
+            ->map(fn ($n) => "{$n['name']}: {$n['have']} available")
+            ->implode(' · ');
+    }
+
+    /** ✅ The Accept confirmation spells out what will happen. */
+    public function acceptConfirm(ResourceRequest $request): string
+    {
+        $parts = collect($this->stockNeeded($request))
+            ->map(fn ($n) => "{$n['name']} ×{$n['qty']} (main stock {$n['have']} → " . ($n['have'] - $n['qty']) . ')')
+            ->implode('; ');
+
+        if (($this->modes[$request->id] ?? 'borrow') === 'assign') {
+            return 'Assign to ' . ($request->user->name ?? 'this Program Head') . ': ' . ($parts ?: 'this request')
+                . ' — they keep it, no return date?';
+        }
+
+        $deadline = $this->deadlines[$request->id] ?? null;
+        $by       = $deadline ? ', return by ' . Carbon::parse($deadline)->format('M d, Y') : '';
+
+        return 'Accept for ' . ($request->user->name ?? 'this Program Head') . ': ' . ($parts ?: 'this request') . $by . '?';
+    }
+
+    /** ✅ request_id => how many of its items the Program Head sent back that aren't confirmed yet. */
+    #[Computed]
+    public function sentBackCounts(): array
+    {
+        return (clone $this->baseQuery())
+            ->whereNull('returned_at')
+            ->whereNotNull('return_requested_at')
+            ->selectRaw('request_id, COUNT(*) as n')
+            ->groupBy('request_id')
+            ->pluck('n', 'request_id')
+            ->map(fn ($n) => (int) $n)
+            ->all();
+    }
+
     /** "Due today", "Due in 2 days", "Overdue by 3 days", "Returned (Good)". */
     public function statusLabel(RequestItem $item): string
     {
@@ -221,23 +306,43 @@ new #[Layout('layouts.admin')] class extends Component
         };
     }
 
+    /** ✅ A borrowed item the borrower will keep (e.g. faculty room furniture) → assigned, no return date. */
+    public function convertToAssigned(int $itemId): void
+    {
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
+
+        $item = $this->baseQuery()->whereNull('returned_at')->findOrFail($itemId);
+
+        try {
+            $holder = \App\Support\Assignments::assign($item, Auth::user());
+        } catch (\RuntimeException $e) {
+            session()->flash('error', $e->getMessage());
+            return;
+        }
+
+        session()->flash('message', "{$holder->item_name} ×{$holder->quantity} is now assigned to " . ($holder->holder?->name ?? 'the borrower') . ' — kept, no return date. See the Assigned tab.');
+        unset($this->items, $this->counts);
+    }
+
     // ============================================================
     // ✅ ACCEPT WITH A RETURN DEADLINE
     // ============================================================
     public function accept(int $id): void
     {
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
         abort_unless(
             auth()->user()->canAny(['program-head-requests.approve', 'requests.approve']),
             403
         );
 
         $request = $this->pendingQuery()->with('items.resource')->findOrFail($id);
+        $assign  = ($this->modes[$id] ?? 'borrow') === 'assign';
 
-        // --- Validate the deadline ---
+        // --- Validate the deadline (not needed when the items are assigned) ---
         $earliest = $this->earliestDeadline($request);
         $this->resetErrorBag("deadlines.{$id}");
 
-        $this->validate(
+        if (! $assign) $this->validate(
             ["deadlines.{$id}" => 'required|date|after_or_equal:' . $earliest->format('Y-m-d') . '|before_or_equal:' . today()->addYear()->format('Y-m-d')],
             [
                 "deadlines.{$id}.required"        => 'Please set a return deadline.',
@@ -247,7 +352,7 @@ new #[Layout('layouts.admin')] class extends Component
             ]
         );
 
-        $deadline = Carbon::parse($this->deadlines[$id])->startOfDay();
+        $deadline = $assign ? null : Carbon::parse($this->deadlines[$id])->startOfDay();
 
         // --- Facility conflict check (same rule as Program Head Requests) ---
         $facilityItem = $request->items->firstWhere('resource_id', null);
@@ -329,24 +434,27 @@ new #[Layout('layouts.admin')] class extends Component
 
                 $fresh->update(['status' => 'approved']);
 
-                // ✅ The return deadline goes on every Pcs item of this request
-                RequestItem::where('request_id', $fresh->id)
-                    ->whereNotNull('resource_id')
-                    ->whereHas('resource', fn ($r) => $r->where('is_returnable', true))
-                    ->update(['due_back_at' => $deadline->toDateString()]);
+                // ✅ The return deadline goes on every Pcs item of this request (assigned items have none)
+                if ($deadline) {
+                    RequestItem::where('request_id', $fresh->id)
+                        ->whereNotNull('resource_id')
+                        ->whereHas('resource', fn ($r) => $r->where('is_returnable', true))
+                        ->update(['due_back_at' => $deadline->toDateString()]);
+                }
 
                 RequestApproval::create([
                     'request_id'  => $fresh->id,
                     'approver_id' => Auth::id(),
                     'status'      => 'approved',
-                    'remarks'     => 'Return deadline: ' . $deadline->format('M d, Y'),
+                    'remarks'     => $deadline ? 'Return deadline: ' . $deadline->format('M d, Y') : 'Assigned — kept, no return date',
                     'approved_at' => now(),
                 ]);
 
                 Notification::create([
                     'user_id'    => $fresh->user_id,
                     'request_id' => $fresh->id,
-                    'message'    => Auth::user()->name . ' (Admin) approved your request. Please return the borrowed items by ' . $deadline->format('M d, Y') . '.',
+                    'message'    => Auth::user()->name . ' (Admin) approved your request. '
+                                  . ($deadline ? 'Please return the borrowed items by ' . $deadline->format('M d, Y') . '.' : 'The items are assigned — kept, with no return date.'),
                     'type'       => 'Gmail',
                     'status'     => 'pending',
                 ]);
@@ -358,16 +466,31 @@ new #[Layout('layouts.admin')] class extends Component
 
         $this->emailRequester($request->id, $deadline);
 
-        unset($this->deadlines[$id], $this->pendingRequests, $this->counts, $this->items);
+        unset($this->deadlines[$id], $this->modes[$id], $this->pendingRequests, $this->counts, $this->items);
 
         // ✅ Endorsed from a student / faculty request → approve that one automatically too
         $note = \App\Support\ForwardedRequests::onAdminApproved(ResourceRequest::find($id));
 
-        session()->flash('message', 'Request approved. Return deadline set to ' . $deadline->format('M d, Y') . '.' . ($note ? ' ' . $note : ''));
+        // ✅ Assign: the items are kept (no return date) by the Program Head — or by the faculty member it was for
+        $holders = [];
+        if ($assign) {
+            $items = RequestItem::where('request_id', $id)
+                ->whereNotNull('resource_id')
+                ->whereHas('resource', fn ($r) => $r->where('is_returnable', true))
+                ->get();
+            foreach ($items as $item) {
+                $holders[] = \App\Support\Assignments::assign($item, Auth::user())->holder?->name;
+            }
+            unset($this->counts);
+        }
+
+        session()->flash('message', 'Request approved. ' . ($assign
+            ? 'Assigned to ' . (collect($holders)->filter()->unique()->implode(', ') ?: 'the requester') . ' — kept, no return date.'
+            : 'Return deadline set to ' . $deadline->format('M d, Y') . '.') . ($note ? ' ' . $note : ''));
     }
 
     /** E-mail the Program Head, including the return deadline. */
-    protected function emailRequester(int $requestId, Carbon $deadline): void
+    protected function emailRequester(int $requestId, ?Carbon $deadline): void
     {
         $request = ResourceRequest::with(['user', 'items.resource'])->find($requestId);
         if (! $request?->user) {
@@ -388,7 +511,9 @@ new #[Layout('layouts.admin')] class extends Component
             ->map(fn ($i) => "{$i->item_name} x{$i->quantity}")
             ->implode(', ');
 
-        $details .= ". Please return {$pcs} by " . $deadline->format('M d, Y') . '.';
+        $details .= $deadline
+            ? ". Please return {$pcs} by " . $deadline->format('M d, Y') . '.'
+            : ". {$pcs}: assigned to you — kept, no return date.";
 
         rescue(fn () => $request->user->notify(new RequestStatusNotification(
             status:       'approved',
@@ -405,6 +530,7 @@ new #[Layout('layouts.admin')] class extends Component
     // ============================================================
     public function openReject(int $id): void
     {
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
         abort_unless(
             auth()->user()->canAny(['program-head-requests.reject', 'requests.reject']),
             403
@@ -423,6 +549,7 @@ new #[Layout('layouts.admin')] class extends Component
 
     public function confirmReject(): void
     {
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
         abort_unless(
             auth()->user()->canAny(['program-head-requests.reject', 'requests.reject']),
             403
@@ -501,6 +628,7 @@ new #[Layout('layouts.admin')] class extends Component
 
     public function sendReminder(int $id): void
     {
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
         $due = $this->dueDateSql();
 
         $item = $this->baseQuery()
@@ -552,6 +680,7 @@ new #[Layout('layouts.admin')] class extends Component
     // ============================================================
     public function openReturn(int $id): void
     {
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
         // ✅ The Admin confirms a return only after the Program Head clicked "Return to Admin"
         $item = $this->baseQuery()->whereNull('returned_at')->find($id);
 
@@ -573,6 +702,7 @@ new #[Layout('layouts.admin')] class extends Component
 
     public function confirmReturn(): void
     {
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
         $this->validate([
             'returnCondition' => 'required|in:' . implode(',', array_keys(RequestItem::CONDITIONS)),
             'returnNotes'     => 'nullable|string|max:500',
@@ -581,83 +711,128 @@ new #[Layout('layouts.admin')] class extends Component
         $item = $this->baseQuery()->findOrFail($this->returningId);
 
         try {
-            DB::transaction(function () use ($item) {
-                $item = RequestItem::with('request')->lockForUpdate()->findOrFail($item->id);
-
-                if ($item->returned_at) {
-                    throw new \RuntimeException('This item was already marked as returned.');
-                }
-
-                // ✅ Only after the Program Head sent it back (and so the faculty member returned it first)
-                if (! $item->return_requested_at) {
-                    throw new \RuntimeException('The Program Head has not returned this item yet.');
-                }
-
-                $item->update([
-                    'returned_at'      => now(),
-                    'return_condition' => $this->returnCondition,
-                    'return_notes'     => $this->returnNotes ?: null,
-                    'received_by'      => Auth::id(),
-                ]);
-
-                // The department no longer holds these pieces
-                $allocation = DB::table('resource_all_locations')
-                    ->where('resource_id', $item->resource_id)
-                    ->where('department_id', $item->request->department_id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($allocation) {
-                    DB::table('resource_all_locations')
-                        ->where('id', $allocation->id)
-                        ->update([
-                            'allocated_quantity' => max((int) $allocation->allocated_quantity - (int) $item->quantity, 0),
-                            'updated_at'         => now(),
-                        ]);
-                }
-
-                // Good condition → back to the Admin's main stock
-                if ($this->returnCondition === 'good') {
-                    // ✅ Remember the stock level before / after, for Stock History's "Before → After"
-                    $before = (int) DB::table('resources')
-                        ->where('id', $item->resource_id)
-                        ->lockForUpdate()
-                        ->value('quantity_available');
-
-                    DB::table('resources')
-                        ->where('id', $item->resource_id)
-                        ->increment('quantity_available', $item->quantity);
-
-                    $item->update([
-                        'stock_before_return' => $before,
-                        'stock_after_return'  => $before + (int) $item->quantity,
-                    ]);
-                }
-            });
+            $message = $this->confirmOne($item, $this->returnCondition, $this->returnNotes ?: null);
         } catch (\RuntimeException $e) {
             session()->flash('error', $e->getMessage());
             $this->returningId = null;
             return;
         }
 
+        session()->flash('message', $message);
+
+        $this->returningId = null;
+        unset($this->items, $this->counts, $this->sentBackCounts);
+    }
+
+    /**
+     * ✅ Confirm one returned item: mark it returned, take it off the department,
+     *    put Good items back in the main stock (remembering Before → After),
+     *    and tell the Program Head. Returns the message for the Admin.
+     */
+    protected function confirmOne(RequestItem $item, string $condition, ?string $notes): string
+    {
+        DB::transaction(function () use ($item, $condition, $notes) {
+            $item = RequestItem::with('request')->lockForUpdate()->findOrFail($item->id);
+
+            if ($item->returned_at) {
+                throw new \RuntimeException('This item was already marked as returned.');
+            }
+
+            // ✅ Only after the Program Head sent it back (and so the faculty member returned it first)
+            if (! $item->return_requested_at) {
+                throw new \RuntimeException('The Program Head has not returned this item yet.');
+            }
+
+            $item->update([
+                'returned_at'      => now(),
+                'return_condition' => $condition,
+                'return_notes'     => $notes ?: null,
+                'received_by'      => Auth::id(),
+            ]);
+
+            // The department no longer holds these pieces
+            $allocation = DB::table('resource_all_locations')
+                ->where('resource_id', $item->resource_id)
+                ->where('department_id', $item->request->department_id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($allocation) {
+                DB::table('resource_all_locations')
+                    ->where('id', $allocation->id)
+                    ->update([
+                        'allocated_quantity' => max((int) $allocation->allocated_quantity - (int) $item->quantity, 0),
+                        'updated_at'         => now(),
+                    ]);
+            }
+
+            // Good condition → back to the Admin's main stock
+            if ($condition === 'good') {
+                // ✅ Remember the stock level before / after, for Stock History's "Before → After"
+                $before = (int) DB::table('resources')
+                    ->where('id', $item->resource_id)
+                    ->lockForUpdate()
+                    ->value('quantity_available');
+
+                DB::table('resources')
+                    ->where('id', $item->resource_id)
+                    ->increment('quantity_available', $item->quantity);
+
+                $item->update([
+                    'stock_before_return' => $before,
+                    'stock_after_return'  => $before + (int) $item->quantity,
+                ]);
+            }
+        });
+
         // ✅ Tell the Program Head their return was received (with the condition)
-        $conditionText = RequestItem::CONDITIONS[$this->returnCondition] ?? ucfirst($this->returnCondition);
+        $conditionText = RequestItem::CONDITIONS[$condition] ?? ucfirst($condition);
         if ($borrowerId = $item->request?->user_id) {
             Notification::create([
                 'user_id'    => $borrowerId,
                 'request_id' => $item->request_id,
                 'message'    => 'The Admin (' . Auth::user()->name . ") confirmed your return of {$item->quantity} pcs of \"{$item->item_name}\" — condition: {$conditionText}."
-                              . ($this->returnNotes ? " Note: {$this->returnNotes}" : ''),
+                              . ($notes ? " Note: {$notes}" : ''),
                 'type'       => 'Return',
                 'status'     => 'pending',
             ]);
         }
 
-        session()->flash('message', $this->returnCondition === 'good'
+        return $condition === 'good'
             ? "\"{$item->item_name}\" ({$item->quantity} pcs) marked as returned and added back to the main stock."
-            : "\"{$item->item_name}\" ({$item->quantity} pcs) marked as returned ({$this->returnCondition}). It was not added back to stock.");
+            : "\"{$item->item_name}\" ({$item->quantity} pcs) marked as returned ({$condition}). It was not added back to stock.";
+    }
+
+    /** ✅ Every item of one request the Program Head sent back → confirm all in Good condition. */
+    public function confirmAllGood(int $requestId): void
+    {
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
+        $items = $this->baseQuery()
+            ->with('request.user')
+            ->where('request_id', $requestId)
+            ->whereNull('returned_at')
+            ->whereNotNull('return_requested_at')
+            ->get();
+
+        if ($items->isEmpty()) {
+            session()->flash('error', 'There is nothing to confirm for this request.');
+            return;
+        }
+
+        $done = 0;
+        foreach ($items as $item) {
+            try {
+                $this->confirmOne($item, 'good', null);
+                $done++;
+            } catch (\RuntimeException $e) {
+                // already confirmed meanwhile — skip it
+            }
+        }
+
+        $who = $items->first()->request?->user?->name ?? 'the Program Head';
+        session()->flash('message', "Confirmed {$done} " . str('item')->plural($done) . " from {$who} in Good condition and added them back to the main stock.");
 
         $this->returningId = null;
-        unset($this->items, $this->counts);
+        unset($this->items, $this->counts, $this->sentBackCounts);
     }
 };

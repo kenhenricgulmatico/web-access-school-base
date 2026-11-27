@@ -21,6 +21,15 @@ class Stock extends Model
         'arrival_date',
         'arrival_time',
         'remarks',
+        'reason',
+    ];
+
+    /** ✅ Why stock was removed (a removal = negative quantity_added). */
+    public const REASONS = [
+        'used_up'    => 'Used up',
+        'damaged'    => 'Damaged',
+        'lost'       => 'Lost',
+        'correction' => 'Count correction',
     ];
 
     protected $casts = [

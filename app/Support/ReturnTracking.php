@@ -85,7 +85,7 @@ class ReturnTracking
         $facility = $request->items->firstWhere('resource_id', null);
 
         foreach ($request->items as $item) {
-            if (! $item->resource_id || ! $item->resource?->is_returnable || $item->due_back_at) {
+            if (! $item->resource_id || ! $item->resource?->is_returnable || $item->due_back_at || $item->assigned_at) {
                 continue;
             }
 

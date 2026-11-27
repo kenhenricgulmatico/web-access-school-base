@@ -41,10 +41,28 @@ new #[Layout('layouts.coordinator')] class extends Component
 
     public function mount(): void
     {
-        abort_unless(auth()->user()->can('requests.view-department'), 403);
+        abort_unless(auth()->user()->can('borrowed-items.view'), 403);
     }
 
     public function updatingView(): void   { $this->resetPage(); $this->returningId = null; }
+
+    /** ✅ A faculty member keeps a borrowed item (e.g. faculty room furniture) → assigned, no return date. */
+    public function convertToAssigned(int $itemId): void
+    {
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
+
+        $item = $this->baseQuery()->whereNull('returned_at')->findOrFail($itemId);
+
+        try {
+            $holder = \App\Support\Assignments::assign($item, Auth::user());
+        } catch (\RuntimeException $e) {
+            session()->flash('error', $e->getMessage());
+            return;
+        }
+
+        session()->flash('message', "{$holder->item_name} ×{$holder->quantity} is now kept by " . ($holder->holder?->name ?? 'the teacher') . ' — no return date. See "Assigned (kept)".');
+        unset($this->items, $this->counts);
+    }
     public function updatingFilter(): void { $this->resetPage(); }
     public function updatingSearch(): void { $this->resetPage(); }
 
@@ -75,6 +93,8 @@ new #[Layout('layouts.coordinator')] class extends Component
             'overdue'     => (clone $this->baseQuery())->whereNull('returned_at')->whereDate('due_back_at', '<', today())->count(),
             'returned'    => (clone $this->baseQuery())->whereNotNull('returned_at')->count(),
             'mine'        => (clone $this->myItemsQuery())->whereNull('returned_at')->count(),
+            // ✅ kept (no return date) by my department's teachers
+            'assigned'    => RequestItem::assignedNow()->whereHas('holder', fn ($h) => $h->where('department_id', Auth::user()->department_id))->count(),
             // ✅ Faculty items due today or tomorrow, still with the faculty member
             'due_soon'    => (clone $this->baseQuery())->whereNull('returned_at')->whereNull('return_requested_at')
                                 ->whereDate('due_back_at', '>=', today())
@@ -122,7 +142,7 @@ new #[Layout('layouts.coordinator')] class extends Component
 
     public function openReturn(int $id): void
     {
-        abort_unless(auth()->user()->can('requests.approve'), 403);
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
 
         // ✅ Only after the faculty member clicked "Return to Program Head"
         $item = $this->baseQuery()->whereNull('returned_at')->with('request.user')->find($id);
@@ -146,7 +166,7 @@ new #[Layout('layouts.coordinator')] class extends Component
 
     public function confirmReturn(): void
     {
-        abort_unless(auth()->user()->can('requests.approve'), 403);
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
 
         $this->validate([
             'returnCondition' => 'required|in:' . implode(',', array_keys(RequestItem::CONDITIONS)),
@@ -217,7 +237,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     /** ✅ Every item of one request that the faculty sent back → confirm all in Good condition. */
     public function confirmAllGood(int $requestId): void
     {
-        abort_unless(auth()->user()->can('requests.approve'), 403);
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
 
         $items = $this->baseQuery()
             ->with('request.user')
@@ -283,7 +303,7 @@ new #[Layout('layouts.coordinator')] class extends Component
 
     public function sendReminder(int $id): void
     {
-        abort_unless(auth()->user()->can('requests.approve'), 403);
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
 
         $item = $this->baseQuery()
             ->with('request.user')
@@ -353,6 +373,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     {
         return RequestItem::query()
             ->whereNotNull('request_items.resource_id')
+            ->whereNull('request_items.assigned_at')   // ✅ assigned items are listed under "Assigned"
             ->whereHas('resource', fn ($r) => $r->where('is_returnable', true))
             ->whereHas('request', fn ($q) => $q
                 ->where('user_id', Auth::id())
@@ -451,6 +472,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     /** Program Head says: "I'm returning these to the Admin." */
     public function requestReturn(int $id): void
     {
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
         $item = $this->ownItemsQuery()
             ->whereNull('returned_at')
             ->findOrFail($id);
@@ -476,6 +498,7 @@ new #[Layout('layouts.coordinator')] class extends Component
     /** Undo a return that was sent by mistake (only before the Admin confirms). */
     public function cancelRequestReturn(int $id): void
     {
+        abort_unless(auth()->user()->can('borrowed-items.manage'), 403);
         $item = $this->ownItemsQuery()
             ->whereNull('returned_at')
             ->findOrFail($id);

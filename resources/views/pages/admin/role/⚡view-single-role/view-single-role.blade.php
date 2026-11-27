@@ -58,19 +58,22 @@
         @if ($role->permissions->isEmpty())
             <p class="text-sm text-gray-400 dark:text-neutral-500">This role can't do anything yet.</p>
         @else
-            <div class="space-y-6">
+            <div class="grid gap-6 sm:grid-cols-2">
                 @foreach ($this->groupedPermissions as $group => $names)
                     <div>
-                        <p class="text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-2">
-                            {{ ucfirst($group) }}
+                        <p class="text-sm font-semibold text-gray-700 dark:text-neutral-300">
+                            {{ \App\Support\PermissionCatalog::title($group, $role->name) }}
                         </p>
+                        @if ($desc = \App\Support\PermissionCatalog::description($group, $role->name))
+                            <p class="text-xs text-gray-500 dark:text-neutral-400 mb-2">{{ $desc }}</p>
+                        @endif
                         <ul class="space-y-1.5">
                             @foreach ($names as $name)
                                 <li class="flex items-start gap-2 text-sm text-gray-600 dark:text-neutral-400">
                                     <svg class="size-4 mt-0.5 shrink-0 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                                     </svg>
-                                    <span>{{ \Illuminate\Support\Str::headline(str_replace('.', ' ', $name)) }}</span>
+                                    <span>{{ \App\Support\PermissionCatalog::label($name) }}</span>
                                 </li>
                             @endforeach
                         </ul>

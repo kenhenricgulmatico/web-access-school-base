@@ -44,15 +44,45 @@ new #[Layout('layouts.admin')] class extends Component
     }
 
     /**
-     * ✅ Roles pulled from the database — new roles appear here automatically.
+     * ✅ Same choices as Add User: Program Head or Faculty — never Admin
+     *    (one wrong click must not turn a teacher into a full admin).
      */
     #[Computed()]
     public function roles()
     {
-        return Role::orderBy('name')
+        return Role::whereIn('name', \App\Support\Accounts::ASSIGNABLE_ROLES)
+            ->orderBy('name')
             ->get()
             ->mapWithKeys(fn ($r) => [$r->name => ucwords($r->name)])
             ->toArray();
+    }
+
+    /** ✅ Their pending requests / borrowed items (for the role / department warning). */
+    #[Computed()]
+    public function openItems(): array
+    {
+        return \App\Support\Accounts::openItems([$this->user->id])[$this->user->id];
+    }
+
+    /** Warning shown when the role or department is being changed while things are still open. */
+    public function changeWarning(): string
+    {
+        if ($this->isAdmin) {
+            return '';
+        }
+
+        $roleChanged = $this->role !== ($this->user->roles->first()?->name ?? '');
+        $deptChanged = (string) $this->department_id !== (string) ($this->user->department_id ?? '');
+        $open        = \App\Support\Accounts::openItemsText($this->openItems);
+
+        if (! ($roleChanged || $deptChanged) || $open === '') {
+            return '';
+        }
+
+        $what = $roleChanged && $deptChanged ? 'role and department' : ($roleChanged ? 'role' : 'department');
+
+        return "{$this->user->name} still has {$open}. Changing the {$what} now may leave them with the wrong Program Head or page — "
+            . 'consider finishing those first (Program Head Requests / Borrowed Items).';
     }
 
     #[Computed()]
@@ -71,7 +101,9 @@ new #[Layout('layouts.admin')] class extends Component
 
         if (! $this->isAdmin) {
             $rules['department_id'] = 'required|exists:departments,id';
-            $rules['role']          = 'required|string|exists:roles,name';   // ← DB-backed
+            // ✅ same rules as Add User
+            $rules['role']          = 'required|in:' . implode(',', \App\Support\Accounts::ASSIGNABLE_ROLES);
+            $rules['email']        .= '|ends_with:@csav.edu.ph';
         }
 
         return $rules;
@@ -89,6 +121,8 @@ new #[Layout('layouts.admin')] class extends Component
         'department_id.exists'   => 'Selected department is invalid.',
         'role.required'          => 'Please select a role.',
         'role.exists'            => 'Selected role is invalid.',
+        'role.in'                => 'Choose Program Head or Faculty.',
+        'email.ends_with'        => 'Email must end with @csav.edu.ph.',
     ];
 
     public function save()
@@ -110,6 +144,11 @@ new #[Layout('layouts.admin')] class extends Component
 
         if ($passwordChanged) {
             $data['password'] = Hash::make($plainPassword);
+            // ✅ The Admin knows this password → they must choose their own at next sign-in
+            //    (not when the Admin edits their own account)
+            if ($this->user->id !== auth()->id()) {
+                $data['must_change_password'] = true;
+            }
         }
 
         $this->user->update($data);
@@ -142,7 +181,8 @@ new #[Layout('layouts.admin')] class extends Component
         $default = self::DEFAULT_PASSWORD;
 
         $this->user->update([
-            'password' => Hash::make($default),
+            'password'             => Hash::make($default),
+            'must_change_password' => true,   // ✅ shared default → must choose their own at next sign-in
         ]);
 
         $this->sendPasswordResetEmail($default);

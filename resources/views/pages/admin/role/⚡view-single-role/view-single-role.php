@@ -11,6 +11,7 @@ new #[Layout('layouts.admin')] class extends Component
 
     public function mount(Role $role): void
     {
+        abort_unless(auth()->user()->can('roles.view'), 403);
         $this->role = $role->load('permissions');
     }
 
@@ -33,25 +34,16 @@ new #[Layout('layouts.admin')] class extends Component
     /**
      * Group permissions by their prefix (users.*, requests.*, materials.*, etc.)
      */
+    /** Permissions grouped by feature, in the same order and names as Edit Role. */
     #[Computed]
     public function groupedPermissions(): array
     {
-        $groups = [];
-
-        foreach ($this->role->permissions as $permission) {
-            $parts  = explode('.', $permission->name, 2);
-            $prefix = $parts[0] ?? 'other';
-
-            $groups[$prefix][] = $permission->name;
-        }
-
-        ksort($groups);
-
-        return $groups;
+        return \App\Support\PermissionCatalog::orderFor(\App\Support\PermissionCatalog::grouped($this->role->permissions->pluck('name')->all()), $this->role->name);
     }
 
     public function delete(): void
     {
+        abort_unless(auth()->user()->can('roles.manage'), 403);
         // Safety: don't delete roles that are still assigned to users
         if ($this->role->users()->count() > 0) {
             session()->flash('error', 'Cannot delete this role — it is still assigned to ' . $this->role->users()->count() . ' user(s).');

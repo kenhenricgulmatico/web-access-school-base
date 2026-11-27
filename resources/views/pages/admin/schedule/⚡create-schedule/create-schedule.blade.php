@@ -1,4 +1,4 @@
-<div class="select-none">
+<div>
     <div class="max-w-2xl mx-auto px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
 
         {{-- Back --}}
@@ -18,7 +18,7 @@
                     Add Facility
                 </h2>
                 <p class="text-sm text-gray-500 dark:text-neutral-400 mt-1">
-                    Add a new facility that faculty and program heads can reserve.
+                    Add a room that faculty and program heads can reserve. Only the name is required.
                 </p>
             </div>
 
@@ -36,44 +36,7 @@
 
             <form wire:submit="submit" class="space-y-6">
 
-                {{-- Facility Name --}}
-                <div>
-                    <label for="facility-name" class="block mb-2 text-sm font-medium text-gray-700 dark:text-neutral-300">
-                        Facility Name <span class="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        id="facility-name"
-                        wire:model="facility_name"
-                        placeholder="e.g. RM 207, LAB 1, IS FIELD"
-                        class="w-full py-2.5 px-4 border border-gray-300 dark:border-neutral-600 rounded-lg text-sm
-                               bg-white dark:bg-neutral-900 text-gray-800 dark:text-neutral-200
-                               focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none
-                               transition">
-                    @error('facility_name')
-                        <p class="text-xs text-red-500 mt-1.5">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                {{-- Status --}}
-                <div>
-                    <label for="facility-status" class="block mb-2 text-sm font-medium text-gray-700 dark:text-neutral-300">
-                        Status <span class="text-red-500">*</span>
-                    </label>
-                    <select
-                        id="facility-status"
-                        wire:model="status"
-                        class="w-full py-2.5 px-4 border border-gray-300 dark:border-neutral-600 rounded-lg text-sm
-                               bg-white dark:bg-neutral-900 text-gray-800 dark:text-neutral-200
-                               focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none
-                               transition">
-                        <option value="available">Available</option>
-                        <option value="maintenance">Under Maintenance</option>
-                    </select>
-                    @error('status')
-                        <p class="text-xs text-red-500 mt-1.5">{{ $message }}</p>
-                    @enderror
-                </div>
+                @include('partials.facility-form')
 
                 {{-- Buttons --}}
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-neutral-700">

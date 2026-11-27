@@ -21,8 +21,8 @@ new #[Layout('layouts.admin')] class extends Component
 
     public function mount(): void
     {
-        // ✅ Server-side guard — page requires `users.view`
-        abort_unless(auth()->user()->can('users.view'), 403);
+        // ✅ Account Approvals → "Users: Approve sign-ups" (Roles & Permissions)
+        abort_unless(auth()->user()->can('users.approve'), 403);
     }
 
     public function updatedSearch()

@@ -59,6 +59,8 @@ class AuditLogDetails
         'start_time'                => 'Start time',
         'end_time'                  => 'End time',
         'due_back_at'               => 'Return by',
+        'assigned_at'               => 'Assigned (kept) since',
+        'holder_id'                 => 'Kept by',
         'returned_at'               => 'Returned on',
         'return_requested_at'       => 'Return requested on',
         'return_condition'          => 'Return condition',
@@ -87,6 +89,98 @@ class AuditLogDetails
             'title' => static::title($log),
             'rows'  => static::rows(static::record($log), $log->table_name),
         ];
+    }
+
+    /**
+     * ✅ One readable line for a list:
+     *   "Material request · Pending · “for events”", "Chair ×2 · needed Nov 30",
+     *   "Room 101 · Nov 30, 9:00 AM – 11:00 AM", "Signed in", "Account updated".
+     */
+    public static function summary(AuditLog $log): string
+    {
+        $r = static::record($log);
+
+        return match (true) {
+            $log->action === 'login'  => 'Signed in',
+            $log->action === 'logout' => 'Signed out',
+            $log->table_name === 'requests' => collect([
+                static::requestTypeName($r['request_type_id'] ?? 0) === 'Unknown type'
+                    ? 'Request'
+                    : static::requestTypeName($r['request_type_id']),
+                isset($r['status']) ? ucfirst((string) $r['status']) : null,
+                ! empty($r['purpose']) ? '“' . \Illuminate\Support\Str::limit((string) $r['purpose'], 40) . '”' : null,
+            ])->filter()->implode(' · '),
+            $log->table_name === 'request_items' => static::itemLine($r),
+            $log->table_name === 'users' => $log->action === 'created'
+                ? 'Account created' . (! empty($r['name']) ? ' · ' . $r['name'] : '')
+                : 'Account updated' . (! empty($r['status']) && $r['status'] !== 'approved' ? ' · ' . ucfirst((string) $r['status']) : ''),
+            $log->table_name === 'resources'   => static::resourceLine($r, (string) $log->action),
+            $log->table_name === 'departments' => 'Department · ' . ($r['department_name'] ?? '—'),
+            default => static::title($log),
+        };
+    }
+
+    /** The request a log is about (for a "View" link), or null. */
+    public static function requestId(AuditLog $log): ?int
+    {
+        $r = static::record($log);
+
+        return match ($log->table_name) {
+            'requests'      => isset($r['id']) ? (int) $r['id'] : null,
+            'request_items' => isset($r['request_id']) ? (int) $r['request_id'] : null,
+            default         => null,
+        };
+    }
+
+    /** "Room 103 · Under maintenance (Aircon repair)" / "Chair · 99 Pcs in stock" / "Projector · deleted". */
+    protected static function resourceLine(array $r, string $action): string
+    {
+        $name = $r['resource_name'] ?? 'Resource';
+
+        if ($action === 'deleted') {
+            return "{$name} · deleted";
+        }
+
+        $isRoom = static::resourceTypeName($r['resource_type_id'] ?? 0) === ResourceType::FACILITY;
+
+        if ($isRoom) {
+            $status = ($r['status'] ?? '') === 'maintenance'
+                ? 'Under maintenance' . (! empty($r['maintenance_reason']) ? ' (' . $r['maintenance_reason'] . ')' : '')
+                : 'Available';
+
+            return "{$name} · " . ($action === 'created' ? 'room added' : $status);
+        }
+
+        $stock = isset($r['quantity_available']) ? ' · ' . number_format((int) $r['quantity_available']) . ' ' . ($r['unit'] ?? '') . ' in stock' : '';
+
+        return "{$name}" . ($action === 'created' ? ' · added' : '') . rtrim($stock);
+    }
+
+    protected static function itemLine(array $r): string
+    {
+        $name = $r['item_name'] ?? 'Item';
+
+        // ✅ kept (assigned, no return date)
+        if (! empty($r['assigned_at']) && empty($r['returned_at'])) {
+            return $name . (! empty($r['quantity']) ? ' ×' . $r['quantity'] : '')
+                . (! empty($r['holder_id']) ? ' · kept by ' . static::userName($r['holder_id']) : ' · assigned');
+        }
+
+        if (! empty($r['returned_at'])) {
+            return "{$name} · returned" . (! empty($r['return_condition']) ? ' (' . $r['return_condition'] . ')' : '');
+        }
+        if (! empty($r['return_requested_at'])) {
+            return "{$name} · sent back";
+        }
+
+        $when = ! empty($r['request_date']) ? static::date($r['request_date'], false) : null;
+
+        // a room booking has a time, a material line has a quantity
+        if (! empty($r['start_time']) && ! empty($r['end_time']) && empty($r['resource_id'])) {
+            return $name . ($when ? " · {$when}, " . static::time($r['start_time']) . ' – ' . static::time($r['end_time']) : '');
+        }
+
+        return $name . (! empty($r['quantity']) ? ' ×' . $r['quantity'] : '') . ($when ? " · needed {$when}" : '');
     }
 
     public static function title(AuditLog $log): string
@@ -160,7 +254,7 @@ class AuditLogDetails
             $key === 'department_id'             => static::departmentName($value),
             $key === 'request_type_id'           => static::requestTypeName($value),
             $key === 'resource_type_id'          => static::resourceTypeName($value),
-            $key === 'user_id', $key === 'received_by' => static::userName($value),
+            $key === 'user_id', $key === 'received_by', $key === 'holder_id' => static::userName($value),
             $key === 'forwarded_from_request_id' => 'Yes',
             $key === 'items'                     => static::items($value),
             $key === 'roles'                     => static::roles($value),
